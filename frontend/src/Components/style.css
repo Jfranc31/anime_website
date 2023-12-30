@@ -274,6 +274,7 @@ form input:hover{
     overflow: auto;
     border: 1px solid #ddd;
     height: 203.78px;
+    overflow: hidden;
   }
   img {
     width: 100%;
@@ -337,13 +338,13 @@ form input:hover{
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 1700px; /* Adjust the width as needed */
+    width: 2000px; /* Adjust the width as needed */
     height: 1500px;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 3;
+    z-index: 4;
   }
   .modal-header{
     background-color: #04aa6d;
@@ -358,7 +359,7 @@ form input:hover{
     border-radius: 0 0 0 0;
     margin-top: 0;
     height: 150px;
-    z-index: 4;
+    z-index: 3;
     object-fit: cover;
   }
   .modal-header h2{
@@ -512,7 +513,7 @@ form input:hover{
     left: 0;
     right: 0;
     min-height: 400px;
-    width: 1678px;
+    width: 100%;
     overflow: hidden;
     z-index: 2;
   }
@@ -523,7 +524,7 @@ form input:hover{
     left: 0;
     right: 0;
     min-height: 400px;
-    width: 1678px;
+    width: 100%;
     overflow: hidden;
     object-fit: cover;
     z-index: 2;
@@ -531,23 +532,26 @@ form input:hover{
   .anime-page-info{
     color: gray;
     position: absolute;
-    left: 320px;
+    left: 20%;
     text-align: left;
-    top: 0px;
+    top: 5%;
     max-width: 60%;
-    margin-top: 20px;
+    /* margin-top: 20px; */
   }
   .anime-page-info-bk{
     min-height: 200px;
+    top: 50%; /* Updated to start from the top of the page */
+    left: 0;
+    right: 0;
     padding: 50px 20px;
-    width: 1651px;
+    width: 100%;
     box-shadow: 1px 1px 10px rgba(0,0,0,0.1);
-    border-radius: 10px;
+    border-radius: 0px;
     overflow: hidden;
     background: rgba(26, 28, 30, 0.8);
     position: absolute; /* Ensure it stays within the flow of the document */
-    margin-top: -60px; /* Add margin-top to create space from the top */
-    margin-left: -850px;
+    margin-top: -4%; /* Add margin-top to create space from the top */
+    /* margin-right: 50%; */
   }
   .anime-page-img{
     margin-bottom: 30px;

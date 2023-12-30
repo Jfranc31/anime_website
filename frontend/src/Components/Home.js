@@ -1,10 +1,10 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAnimeContext } from '../Context/AnimeContext'
 import axios from 'axios'
 
 const Home = () => {
-    const { animeList, setAnimeList, selectedAnimeId, setSelectedAnimeId } = useAnimeContext();
+    const { animeList } = useAnimeContext();
     const selectedStatus = 'Watching';
     const [latestActivities, setLatestActivities] = useState([]);
 
