@@ -83,6 +83,10 @@ const animeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    notes: {
+        type: String,
+        default: "",
+    }
 });
 
 const AnimeModel = mongoose.model('AnimeModel', animeSchema);
@@ -161,6 +165,26 @@ app.put('/browse/:id/currentEpisode', async(req, res) => {
     }
 })
 
+app.put('/anime/:id/notes', async (req, res) => {
+    try {
+        const animeId = req.params.id;
+        const { notes } = req.body;
+
+        const anime = await AnimeModel.findById(animeId);
+
+        if (!anime) {
+            return res.status(404).json({ message: 'Anime not found' });
+        }
+
+        anime.notes = notes;
+        await anime.save();
+
+        res.json({ message: 'Notes updated successfully' });
+    } catch (error) {
+        console.error('Failed to update notes:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
 
 /*=================================
@@ -297,6 +321,20 @@ app.get('/latest-activities', async (req, res) => {
     }
 });
 
+app.get('/anime/:id/notes', async (req, res) => {
+    try {
+        const animeId = req.params.id;
+        const anime = await AnimeModel.findById(animeId);
+        if (!anime) {
+            return res.status(404).json({ message: 'Anime not found' });
+        }
+        res.json({ notes: anime.notes });
+    } catch (error) {
+        console.error("Error fetching anime notes:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 
 /*============================
         DELETE
@@ -324,6 +362,25 @@ app.delete('/browse/:id', async (req, res) => {
     }
 });
 
+app.delete('/anime/:id/notes', async (req, res) => {
+    try {
+        const animeId = req.params.id;
+
+        const anime = await AnimeModel.findById(animeId);
+
+        if (!anime) {
+            return res.status(404).json({ message: 'Anime not found' });
+        }
+
+        anime.notes = "";
+        await anime.save();
+
+        res.json({ message: 'Notes deleted successfully' });
+    } catch (error) {
+        console.error('Failed to delete notes:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
 /*============================
         listen

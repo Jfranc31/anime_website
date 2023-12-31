@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import AnimeNotes from '../AnimeNotes';
 
 const AnimeDetails = ({anime}) => {
   const { id } = useParams();
@@ -42,6 +43,9 @@ const AnimeDetails = ({anime}) => {
             <p>Description: {animeDetails.description}</p>
             {/* Add more details as needed */}
           </div>
+        </div>
+        <div className='anime-page-notes'>
+          <AnimeNotes animeId={animeDetails._id}/>
         </div>
     </div>
   );

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAnimeContext } from '../Context/AnimeContext';
 import AnimeCard from '../AnimeCard';
+import AnimeNotes from '../AnimeNotes';
 
 const Browse = () => {
     const { animeList, setAnimeList, selectedAnimeId, setSelectedAnimeId } = useAnimeContext();
@@ -236,6 +237,9 @@ const Browse = () => {
                                     <option value="Watching">Watching</option>
                                     <option value="Completed">Completed</option>
                                 </select>
+                            </div>
+                            <div className='modal-notes'>
+                                <AnimeNotes animeId={selectedAnimeId._id}/>
                             </div>
                             <button className="modal-delete-btn" onClick={handleDelete}>
                                 Delete

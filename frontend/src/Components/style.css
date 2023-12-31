@@ -404,7 +404,7 @@ form input:hover{
     color: white;
     display: grid;
     position: relative;
-    grid-template: 'episode status';
+    grid-template: 'episode status' 'notes notes';
     width: 800px;
     height: 400px;
     grid-gap: 10px;
@@ -424,6 +424,9 @@ form input:hover{
   .modal-status{
     grid-area: status;
     width: 80px;
+  }
+  .modal-notes{
+    grid-area: notes;
   }
   .modal {
     background: #fff;
@@ -568,5 +571,11 @@ form input:hover{
     object-fit: cover;
     margin-right: 20px;
     z-index: 3;
+  }
+  .anime-page-notes{
+    color: white;
+    position: absolute;
+    top: 80%;
+    left: 10%;
   }
 /*============================================*/
