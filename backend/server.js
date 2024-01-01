@@ -43,42 +43,131 @@ const userSchema = new mongoose.Schema({
 const UserModel = new mongoose.model("UserModel",userSchema)
 
 const animeSchema = new mongoose.Schema({
-    title: {
-        type: String, 
-        required: true
+    titles: {
+        romaji: {
+            type: String,
+        },
+        english: {
+            type: String,
+            requred: true,
+        },
+        Native: {
+            type: String,
+        }
     },
+    typings: [
+        {
+            Format: {
+                type: String,
+                enum: ['TV', "TV Short", "Movie", "Special", "OVA", "ONA", "Music"]
+            },
+            Source: {
+                type: String,
+                enum: ["Original", "Manga", "Anime", "Light Novel", "Web Novel", "Novel", "Doujinshi", "Video Game", "Visula Novel", "Comic", "Game", "Live Action"]
+            },
+            CountryOfOrigin: {
+                type: String,
+                enum: ["China", "Japan", "South Korea", "Taiwan"]
+            }
+        }
+    ],
+    lengths: [
+        {
+            Episodes: {
+                type: Number,
+                required: true
+            },
+            EpisodeDuration: {
+                type: Number,
+                required: true
+            }
+        } 
+    ],
     genres: [
         { genre: {
             type: String
         }}
     ],
-    episodes: {
-        type: Number, 
-        required: true
+    description: {
+        type: String
+    },
+    images: [
+        {
+            image: {
+                type: String
+            },
+            border: {
+                type: String
+            }
+        }
+    ],
+    characters: [
+        {
+            character: {
+                names: {
+                    givenName: {
+                        type: String,
+                        required: true
+                    },
+                    middleName: {
+                        type: String
+                    },
+                    surName: {
+                        type: String
+                    },
+                    alterNames: {
+                        type: String
+                    }
+                },
+                typeofCharacter: {
+                    type: String,
+                    enum: ["Main", "Supporting", "Background"]
+                },
+                about: {
+                    type: String
+                },
+                gender: {
+                    type: String,
+                    enum: ["Female", "Male", "Non-binary"]
+                },
+                age: {
+                    type: Number
+                },
+                DOB: {
+                    year: {
+                        type: Number
+                    },
+                    month: {
+                        type: Number
+                    },
+                    day: {
+                        type: Number
+                    }
+                },
+                characterImage: {
+                    type: String
+                }
+            }
+        }
+    ],
+    relations: {
+        typeofRelation: {
+            type: String,
+            enum: ["Adaptation", "Source", "Prequel", "Sequel", "Side Story", "Character", "Summary", "Alternative", "Spin Off", "Other", "Compilations", "Contains"]
+        }
     },
     currentEpisode: {
         type: Number, 
         default: 0
     },
-    description: {
-        type: String
-    },
-    image: {
-        type: String
-    },
-    characters: [
-        {name: {
-            type: String
-        }}
-    ],
+    
+    
     status: {
         type: String, 
         enum: ['Planning', 'Watching', 'Completed'], 
         default: 'Planning'
     },
-    border: {
-        type: String
-    },
+    
     activityTimestamp: {
         type: Date,
         default: Date.now,
@@ -267,9 +356,9 @@ app.post("/addanime", async (req, res) => {
     console.log('Received request to create anime:', req.body);
     try {
         // Validate
-        const { title, genres, episodes, image, description, characters, status, border } = req.body;
-        if(!title) {
-        console.log(title);
+        const { titles, genres, episodes, image, description, characters, status, border } = req.body;
+        if(!titles) {
+        console.log(titles);
         return res.status(400).json({message: 'no title'});
         }
         // Convert the genres string to an array of objects
