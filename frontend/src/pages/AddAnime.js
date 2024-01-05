@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import axios from 'axios';
+import CreateCharacter from "../Components/CreateCharacter";
+import CharacterSearch from "../Components/CharacterSearch";
 
 export default function AddAnime() {
   // Initialize state for form data
@@ -26,26 +28,8 @@ export default function AddAnime() {
         image: "",
         border: ""
     },
-    characters: {
-        name: "",
-        typeofCharacter: "",
-        about: "",
-        gender: "",
-        age: 0,
-        DOB: {
-          year: 0,
-          month: 0,
-          day: 0
-        },
-        characterImage: ""
-      },
-    relations: {
-      typeofRelation: ""
-    },
-    currentEpisode: 0,
-    status: "Planning",
+    characters: [],
     activityTimestamp: 0,
-    notes: ""
   });
 
   const handleTabChange = (tab) => {
@@ -53,9 +37,12 @@ export default function AddAnime() {
   };
 
   const [activeTab, setActiveTab] = useState("general");
+  const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [activeModal, setActiveModal] = useState(null);
+  const [showCharacterSearch, setShowCharacterSearch] = useState();
   
   const availableGenres = ["Action", "Adventure", "Comedy", "Drama", "Ecchi", "Fantasy", "Horror", "Hentai", "Mahou Shoujo", "Mecha", "Music", "Mystery", "Psychological", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller"];
   const availableFormats = ['TV', "TV Short", "Movie", "Special", "OVA", "ONA", "Music"];
@@ -66,14 +53,27 @@ export default function AddAnime() {
     const { name, value, type } = e.target;
   
     // Check if the changed field is part of the nested structure
-    if (name.startsWith("titles.") || name.startsWith("typings.") || name.startsWith("lengths.") || name.startsWith("images.") || name.startsWith("characters.") || name.startsWith("relations.") || name.startsWith("DOB.")) {
+    if (name.startsWith("titles.") || name.startsWith("typings.") || name.startsWith("lengths.") || name.startsWith("images.") || name.startsWith("relations.") || name.startsWith("DOB.")) {
+      const [mainField, subField] = name.split(".");
+  
+      // Ensure that typings is an object with nested properties
+      setFormData((prev) => ({
+        ...prev,
+        [mainField]: {
+          ...prev[mainField],
+          [subField]: type === 'select-multiple' ? [value] : value,
+        },
+      }));
+    } else if (name.startsWith("characters.")) {
       const [mainField, subField] = name.split(".");
   
       setFormData((prev) => ({
         ...prev,
-        [mainField]: Array.isArray(prev[mainField])
-          ? prev[mainField].map((item, index) => (index.toString() === subField ? { ...item, [subField]: type === 'select-multiple' ? [...item[subField], value] : value } : item))
-          : { ...prev[mainField], [subField]: type === 'select-multiple' ? [value] : value },
+        characters: prev.characters.map((item, index) =>
+          index.toString() === subField
+            ? { ...item, [mainField]: type === 'select-multiple' ? [...item[mainField], value] : value }
+            : item
+        ),
       }));
     } else {
       setFormData((prev) => ({
@@ -83,14 +83,71 @@ export default function AddAnime() {
     }
   };
   
+  
 
-  const handleStatusChange = (status) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      status,
-    }));
+  const handleModalClose = () => {
+    setActiveModal(null);
+    setShowModal(false);
+    setShowCharacterSearch(false);
+};
+
+// Existing Character --------------------------------------------
+  const handleAddExistingCharacter = () => {
+    setActiveModal('characterSearch');
   };
+  const handleSelectExistingCharacter = (selectedCharacters) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      characters: [...prevFormData.characters, ...selectedCharacters],
+      typeofCharacter: 'Supporting'
+    }));
+    setShowCharacterSearch(false);
+  };
+// ---------------------------------------------------------------
 
+// Handle Character type / Removal -------------------------------
+  const handleCharacterTypeChange = (e, index) => {
+    const newType = e.target.value;
+    updateCharacterType(index, newType);
+  };
+  const updateCharacterType = (index, newType) => {
+    setFormData((prevFormData) => {
+      const updatedCharacters = [...prevFormData.characters];
+      updatedCharacters[index].typeofCharacter = newType;
+      return {
+        ...prevFormData,
+        characters: updatedCharacters,
+      };
+    });
+  };
+  const handleRemoveCharacter = (index) => {
+    setFormData((prevData) => {
+      const updatedCharacters = [...prevData.characters];
+      updatedCharacters.splice(index, 1);
+      return {
+        ...prevData,
+        characters: updatedCharacters,
+      };
+    });
+  };
+// ---------------------------------------------------------------
+
+  
+// Create Charater ------------------------------
+  const handleAddCharacter = (newCharacter) => {
+    setActiveModal('createCharacter');
+  };
+  const handleAddingCharacter = (selectedCharacters) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      characters: [...prevFormData.characters, selectedCharacters],
+      typeofCharacter: 'Supporting'
+    }));
+    setShowModal(false);
+  };
+// ----------------------------------------------
+
+  // Genre Related-------------------------------
   const handleGenreChange = (selectedGenre) => {
     setSelectedGenres((prevGenres) => {
       if (!prevGenres.includes(selectedGenre)) {
@@ -105,7 +162,6 @@ export default function AddAnime() {
       genres: [...prevData.genres, selectedGenre],
     }));
   };
-
   const handleRemoveGenre = (removedGenre) => {
     setSelectedGenres((prevGenres) =>
       prevGenres.filter((genre) => genre !== removedGenre)
@@ -117,6 +173,7 @@ export default function AddAnime() {
       genres: prevData.genres.filter((genre) => genre !== removedGenre),
     }));
   };
+  // --------------------------------------------
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -124,12 +181,12 @@ export default function AddAnime() {
 
     // Basic form validation
     const errors = {};
-    if (!formData.titles.english.trim()) {
-      errors.title = "Title is required";
-    }
-    if (formData.genres.length === 0) {
-      errors.genres = "At least one genre is required";
-    }
+    // if (!formData.titles.english.trim()) {
+    //   errors.title = "Title is required";
+    // }
+    // if (formData.genres.length === 0) {
+    //   errors.genres = "At least one genre is required";
+    // }
 
     setFormErrors(errors);
 
@@ -137,12 +194,24 @@ export default function AddAnime() {
       alert(errors.data.message);
       return;
     }
+    // Create an array of character objects with character and typeofCharacter properties
+    const charactersArray = formData.characters.map((character) => ({
+      character: character._id, // Assuming _id is the character ID
+      typeofCharacter: character.typeofCharacter,
+    }));
 
+    // Create a new object with character array
+    const updatedFormData = {
+      ...formData,
+      characters: charactersArray,
+    };
     try {
       setIsLoading(true);
-      console.log('Current formData:', formData);
+      console.log('Current formData:',updatedFormData);
 
-      const res = await axios.post('http://localhost:8080/addanime', formData);
+      const res = await axios.post('http://localhost:8080/addanime', updatedFormData);
+
+      console.log('Response from backend:', res.data);
 
       if (res.status === 201) {
         // Redirect or perform additional actions on success
@@ -175,28 +244,8 @@ export default function AddAnime() {
               border: ""
             }
           ],
-          characters: [
-            {
-              name: "",
-              typeofCharacter: "",
-              about: "",
-              gender: "",
-              age: 0,
-              DOB: {
-                year: 0,
-                month: 0,
-                day: 0
-              },
-              characterImage: ""
-            }
-          ],
-          relations: {
-            typeofRelation: ""
-          },
-          currentEpisode: 0,
-          status: "Planning",
+          characters: [],
           activityTimestamp: 0,
-          notes: ""
           // Add more fields as needed based on the updated AnimeModel schema
         });
         setSelectedGenres([]);
@@ -215,6 +264,7 @@ export default function AddAnime() {
 
   console.log("FormData: ", formData);
   
+  // Data Fields ------------------------
   const renderGeneralSection = () => (
     <>
       <div className="section">
@@ -229,7 +279,6 @@ export default function AddAnime() {
               name="titles.romaji"
               value={formData.titles.romaji}
               onChange={handleChange}
-              required
             />
           </div>
           <div>
@@ -253,7 +302,6 @@ export default function AddAnime() {
               name="titles.Native"
               value={formData.titles.Native}
               onChange={handleChange}
-              required
             />
           </div>
         </div>
@@ -271,7 +319,6 @@ export default function AddAnime() {
               name="typings.Format"
               value={formData.typings.Format}
               onChange={(handleChange)}
-              required
             >
               <option value="" disabled>Select Format</option>
               {availableFormats.map((format) => (
@@ -285,12 +332,11 @@ export default function AddAnime() {
             <label htmlFor="typings.Source">Source:</label>
             <div></div>
             <select
-              type="typingd.Source"
+              type="typings.Source"
               id="typings.Source"
               name="typings.Source"
               value={formData.typings.Source}
               onChange={handleChange}
-              required
             >
               <option value="" disabled>Select Source</option>
               {availableSource.map((source) => (
@@ -308,8 +354,7 @@ export default function AddAnime() {
               id="typings.CountryOfOrigin"
               name="typings.CountryOfOrigin"
               value={formData.typings.CountryOfOrigin}
-              onChange={handleChange}
-              required
+              onChange={(handleChange)}
             >
               <option value="" disabled>Select Country</option>
               {availableCountry.map((country) => (
@@ -334,7 +379,6 @@ export default function AddAnime() {
               name="lengths.Episodes"
               value={formData.lengths.Episodes}
               onChange={handleChange}
-              required
             />
           </div>
           <div>
@@ -346,7 +390,6 @@ export default function AddAnime() {
               name="lengths.EpisodeDuration"
               value={formData.lengths.EpisodeDuration}
               onChange={handleChange}
-              required
             />
           </div>
         </div>
@@ -364,7 +407,6 @@ export default function AddAnime() {
               multiple
               value={selectedGenres}
               onChange={(e) => handleGenreChange((e.target.value))}
-              required
             >
               {availableGenres.map((genre) => (
                 <option key={genre} value={genre}>
@@ -384,9 +426,22 @@ export default function AddAnime() {
           </div>
         </div>
       </div>
+
+      <div className="section">
+        <h2>Description</h2>
+        <div className="grid">
+          <textarea 
+          type="text"
+          id="description"
+          name="description"
+          value={formData.description} 
+          onChange={handleChange} 
+          rows={4} 
+          cols={80}></textarea>
+        </div>
+      </div>
     </>
   );
-
   const renderImagesSection = () => (
     <>
       <div className="section">
@@ -427,22 +482,105 @@ export default function AddAnime() {
       </div>
     </>
   );
+  const renderCharactersSection = () => (
+    <>
+      <div className="section">
+        <h2>Characters</h2>
+        <div className="characters">
+          {formData.characters.map((character, index) => (
+            <div key={index} className="character">
+              {/* Display character information here */}
+              <div className="character-info">
+                {/* Add a small circular image of the character here */}
+                <img
+                  src={character.characterImage}
+                  alt={`Character ${index + 1}`}
+                  className="character-image"
+                />
+                <div className="character-details">
+                  <p>
+                    {character.names &&
+                      `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
+                  </p>
+                  <label htmlFor={`characterType-${index}`}>Type:</label>
+                  <select
+                    id={`characterType-${index}`}
+                    name={`characterType-${index}`}
+                    value={character.typeofCharacter}
+                    onChange={(e) => handleCharacterTypeChange(e, index)}
+                  >
+                    <option value="Main">Main</option>
+                    <option value="Supporting">Supporting</option>
+                    <option value="Background">Background</option>
+                  </select>
+                </div>
+              </div>
+              {/* Add a button to remove the character */}
+              <button type="button" onClick={() => handleRemoveCharacter(index)}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={() => handleAddExistingCharacter()}>
+          Add Existing Character
+        </button>
+        <button type="button" onClick={() => handleAddCharacter()}>
+          Create Character
+        </button>
+        {/* Conditionally render CharacterSearch component */}
+      </div>
+    </>
+  );
+  // ------------------------------------
 
   return (
     <div className="add-anime-container">
       <div className="add-anime-container-tabs">
-        <button className="add-anime-btn" type="submit">
+        <button className="add-anime-btn" form="submitAnime" type="submit" >
           Submit
         </button>
         <button onClick={() => handleTabChange("general")}>General</button>
         <button onClick={() => handleTabChange("images")}>Images</button>
+        <button onClick={() => handleTabChange("characters")}>Characters</button>
         {/* Add more buttons for additional tabs */}
       </div>
 
-      <form className="form-container" onSubmit={handleSubmit}>
+      <form className="form-container" id="submitAnime"  onSubmit={handleSubmit}>
         {activeTab === "general" && renderGeneralSection()}
         {activeTab === "images" && renderImagesSection()}
+        {activeTab === "characters" && renderCharactersSection()}
       </form>
+
+      {activeModal && (
+        <div className="character-modal-overlay" onClick={handleModalClose}>
+          <div className="character-modal" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="character-modal-header">
+              <h2>{activeModal === 'createCharacter' ? 'Create Character' : 'Search Character'}</h2>
+              <button className="character-modal-close" onClick={handleModalClose}>
+                &times;
+              </button>
+            </div>
+            {/* Modal Body */}
+            <div className="character-modal-body">
+              {/* Render the corresponding modal content based on activeModal state */}
+              {activeModal === 'createCharacter' && (
+                <CreateCharacter
+                  onCharacterCreated={handleAddingCharacter}
+                  onClose={handleModalClose}
+                />
+              )}
+              {activeModal === 'characterSearch' && (
+                <CharacterSearch
+                  onCharacterSelected={handleSelectExistingCharacter}
+                  onClose={() => setActiveModal(null)}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -509,7 +509,13 @@ form input:hover{
   padding: 5px 5px;
   margin-bottom: 20px;
   border: 1px solid #000;
-  width: 90%;
+  width: 80%;
+}
+.grid select{
+  width: 50%;
+}
+.grid textarea{
+  width: 100%
 }
 .grid div {
   margin-bottom: 10px;
@@ -553,6 +559,67 @@ padding: 0px 20px 20px 20px;
 object-fit: cover;
 margin-right: 20px; /* Add some margin for spacing */
 margin-bottom: 30px;
+}
+.character-cards{
+  display: grid;
+  grid-gap: 20px;
+  grid-template-columns: repeat(5, minmax(60px, 1fr));
+  list-style: none;
+  min-width: 0;
+  border: 2px solid transparent; /* Set a transparent border */
+  transition: box-shadow 0.3s, transform 0.3s; /* Add transition for smooth effect */
+}
+.character-cards li {
+  list-style: none;
+}
+.character-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  background-color: rgba(25, 30, 39, 0.8);
+  color: white;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.character-card.selected {
+  box-shadow: 0 0 0 5px #4caf50; /* Green box-shadow to create a border effect */
+  transform: scale(0.9); /* Scale down the image */
+}
+.character {
+  margin-bottom: 20px;
+  padding: 10px 10px .05px 20px;
+  background: rgba(26, 28, 30, 0.8);
+}
+.character-info {
+  display: flex;
+  align-items: center;
+}
+.character-image {
+  width: 50px; /* Adjust the size as needed */
+  height: 50px; /* Adjust the size as needed */
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.character-details {
+  flex-grow: 1;
+}
+.character button {
+  margin-left: 650px;
+  margin-bottom: 10px;
+}
+/* Additional styling for buttons, if needed */
+.character button {
+  background-color: #ff6347; /* Tomato color */
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.character button:hover {
+  background-color: #d32f2f; /* Darker shade for hover effect */
 }
 /*============================================*/
   
@@ -633,4 +700,181 @@ margin-bottom: 30px;
     top: 80%;
     left: 10%;
   }
+  .anime-page-characters {
+    position: absolute;
+    top: 80%;
+    left: 10%;
+    color: gray;
+    text-align: center;
+    width: 80%; /* Adjust the width as needed */
+    margin: 0 auto; /* Center the grid */
+    padding: 20px; /* Add some padding for better aesthetics */
+  }
+  .character-anime-card{
+    border-radius: 3px;
+    display: inline-block;
+    font-size: 1rem;
+    height: auto;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 10px; /* Adjust margin as needed */
+    overflow: hidden; /* Hide overflow to prevent unwanted scrollbars */
+  }
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  .character-details {
+    margin-top: 10px;
+    color: gray;
+  }
+  
+  /* Optional: Adjust styles for better aesthetics */
+  .character-details p {
+    margin: 5px 0;
+  }
+/*============================================*/
+
+
+/*=============================================
+            Character Modal Page
+==============================================*/
+.character-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 4;
+  overflow-y: auto;
+}
+.character-modal-header{
+    background-color: #04aa6d;
+    position: relative;
+    border-radius: 0 0 0 0;
+    margin-top: 0;
+    height: 50px;
+    z-index: 3;
+}
+.character-modal-body {
+  background-color: rgb(104, 111, 117);
+  color: white;
+  display: grid;
+  position: relative;
+  width: 800px;
+  height: 1050px;
+  grid-gap: 10px;
+  padding: 20px;
+  border-radius: 0 0 0 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+}
+.character-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+  margin-top: 300px;
+  margin-bottom: 200px;
+}
+.character-modal-close{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #333; /* Adjust the color as needed */
+  cursor: pointer;
+  z-index: 5;
+  color: #ddd;
+}
+
+/*============================================*/
+
+/*=============================================
+            Character Page css
+==============================================*/
+.character-page{
+  background-color: #04aa6d;
+  position: absolute;
+  border-radius: 0 0 0 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  min-height: 200px;
+  width: 100%;
+  overflow: hidden;
+  z-index: 2;
+}
+.character-page h1{
+  z-index: 20;
+  top: 50%;
+  left: 30%;
+  color: black;
+  position: absolute;
+}
+.character-page h3{
+  z-index: 20;
+  top: 75%;
+  left: 30%;
+  color: black;
+  position: absolute;
+}
+.character-page img{
+  position: absolute;
+  border-radius: 0 0 0 0;
+  top: 0; /* Updated to start from the top of the page */
+  left: 0;
+  right: 0;
+  min-height: 400px;
+  width: 100%;
+  overflow: hidden;
+  object-fit: cover;
+  z-index: 2;
+}
+.character-page-img{
+  margin-bottom: 30px;
+  left: 15%;
+  top: 15%;
+  position: absolute;
+  align-items: center;
+  color: rgb(200, 195, 188);
+  z-index: 3;
+}
+.character-page-info{
+  color: gray;
+  position: absolute;
+  left: 30%;
+  text-align: left;
+  top: 5%;
+  max-width: 40%;
+  overflow-y: auto;
+  /* margin-top: 20px; */
+}
+.character-page-info-bk{
+  min-height: 200px;
+  top: 29%; /* Updated to start from the top of the page */
+  left: 0;
+  right: 0;
+  padding: 50px 20px;
+  width: 100%;
+  box-shadow: 1px 1px 10px rgba(0,0,0,0.1);
+  border-radius: 0px;
+  overflow: hidden;
+  background: rgba(26, 28, 30, 0.8);
+  position: absolute; /* Ensure it stays within the flow of the document */
+  margin-top: -4%; /* Add margin-top to create space from the top */
+  /* margin-right: 50%; */
+}
 /*============================================*/

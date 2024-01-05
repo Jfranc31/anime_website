@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { useNavigate } from 'react-router-dom';
-import data from '../ContextApi'
+import data from '../Context/ContextApi'
 import Cookies from 'js-cookie'
 
 const Profile = () => {

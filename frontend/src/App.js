@@ -1,17 +1,19 @@
 import './App.css';
-import Profile from './Components/Profile';
-import { Login } from './Components/Login';
-import Register from './Components/Register';
-import Home from './Components/Home';
-import AddAnime from './Components/AddAnime';
+import Profile from './pages/Profile';
+import { Login } from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import AddAnime from './pages/AddAnime';
+import Characters from './pages/Characters';
 import "./Components/style.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import data from './ContextApi';
+import data from './Context/ContextApi';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import Browse from './Components/Browse';
+import Animes from './pages/Animes';
 import AnimeDetails from './Components/AnimeDetails';
+import CharacterDetails from './Components/CharacterDetails';
 
 
 function App() {
@@ -38,9 +40,11 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path='/profile' element={userData && userData._id ? <Profile /> : <Login/>}/>
-            <Route path="/browse" element={<Browse />} />
+            <Route path="/animes" element={<Animes />} />
+            <Route path='/characters' element={<Characters />} />
             <Route path="/addanime" element={<AddAnime />} />
             <Route path='/anime/:id' element={<AnimeDetails />}/>
+            <Route path='/characters/:id' element={<CharacterDetails />}/>
           </Routes>
         </Router>
       </data.Provider>

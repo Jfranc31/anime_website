@@ -2,17 +2,20 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import reportWebVitals from './random/reportWebVitals';
 import Navbar from './Components/Navbar';
 import { AnimeProvider } from './Context/AnimeContext';
+import { CharacterProvider } from './Context/CharacterContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Navbar />
-    <AnimeProvider>
+    <CharacterProvider>
+      <AnimeProvider>
         <App />
       </AnimeProvider>
+    </CharacterProvider>
   </React.StrictMode>
 );
 

@@ -12,7 +12,7 @@ export const AnimeProvider = ({ children }) => {
       try {
 
         // Fetch data from your API
-        const response = await fetch('http://localhost:8080/browse', {
+        const response = await fetch('http://localhost:8080/animes', {
           credentials: 'include',
         });
 

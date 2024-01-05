@@ -42,6 +42,56 @@ const userSchema = new mongoose.Schema({
 })
 const UserModel = new mongoose.model("UserModel",userSchema)
 
+const characterSchema = new mongoose.Schema({
+    names: {
+        givenName: {
+            type: String,
+            required: true
+        },
+        middleName: {
+            type: String
+        },
+        surName: {
+            type: String
+        },
+        alterNames: {
+            type: String
+        }
+    },
+    about: {
+        type: String
+    },
+    gender: {
+        type: String,
+        enum: ["Female", "Male", "Non-binary"]
+    },
+    age: {
+        type: Number
+    },
+    DOB: {
+        year: {
+            type: Number
+        },
+        month: {
+            type: Number
+        },
+        day: {
+            type: Number
+        }
+    },
+    characterImage: {
+        type: String
+    },
+    animes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'AnimeModel'
+        }
+    ],
+});
+
+const CharacterModel = mongoose.model("CharacterModel",characterSchema)
+
 const animeSchema = new mongoose.Schema({
     titles: {
         romaji: {
@@ -63,7 +113,7 @@ const animeSchema = new mongoose.Schema({
             },
             Source: {
                 type: String,
-                enum: ["Original", "Manga", "Anime", "Light Novel", "Web Novel", "Novel", "Doujinshi", "Video Game", "Visula Novel", "Comic", "Game", "Live Action"]
+                enum: ["Original", "Manga", "Anime", "Light Novel", "Web Novel", "Novel", "Doujinshi", "Video Game", "Visual Novel", "Comic", "Game", "Live Action"]
             },
             CountryOfOrigin: {
                 type: String,
@@ -104,78 +154,25 @@ const animeSchema = new mongoose.Schema({
     characters: [
         {
             character: {
-                names: {
-                    givenName: {
-                        type: String,
-                        required: true
-                    },
-                    middleName: {
-                        type: String
-                    },
-                    surName: {
-                        type: String
-                    },
-                    alterNames: {
-                        type: String
-                    }
-                },
-                typeofCharacter: {
-                    type: String,
-                    enum: ["Main", "Supporting", "Background"]
-                },
-                about: {
-                    type: String
-                },
-                gender: {
-                    type: String,
-                    enum: ["Female", "Male", "Non-binary"]
-                },
-                age: {
-                    type: Number
-                },
-                DOB: {
-                    year: {
-                        type: Number
-                    },
-                    month: {
-                        type: Number
-                    },
-                    day: {
-                        type: Number
-                    }
-                },
-                characterImage: {
-                    type: String
-                }
-            }
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'CharacterModel'
+            },
+            typeofCharacter: {
+                type: String,
+                enum: ["Main", "Supporting", "Background"]
+            },
         }
     ],
-    relations: {
-        typeofRelation: {
-            type: String,
-            enum: ["Adaptation", "Source", "Prequel", "Sequel", "Side Story", "Character", "Summary", "Alternative", "Spin Off", "Other", "Compilations", "Contains"]
-        }
-    },
-    currentEpisode: {
-        type: Number, 
-        default: 0
-    },
-    
-    
-    status: {
-        type: String, 
-        enum: ['Planning', 'Watching', 'Completed'], 
-        default: 'Planning'
-    },
-    
+    // relations: {
+    //     typeofRelation: {
+    //         type: String,
+    //         enum: ["Adaptation", "Source", "Prequel", "Sequel", "Side Story", "Character", "Summary", "Alternative", "Spin Off", "Other", "Compilations", "Contains"]
+    //     }
+    // },  
     activityTimestamp: {
         type: Date,
         default: Date.now,
     },
-    notes: {
-        type: String,
-        default: "",
-    }
 });
 
 const AnimeModel = mongoose.model('AnimeModel', animeSchema);
@@ -327,7 +324,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-app.get('/browse', async (req, res) => {
+app.get('/animes', async (req, res) => {
     try {
         const animes = await AnimeModel.find({});
         res.json(animes);
@@ -336,6 +333,39 @@ app.get('/browse', async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }    
 });
+
+app.get('/characters', async (req, res) => {
+    try{
+        const characters = await CharacterModel.find({});
+        res.json(characters);
+    } catch (error) {
+        console.error("Error fetching characters:", error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+app.get('/searchcharacters', async (req, res) => {
+    console.log(req.body);
+    try {
+        const searchTerm = req.query.query;
+
+        // Perform a case-insensitive search for characters with any name field containing the searchTerm
+        const foundCharacters = await CharacterModel.find({
+            $or: [
+                {'names.givenName': { $regex: searchTerm, $options: 'i' }},
+                {'names.middleName': { $regex: searchTerm, $options: 'i' }},
+                {'names.surName': { $regex: searchTerm, $options: 'i' }},
+                {'names.alterNames': { $regex: searchTerm, $options: 'i' }},
+            ]
+        });
+
+        res.json({ characters: foundCharacters });
+    } catch (error) {
+        console.error('Error during character search:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 app.get('/anime/:id', async (req, res) => {
     try {
@@ -351,52 +381,92 @@ app.get('/anime/:id', async (req, res) => {
     }
 });
 
-
-app.post("/addanime", async (req, res) => {
-    console.log('Received request to create anime:', req.body);
+app.get('/characters/:id', async (req, res) => {
     try {
-        // Validate
-        const { titles, genres, episodes, image, description, characters, status, border } = req.body;
-        if(!titles) {
-        console.log(titles);
-        return res.status(400).json({message: 'no title'});
+        const characterID = req.params.id;
+        const character = await CharacterModel.findById(characterID);
+        if (!character){
+            return res.status(404).json({ message: 'Character not found' });
         }
-        // Convert the genres string to an array of objects
-        const genresArray = genres.map(genre => ({ genre }));
+        res.json(character);
+    } catch (error) {
+        console.error("Error fetching character for page: ",error);
+        res.status(500).json({ message: 'internal Server Error' });
+    }
+});
 
-        if (!genresArray || genresArray.length === 0 || !genresArray[0].genre) {
-        console.log(genresArray);
-        return res.status(400).json({ message: 'genres issue' });
-        }
-        if( !episodes) {
-        console.log(episodes);
-        return res.status(400).json({message: 'no episode'});
-        }
-        const charactersArray = characters.split(',').map(name => ({ name }));
+app.post("/addcharacter", async (req, res) => {
+    console.log("REQBODY: ", req.body);
+    try {
+        const { names, typeofCharacter, about, gender, age, DOB, characterImage, animes } = req.body;
 
-        if (!charactersArray || charactersArray.length === 0 || !charactersArray[0].name) {
-        console.log(charactersArray);
-        return res.status(400).json({ message: 'characters issue' });
-        }
+        // If animes array is provided, associate the character with the animes
+        const animeIds = animes ? animes.map(animeId => mongoose.Types.ObjectId(animeId)) : [];
 
-        const anime = await AnimeModel.create({
-        title,
-        genres: genresArray,
-        episodes,
-        image,
-        description,
-        characters: charactersArray,
-        status,
-        border
+        const character = await CharacterModel.create({
+            names,
+            typeofCharacter,
+            about,
+            gender,
+            age,
+            DOB,
+            characterImage,
+            animes: animeIds
         });
 
-        anime.activityTimestamp = Date.now();
-        res.status(201).json(anime);
+        // If character is associated with animes, update the anime documents
+        if (animeIds.length > 0) {
+            await AnimeModel.updateMany(
+                { _id: { $in: animeIds } },
+                { $push: { characters: character._id } }
+            );
+        }
 
+        res.status(201).json(character);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 });
+
+app.post("/addanime", async (req, res) => {
+    try {
+        const { titles, genres, lengths, typings, description, images, characters, activityTimestamp } = req.body;
+
+        // Check if the English title is provided
+        if (!titles.english.trim()) {
+            return res.status(400).json({ message: 'English title is required' });
+        }
+
+        // Create an array of genre objects
+        const genresArray = genres.map((genre) => ({ genre }));
+
+        // Assuming characters is an array of character objects
+        const charactersArray = characters.map((characterInfo) => ({
+            character: characterInfo.character,
+            typeofCharacter: characterInfo.typeofCharacter, // Assuming the type of character is provided in the request
+        }));
+
+        const anime = await AnimeModel.create({
+            titles,
+            lengths,
+            typings,
+            genres: genresArray,
+            description,
+            images,
+            characters: charactersArray,
+            activityTimestamp,
+        });
+
+        // Set activityTimestamp once after creating the anime
+        anime.activityTimestamp = Date.now();
+
+        res.status(201).json(anime);
+    } catch (error) {
+        console.error('Error during anime creation:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 
 
 // Example endpoint to get the latest activities

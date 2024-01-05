@@ -1,19 +1,17 @@
 // src/Components/AnimeDetails.js
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import AnimeNotes from '../AnimeNotes';
 
-const AnimeDetails = ({anime}) => {
+const AnimeDetails = () => {
   const { id } = useParams();
-  console.log("ID: ", id);
   const [animeDetails, setAnimeDetails] = useState(null);
+  const [charactersDetails, setCharactersDetails] = useState([]);
 
   useEffect(() => {
     const fetchAnimeDetails = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/anime/${id}`);
-        console.log("RESPONSE DATA: ", response.data);
         setAnimeDetails(response.data);
       } catch (error) {
         console.error('Error fetching anime details:', error);
@@ -23,32 +21,79 @@ const AnimeDetails = ({anime}) => {
     fetchAnimeDetails();
   }, [id]);
 
+  useEffect(() => {
+    const fetchCharacterDetails = async () => {
+      const charactersWithDetails = await Promise.all(
+        animeDetails?.characters.map(async (character) => {
+          try {
+            const response = await axios.get(`http://localhost:8080/characters/${character.character}`);
+            return {
+              ...character,
+              characterDetails: response.data
+            };
+          } catch (error) {
+            console.error(`Error fetching details for character ${character.character}:`, error);
+            return character; // Return the character without details in case of an error
+          }
+        }) || []
+      );
+
+      setCharactersDetails(charactersWithDetails);
+    };
+
+    if (animeDetails) {
+      fetchCharacterDetails();
+    }
+  }, [animeDetails]);
+
   if (!animeDetails) {
     return <div>Loading...</div>;
   }
-
+console.log("CH: ", charactersDetails);
   return (
     <div>
-        <div className='anime-page'>
-          <img src={animeDetails.border} alt={animeDetails.title}></img>
+      <div className='anime-page'>
+        <img src={animeDetails.images[0].border} alt={animeDetails.titles.english} />
+      </div>
+
+      <div className='anime-page-img'>
+        <img src={animeDetails.images[0].image} alt={animeDetails.titles.english} />
+      </div>
+
+      <div className='anime-page-info-bk'>
+        <div className='anime-page-info'>
+          <p>{animeDetails.titles.english}</p>
+          <div className='mydiv'></div>
+          <p>Description: {animeDetails.description}</p>
         </div>
-        {/* Display other details about the anime */}
-        <div className='anime-page-img'>
-          <img src={animeDetails.image} alt={animeDetails.title} />
+      </div>
+
+      <div className='anime-page-characters'>
+        <h2>Characters</h2>
+        <div className='anime-list'>
+          {charactersDetails.map((character) => (
+            <div key={character.character} className='anime-card'>
+              {/* Link to character details page */}
+              {/* Assuming you have a separate route for character details */}
+              <div className='img-container'>
+                <img src={character.characterDetails?.characterImage} alt={character.characterDetails?.names.givenName || 'Unknown'} />
+                <div className='title-and-progress'>
+                  <Link to={`/characters/${character.characterDetails?._id}`}>
+                    <div className='anime-title'>{character.characterDetails?.names.givenName} {character.characterDetails?.names.middleName} {character.characterDetails?.names.surName}</div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className='anime-page-info-bk'>
-          <div className='anime-page-info'>
-            <p>{animeDetails.title}</p>
-            <div className='mydiv'></div>
-            <p>Description: {animeDetails.description}</p>
-            {/* Add more details as needed */}
-          </div>
-        </div>
-        <div className='anime-page-notes'>
-          <AnimeNotes animeId={animeDetails._id}/>
-        </div>
+      </div>
     </div>
   );
 };
 
 export default AnimeDetails;
+
+
+
+
+
