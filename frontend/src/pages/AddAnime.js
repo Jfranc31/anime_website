@@ -48,6 +48,7 @@ export default function AddAnime() {
   const availableFormats = ['TV', "TV Short", "Movie", "Special", "OVA", "ONA", "Music"];
   const availableSource = ["Original", "Manga", "Anime", "Light Novel", "Web Novel", "Novel", "Doujinshi", "Video Game", "Visula Novel", "Comic", "Game", "Live Action"];
   const availableCountry = ["China", "Japan", "South Korea", "Taiwan"];
+  const availableRole = ["Main", "Supporting", "Background"];
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -82,8 +83,6 @@ export default function AddAnime() {
       }));
     }
   };
-  
-  
 
   const handleModalClose = () => {
     setActiveModal(null);
@@ -99,7 +98,6 @@ export default function AddAnime() {
     setFormData((prevFormData) => ({
       ...prevFormData,
       characters: [...prevFormData.characters, ...selectedCharacters],
-      typeofCharacter: 'Supporting'
     }));
     setShowCharacterSearch(false);
   };
@@ -113,7 +111,7 @@ export default function AddAnime() {
   const updateCharacterType = (index, newType) => {
     setFormData((prevFormData) => {
       const updatedCharacters = [...prevFormData.characters];
-      updatedCharacters[index].typeofCharacter = newType;
+      updatedCharacters[index].role = newType;
       return {
         ...prevFormData,
         characters: updatedCharacters,
@@ -141,7 +139,6 @@ export default function AddAnime() {
     setFormData((prevFormData) => ({
       ...prevFormData,
       characters: [...prevFormData.characters, selectedCharacters],
-      typeofCharacter: 'Supporting'
     }));
     setShowModal(false);
   };
@@ -150,27 +147,30 @@ export default function AddAnime() {
   // Genre Related-------------------------------
   const handleGenreChange = (selectedGenre) => {
     setSelectedGenres((prevGenres) => {
-      if (!prevGenres.includes(selectedGenre)) {
-        return [...prevGenres, selectedGenre];
-      }
-      return prevGenres;
-    });
+        const updatedGenres = [...prevGenres];
+        
+        if (!updatedGenres.includes(selectedGenre)) {
+            updatedGenres.push(selectedGenre);
+        }
 
-    // Set the selected genres directly in the formData
-    setFormData((prevData) => ({
-      ...prevData,
-      genres: [...prevData.genres, selectedGenre],
-    }));
+        // Update genres in formData
+        setFormData((prevData) => ({
+            ...prevData,
+            genres: updatedGenres,
+        }));
+
+        return updatedGenres;
+    });
   };
   const handleRemoveGenre = (removedGenre) => {
     setSelectedGenres((prevGenres) =>
-      prevGenres.filter((genre) => genre !== removedGenre)
+        prevGenres.filter((genre) => genre !== removedGenre)
     );
 
     // Update genres in formData
     setFormData((prevData) => ({
-      ...prevData,
-      genres: prevData.genres.filter((genre) => genre !== removedGenre),
+        ...prevData,
+        genres: prevData.genres.filter((genre) => genre !== removedGenre),
     }));
   };
   // --------------------------------------------
@@ -178,72 +178,63 @@ export default function AddAnime() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Basic form validation
     const errors = {};
-    // if (!formData.titles.english.trim()) {
-    //   errors.title = "Title is required";
-    // }
-    // if (formData.genres.length === 0) {
-    //   errors.genres = "At least one genre is required";
-    // }
-
+  
     setFormErrors(errors);
-
+  
     if (Object.keys(errors).length > 0) {
       alert(errors.data.message);
       return;
     }
+  
     // Create an array of character objects with character and typeofCharacter properties
     const charactersArray = formData.characters.map((character) => ({
-      character: character._id, // Assuming _id is the character ID
-      typeofCharacter: character.typeofCharacter,
+      characterId: character._id, // Assuming _id is the character ID
+      role: character.role,
     }));
-
+  
     // Create a new object with character array
     const updatedFormData = {
       ...formData,
       characters: charactersArray,
     };
+  
     try {
       setIsLoading(true);
-      console.log('Current formData:',updatedFormData);
-
+      console.log('Current formData:', updatedFormData);
+  
+      // Use axios.post to send the form data to your backend API endpoint
       const res = await axios.post('http://localhost:8080/addanime', updatedFormData);
-
+  
       console.log('Response from backend:', res.data);
-
+  
       if (res.status === 201) {
         // Redirect or perform additional actions on success
-        console.log('Anime added successfully!');
+        console.log('Anime and characters added successfully!', res.data);
         // Clear the form after successful submission
         setFormData({
           titles: {
             romaji: "",
             english: "",
-            Native: ""
+            Native: "",
           },
-          typings: [
-            {
-              Format: "",
-              Source: "",
-              CountryOfOrigin: ""
-            }
-          ],
-          lengths: [
-            {
-              Episodes: 0,
-              EpisodeDuration: 0
-            }
-          ],
+          typings: {
+            Format: "",
+            Source: "",
+            CountryOfOrigin: "",
+          },
+          lengths: {
+            Episodes: 0,
+            EpisodeDuration: 0,
+          },
           genres: [],
           description: "",
-          images: [
-            {
-              image: "",
-              border: ""
-            }
-          ],
+          images: {
+            image: "",
+            border: "",
+          },
           characters: [],
           activityTimestamp: 0,
           // Add more fields as needed based on the updated AnimeModel schema
@@ -506,12 +497,15 @@ export default function AddAnime() {
                   <select
                     id={`characterType-${index}`}
                     name={`characterType-${index}`}
-                    value={character.typeofCharacter}
+                    value={character.role}
                     onChange={(e) => handleCharacterTypeChange(e, index)}
                   >
-                    <option value="Main">Main</option>
-                    <option value="Supporting">Supporting</option>
-                    <option value="Background">Background</option>
+                    <option value="" disabled>Select Role</option>
+                    {availableRole.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -557,7 +551,7 @@ export default function AddAnime() {
           <div className="character-modal" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
             <div className="character-modal-header">
-              <h2>{activeModal === 'createCharacter' ? 'Create Character' : 'Search Character'}</h2>
+              <h1>{activeModal === 'createCharacter' ? 'Create Character' : 'Search Character'}</h1>
               <button className="character-modal-close" onClick={handleModalClose}>
                 &times;
               </button>

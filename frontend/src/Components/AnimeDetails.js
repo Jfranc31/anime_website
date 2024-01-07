@@ -26,7 +26,7 @@ const AnimeDetails = () => {
       const charactersWithDetails = await Promise.all(
         animeDetails?.characters.map(async (character) => {
           try {
-            const response = await axios.get(`http://localhost:8080/characters/${character.character}`);
+            const response = await axios.get(`http://localhost:8080/characters/${character.characterId}`);
             return {
               ...character,
               characterDetails: response.data
@@ -46,18 +46,19 @@ const AnimeDetails = () => {
     }
   }, [animeDetails]);
 
-  if (!animeDetails) {
+  if (!animeDetails || charactersDetails.length === 0) {
     return <div>Loading...</div>;
   }
+  
 console.log("CH: ", charactersDetails);
   return (
     <div>
       <div className='anime-page'>
-        <img src={animeDetails.images[0].border} alt={animeDetails.titles.english} />
+        <img src={animeDetails.images.border} alt={animeDetails.titles.english} />
       </div>
 
       <div className='anime-page-img'>
-        <img src={animeDetails.images[0].image} alt={animeDetails.titles.english} />
+        <img src={animeDetails.images.image} alt={animeDetails.titles.english} />
       </div>
 
       <div className='anime-page-info-bk'>
@@ -68,11 +69,16 @@ console.log("CH: ", charactersDetails);
         </div>
       </div>
 
+      {/* Add an Update button */}
+      <Link to={`/anime/${animeDetails._id}/update`}>
+        <button className='update-anime-button'>Update Anime</button>
+      </Link>
+
       <div className='anime-page-characters'>
         <h2>Characters</h2>
         <div className='anime-list'>
           {charactersDetails.map((character) => (
-            <div key={character.character} className='anime-card'>
+            <div key={character.characterDetails?._id} className='anime-card'>
               {/* Link to character details page */}
               {/* Assuming you have a separate route for character details */}
               <div className='img-container'>
@@ -80,6 +86,7 @@ console.log("CH: ", charactersDetails);
                 <div className='title-and-progress'>
                   <Link to={`/characters/${character.characterDetails?._id}`}>
                     <div className='anime-title'>{character.characterDetails?.names.givenName} {character.characterDetails?.names.middleName} {character.characterDetails?.names.surName}</div>
+                    <div className='anime-title'>{character.role}</div>
                   </Link>
                 </div>
               </div>

@@ -84,8 +84,14 @@ const characterSchema = new mongoose.Schema({
     },
     animes: [
         {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'AnimeModel'
+            animeId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'AnimeModel'
+            },
+            role: {
+                type: String,
+                enum: ["Main", "Supporting", "Background"]
+            },
         }
     ],
 });
@@ -105,61 +111,54 @@ const animeSchema = new mongoose.Schema({
             type: String,
         }
     },
-    typings: [
-        {
-            Format: {
-                type: String,
-                enum: ['TV', "TV Short", "Movie", "Special", "OVA", "ONA", "Music"]
-            },
-            Source: {
-                type: String,
-                enum: ["Original", "Manga", "Anime", "Light Novel", "Web Novel", "Novel", "Doujinshi", "Video Game", "Visual Novel", "Comic", "Game", "Live Action"]
-            },
-            CountryOfOrigin: {
-                type: String,
-                enum: ["China", "Japan", "South Korea", "Taiwan"]
-            }
+    typings: {
+        Format: {
+            type: String,
+            enum: ['TV', "TV Short", "Movie", "Special", "OVA", "ONA", "Music"]
+        },
+        Source: {
+            type: String,
+            enum: ["Original", "Manga", "Anime", "Light Novel", "Web Novel", "Novel", "Doujinshi", "Video Game", "Visual Novel", "Comic", "Game", "Live Action"]
+        },
+        CountryOfOrigin: {
+            type: String,
+            enum: ["China", "Japan", "South Korea", "Taiwan"]
         }
-    ],
-    lengths: [
-        {
-            Episodes: {
-                type: Number,
-                required: true
-            },
-            EpisodeDuration: {
-                type: Number,
-                required: true
-            }
-        } 
-    ],
+    },
+    lengths:{
+        Episodes: {
+            type: Number,
+            required: true
+        },
+        EpisodeDuration: {
+            type: Number,
+            required: true
+        }
+    },
     genres: [
-        { genre: {
-            type: String
-        }}
+        String
     ],
     description: {
         type: String
     },
-    images: [
-        {
-            image: {
-                type: String
-            },
-            border: {
-                type: String
-            }
+    images:{
+        image: {
+            type: String
+        },
+        border: {
+            type: String
         }
-    ],
+    },
     characters: [
         {
-            character: {
+            characterId: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'CharacterModel'
             },
-            typeofCharacter: {
+            role: {
                 type: String,
-                enum: ["Main", "Supporting", "Background"]
+                enum: ["Main", "Supporting", "Background"],
+                default: "Supporting"
             },
         }
     ],
@@ -272,6 +271,90 @@ app.put('/anime/:id/notes', async (req, res) => {
     }
 });
 
+app.put('/anime/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Assuming Anime is your Mongoose model
+        const { characters, ...otherFields } = req.body;
+
+        // Filter out characters with empty characterId
+        const validCharacters = characters.filter(character => character.characterId);
+
+        // Update the anime, excluding characters with empty characterId
+        const updatedAnime = await AnimeModel.findByIdAndUpdate(id, { ...otherFields, characters: validCharacters }, {
+            new: true, // Return the modified document
+            runValidators: true, // Run validators for update operations
+        });
+
+        if (!updatedAnime) {
+            return res.status(404).json({ error: 'Anime not found' });
+        }
+
+        // Update characters, adding new characters if they don't have the animeId already
+        const updatedCharacters = await Promise.all(
+            validCharacters.map(async (characterInfo) => {
+                const character = await CharacterModel.findById(characterInfo.characterId);
+
+                if (!character) {
+                    // Handle case where character is not found
+                    return null;
+                }
+
+                // Check if the character already has the given animeId
+                const hasAnime = character.animes.some(animeInfo => String(animeInfo.animeId) === String(updatedAnime._id));
+
+                if (!hasAnime) {
+                    // If not, push the new animeId
+                    character.animes.push({
+                        animeId: updatedAnime._id,
+                        role: characterInfo.role,
+                    });
+                    await character.save();
+                }
+
+                return character;
+            })
+        );
+
+        res.status(200).json({ ...updatedAnime._doc, characters: updatedCharacters.filter(Boolean) });
+    } catch (error) {
+        console.error('Error updating anime:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+app.put('/characters/:id', async (req, res) => {
+    try {
+        const characterId = req.params.id;
+        const { names, about, gender, age, DOB, characterImage } = req.body;
+
+        // Find the character by ID
+        const character = await CharacterModel.findById(characterId);
+
+        if (!character) {
+            return res.status(404).json({ message: 'Character not found' });
+        }
+
+        // Update the core character information
+        character.names = names;
+        character.about = about;
+        character.gender = gender;
+        character.age = age;
+        character.DOB = DOB;
+        character.characterImage = characterImage;
+
+        // Save the updated character
+        await character.save();
+
+        res.json({ message: 'Character updated successfully' });
+    } catch (error) {
+        console.error('Failed to update character:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 
 /*=================================
         get and post
@@ -366,7 +449,6 @@ app.get('/searchcharacters', async (req, res) => {
     }
 });
 
-
 app.get('/anime/:id', async (req, res) => {
     try {
         const animeID = req.params.id;
@@ -396,41 +478,56 @@ app.get('/characters/:id', async (req, res) => {
 });
 
 app.post("/addcharacter", async (req, res) => {
-    console.log("REQBODY: ", req.body);
     try {
-        const { names, typeofCharacter, about, gender, age, DOB, characterImage, animes } = req.body;
+        const { names, about, gender, age, DOB, characterImage, animes } = req.body;
 
-        // If animes array is provided, associate the character with the animes
-        const animeIds = animes ? animes.map(animeId => mongoose.Types.ObjectId(animeId)) : [];
+        // Check if animes are provided
+        if (animes && Array.isArray(animes) && animes.length > 0) {
+            // If animes array is provided, associate the character with the animes
+            const animeIds = animes.map((animeInfo) => ({
+                anime: animeInfo.animeId,
+                role: animeInfo.role,
+            }));
 
-        const character = await CharacterModel.create({
-            names,
-            typeofCharacter,
-            about,
-            gender,
-            age,
-            DOB,
-            characterImage,
-            animes: animeIds
-        });
+            const character = await CharacterModel.create({
+                names,
+                about,
+                gender,
+                age,
+                DOB,
+                characterImage,
+                animes: animeIds
+            });
 
-        // If character is associated with animes, update the anime documents
-        if (animeIds.length > 0) {
+            // Update the anime documents with the character ID
             await AnimeModel.updateMany(
-                { _id: { $in: animeIds } },
+                { _id: { $in: animeIds.map(animeInfo => animeInfo.anime) } },
                 { $push: { characters: character._id } }
             );
-        }
 
-        res.status(201).json(character);
+            res.status(201).json(character);
+        } else {
+            // If animes are not provided, create the character without association
+            const character = await CharacterModel.create({
+                names,
+                about,
+                gender,
+                age,
+                DOB,
+                characterImage,
+            });
+
+            res.status(201).json(character);
+        }
     } catch (error) {
+        console.error('Error during character creation:', error);
         res.status(400).json({ message: error.message });
     }
 });
 
 app.post("/addanime", async (req, res) => {
     try {
-        const { titles, genres, lengths, typings, description, images, characters, activityTimestamp } = req.body;
+        const { titles, typings, lengths, genres, description, images, characters, activityTimestamp } = req.body;
 
         // Check if the English title is provided
         if (!titles.english.trim()) {
@@ -438,19 +535,19 @@ app.post("/addanime", async (req, res) => {
         }
 
         // Create an array of genre objects
-        const genresArray = genres.map((genre) => ({ genre }));
+        // const genresArray = genres.map((genre) => ({ genre }));
 
         // Assuming characters is an array of character objects
         const charactersArray = characters.map((characterInfo) => ({
-            character: characterInfo.character,
-            typeofCharacter: characterInfo.typeofCharacter, // Assuming the type of character is provided in the request
+            characterId: characterInfo.characterId,
+            role: characterInfo.role, // Assuming the type of character is provided in the request
         }));
 
         const anime = await AnimeModel.create({
             titles,
             lengths,
             typings,
-            genres: genresArray,
+            genres,
             description,
             images,
             characters: charactersArray,
@@ -460,14 +557,31 @@ app.post("/addanime", async (req, res) => {
         // Set activityTimestamp once after creating the anime
         anime.activityTimestamp = Date.now();
 
-        res.status(201).json(anime);
+        // Update characters with the anime ID
+        const updatedCharacters = await Promise.all(
+            charactersArray.map(async (characterInfo) => {
+                const character = await CharacterModel.findByIdAndUpdate(
+                    characterInfo.characterId,
+                    {
+                        $push: {
+                            animes: {
+                                animeId: anime._id,
+                                role: characterInfo.role,
+                            },
+                        },
+                    },
+                    { new: true }
+                );
+                return character;
+            })
+        );
+
+        res.status(201).json({ ...anime._doc, characters: updatedCharacters });
     } catch (error) {
         console.error('Error during anime creation:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
-
-
 
 // Example endpoint to get the latest activities
 app.get('/latest-activities', async (req, res) => {

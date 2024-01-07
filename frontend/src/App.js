@@ -14,7 +14,8 @@ import Cookies from 'js-cookie';
 import Animes from './pages/Animes';
 import AnimeDetails from './Components/AnimeDetails';
 import CharacterDetails from './Components/CharacterDetails';
-
+import { UpdateAnime } from './Components/Updates/UpdateAnime';
+import { UpdateCharacter } from './Components/Updates/UpdateCharacter';
 
 function App() {
   const [userData, setUserData] = useState({});
@@ -44,7 +45,9 @@ function App() {
             <Route path='/characters' element={<Characters />} />
             <Route path="/addanime" element={<AddAnime />} />
             <Route path='/anime/:id' element={<AnimeDetails />}/>
+            <Route path='/anime/:id/update' element={<UpdateAnime />}/>
             <Route path='/characters/:id' element={<CharacterDetails />}/>
+            <Route path='/characters/:id/update' element={<UpdateCharacter />}/>
           </Routes>
         </Router>
       </data.Provider>

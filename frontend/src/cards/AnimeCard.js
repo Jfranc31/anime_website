@@ -17,11 +17,11 @@ function AnimeCard({ anime, onTopRightButtonClick }) {
           onMouseLeave={() => setIsHovered(false)}
         >
           <div className="img-container">
-            <img src={anime.images[0].image} alt={anime.titles.english} />
+            <img src={anime.images.image} alt={anime.titles.english} />
             <div className="title-and-progress">
-            <Link to={`/anime/${anime._id}`}>
-            <div className='anime-title'>{anime.titles.english}</div>
-            </Link>
+              <Link to={`/anime/${anime._id}`}>
+                <div className='anime-title'>{anime.titles.english}</div>
+              </Link>
             </div>
           </div>
           {isHovered && (

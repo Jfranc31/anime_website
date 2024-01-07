@@ -33,7 +33,11 @@ const Animes = () => {
         return matchesSearch && matchesGenres;
     }) : [];
 
-    const sortedAnime = [...filteredAnime].sort((a, b) => a.title.localeCompare(b.title));
+    const sortedAnime = [...filteredAnime].sort((a, b) => {
+        const titleA = (a.titles && a.titles.english) || ''; // handle undefined
+        const titleB = (b.titles && b.titles.english) || ''; // handle undefined
+        return titleA.localeCompare(titleB);
+    });
 
     const handleCardClick = (animeId) => {
         setSelectedAnimeId(animeId);
@@ -43,8 +47,9 @@ const Animes = () => {
         setSelectedGenres(prevGenres => {
           if (!prevGenres.includes(selectedGenre)) {
             return [...prevGenres, selectedGenre];
+          } else {
+            return prevGenres; // Add this else block
           }
-          return prevGenres;
         });
     };
 

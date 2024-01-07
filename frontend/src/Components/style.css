@@ -606,8 +606,8 @@ margin-bottom: 30px;
   flex-grow: 1;
 }
 .character button {
-  margin-left: 650px;
-  margin-bottom: 10px;
+  margin-left: 94%;
+  margin-bottom: 1%;
 }
 /* Additional styling for buttons, if needed */
 .character button {
@@ -710,6 +710,16 @@ margin-bottom: 30px;
     margin: 0 auto; /* Center the grid */
     padding: 20px; /* Add some padding for better aesthetics */
   }
+  .character-page-references{
+    position: absolute;
+    top: 60%;
+    left: 10%;
+    color: gray;
+    text-align: center;
+    width: 80%; /* Adjust the width as needed */
+    margin: 0 auto; /* Center the grid */
+    padding: 20px; /* Add some padding for better aesthetics */
+  }
   .character-anime-card{
     border-radius: 3px;
     display: inline-block;
@@ -735,6 +745,20 @@ margin-bottom: 30px;
   .character-details p {
     margin: 5px 0;
   }
+  .update-anime-button{
+    position: absolute;
+    background-color: #ff6347; /* Tomato color */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 10%;
+    height: 5%;
+    left: 6%;
+    top: 66%;
+    z-index: 1000;
+  }
 /*============================================*/
 
 
@@ -755,11 +779,10 @@ margin-bottom: 30px;
   overflow-y: auto;
 }
 .character-modal-header{
-    background-color: #04aa6d;
     position: relative;
     border-radius: 0 0 0 0;
     margin-top: 0;
-    height: 50px;
+    height: max-content;
     z-index: 3;
 }
 .character-modal-body {
@@ -768,7 +791,7 @@ margin-bottom: 30px;
   display: grid;
   position: relative;
   width: 800px;
-  height: 1050px;
+  height: auto;
   grid-gap: 10px;
   padding: 20px;
   border-radius: 0 0 0 0;
@@ -780,7 +803,7 @@ margin-bottom: 30px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #fff;
+  background-color: #04aa6d;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   z-index: 3;
@@ -846,7 +869,7 @@ margin-bottom: 30px;
 .character-page-img{
   margin-bottom: 30px;
   left: 15%;
-  top: 15%;
+  top: 10%;
   position: absolute;
   align-items: center;
   color: rgb(200, 195, 188);
@@ -876,5 +899,19 @@ margin-bottom: 30px;
   position: absolute; /* Ensure it stays within the flow of the document */
   margin-top: -4%; /* Add margin-top to create space from the top */
   /* margin-right: 50%; */
+}
+.update-character-button{
+  position: absolute;
+  background-color: #ff6347; /* Tomato color */
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  width: 10%;
+  height: 5%;
+  left: 16.5%;
+  top: 48%;
+  z-index: 1000;
 }
 /*============================================*/
