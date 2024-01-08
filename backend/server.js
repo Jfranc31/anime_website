@@ -162,12 +162,18 @@ const animeSchema = new mongoose.Schema({
             },
         }
     ],
-    // relations: {
-    //     typeofRelation: {
-    //         type: String,
-    //         enum: ["Adaptation", "Source", "Prequel", "Sequel", "Side Story", "Character", "Summary", "Alternative", "Spin Off", "Other", "Compilations", "Contains"]
-    //     }
-    // },  
+    relations: [
+        {
+            relationId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'AnimeModel'
+            },
+            typeofRelation: {
+                type: String,
+                enum: ["Adaptation", "Source", "Prequel", "Sequel", "Side Story", "Character", "Summary", "Alternative", "Spin Off", "Other", "Compilations", "Contains"]
+            }
+        }
+    ],  
     activityTimestamp: {
         type: Date,
         default: Date.now,
@@ -275,11 +281,11 @@ app.put('/anime/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Assuming Anime is your Mongoose model
-        const { characters, ...otherFields } = req.body;
+        const { characters, relations, ...otherFields } = req.body;
 
         // Filter out characters with empty characterId
         const validCharacters = characters.filter(character => character.characterId);
+        const validRelations = relations.filter(relation => relation.relationId);
 
         // Update the anime, excluding characters with empty characterId
         const updatedAnime = await AnimeModel.findByIdAndUpdate(id, { ...otherFields, characters: validCharacters }, {
@@ -294,36 +300,88 @@ app.put('/anime/:id', async (req, res) => {
         // Update characters, adding new characters if they don't have the animeId already
         const updatedCharacters = await Promise.all(
             validCharacters.map(async (characterInfo) => {
-                const character = await CharacterModel.findById(characterInfo.characterId);
-
-                if (!character) {
-                    // Handle case where character is not found
-                    return null;
+                const { characterId, role } = characterInfo;
+        
+                // Use updateOne to atomically update the document
+                const result = await CharacterModel.updateOne(
+                    {
+                        _id: characterId,
+                        'animes.animeId': { $ne: updatedAnime._id }, // Ensure animeId is not already present
+                    },
+                    {
+                        $push: {
+                            animes: {
+                                animeId: updatedAnime._id,
+                                role: role,
+                            },
+                        },
+                    }
+                );
+        
+                // Check if the document was modified (i.e., updated)
+                if (result.nModified > 0) {
+                    // Document was updated, return the updated character
+                    const updatedCharacter = await CharacterModel.findById(characterId);
+                    return updatedCharacter;
                 }
-
-                // Check if the character already has the given animeId
-                const hasAnime = character.animes.some(animeInfo => String(animeInfo.animeId) === String(updatedAnime._id));
-
-                if (!hasAnime) {
-                    // If not, push the new animeId
-                    character.animes.push({
-                        animeId: updatedAnime._id,
-                        role: characterInfo.role,
-                    });
-                    await character.save();
-                }
-
-                return character;
+        
+                // Document was not updated, return null
+                return null;
             })
         );
 
-        res.status(200).json({ ...updatedAnime._doc, characters: updatedCharacters.filter(Boolean) });
+        // Update relations
+        const updatedRelations = await Promise.all(
+            validRelations.map(async (relationInfo) => {
+                const { relationId, typeofRelation } = relationInfo;
+
+                // Update the relation on the current anime
+                const result = await AnimeModel.updateOne(
+                    {
+                        _id: id,
+                        'relations.relationId': relationId,
+                    },
+                    {
+                        $set: {
+                            'relations.$.typeofRelation': typeofRelation,
+                        },
+                    }
+                );
+
+                // Check if the document was modified (i.e., updated)
+                if (result.nModified > 0) {
+                    // Document was updated, return the updated relation
+                    const updatedAnime = await AnimeModel.findById(id);
+                    return updatedAnime.relations.find((r) => String(r.relationId) === String(relationId));
+                } else {
+                    // Document was not updated, try updating the reverse relation on the related anime
+                    const reverseRelationAnime = await AnimeModel.findOneAndUpdate(
+                        {
+                            'relations.relationId': id,
+                        },
+                        {
+                            $set: {
+                                'relations.$.typeofRelation': getReverseRelationType(typeofRelation),
+                            },
+                        },
+                        { new: true }
+                    );
+
+                    // Return both the updated relation on the current anime and the reverse relation
+                    return [
+                        updatedAnime.relations.find((r) => String(r.relationId) === String(relationId)),
+                        reverseRelationAnime ? reverseRelationAnime.relations.find((r) => String(r.relationId) === String(id)) : null,
+                    ];
+                }
+            })
+        );
+
+        res.status(200).json({ ...updatedAnime._doc, characters: updatedCharacters.filter(Boolean), relations: updatedRelations.flat() });
     } catch (error) {
         console.error('Error updating anime:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 app.put('/characters/:id', async (req, res) => {
     try {
@@ -449,6 +507,24 @@ app.get('/searchcharacters', async (req, res) => {
     }
 });
 
+app.get('/searchrelations', async (req, res) => {
+    try {
+        const searchTerm = req.query.query;
+
+        const foundRelations = await AnimeModel.find({
+            $or: [
+                {'titles.english': { $regex: searchTerm, $options: 'i' }},
+                {'titles.romaji': { $regex: searchTerm, $options: 'i' }},
+                {'titles.Native': { $regex: searchTerm, $options: 'i' }},
+            ]
+        });
+        res.json({ relations: foundRelations });
+    } catch (error) {
+        console.error('Error during relation search:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 app.get('/anime/:id', async (req, res) => {
     try {
         const animeID = req.params.id;
@@ -527,15 +603,17 @@ app.post("/addcharacter", async (req, res) => {
 
 app.post("/addanime", async (req, res) => {
     try {
-        const { titles, typings, lengths, genres, description, images, characters, activityTimestamp } = req.body;
+        const { titles, typings, lengths, genres, description, images, characters, relations, activityTimestamp } = req.body;
 
         // Check if the English title is provided
         if (!titles.english.trim()) {
             return res.status(400).json({ message: 'English title is required' });
         }
 
-        // Create an array of genre objects
-        // const genresArray = genres.map((genre) => ({ genre }));
+        const relationsArray = relations.map((relationInfo) => ({
+            relationId: relationInfo.relationId,
+            typeofRelation: relationInfo.typeofRelation,
+        }));
 
         // Assuming characters is an array of character objects
         const charactersArray = characters.map((characterInfo) => ({
@@ -551,6 +629,7 @@ app.post("/addanime", async (req, res) => {
             description,
             images,
             characters: charactersArray,
+            relations: relationsArray,
             activityTimestamp,
         });
 
@@ -576,12 +655,58 @@ app.post("/addanime", async (req, res) => {
             })
         );
 
-        res.status(201).json({ ...anime._doc, characters: updatedCharacters });
+        // Update relations with the anime ID
+        const updatedRelations = await Promise.all(
+            relationsArray.map(async (relationInfo) => {
+                const reverseRelationType = getReverseRelationType(relationInfo.typeofRelation);
+
+                if (reverseRelationType) {
+                    const reverseRelationAnime = await AnimeModel.findByIdAndUpdate(
+                        relationInfo.relationId,
+                        {
+                            $push: {
+                                relations: {
+                                    relationId: anime._id,
+                                    typeofRelation: reverseRelationType,
+                                },
+                            },
+                        },
+                        { new: true }
+                    );
+                    return [anime, reverseRelationAnime];
+                } else {
+                    return anime;
+                }
+            })
+        );
+
+        res.status(201).json({ ...anime._doc, characters: updatedCharacters, relations: updatedRelations.flat() });
     } catch (error) {
         console.error('Error during anime creation:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+
+// Helper function to get the reverse relation type
+function getReverseRelationType(relationType) {
+    const reverseRelationMap = {
+        Source: 'Adaptation',
+        Adaptation: 'Source',
+        Prequel: 'Sequel',
+        Sequel: 'Prequel',
+        Character: 'Parent',
+        Alternative: 'Alternative',
+        Contains: 'Compilation',
+        Compilation: 'Contains',
+        SideStory: 'Parent',
+        SpinOff: 'Parent',
+        Summary: 'Parent',
+        Other: 'Parent',
+    };
+
+    return reverseRelationMap[relationType] || null;
+}
+
 
 // Example endpoint to get the latest activities
 app.get('/latest-activities', async (req, res) => {

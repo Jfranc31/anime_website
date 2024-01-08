@@ -85,7 +85,7 @@ const CharacterDetails = () => {
             <div key={reference.animeId} className="anime-card">
               <div className='img-container'>
                 <img src={reference.referenceDetails?.images.image} alt={reference.referenceDetails?.titles.english} />
-                <div className='title-and-progress'>
+                <div className='title-progress'>
                   <Link to={`/anime/${reference.referenceDetails?._id}`}>
                     <div className='anime-title'>{reference.referenceDetails?.titles.english}</div>
                   </Link>

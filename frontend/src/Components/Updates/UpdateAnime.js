@@ -1,14 +1,15 @@
 // src/components/Update/UpdateAnime.js
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import CreateCharacter from "../CreateCharacter";
-import CharacterSearch from '../CharacterSearch';
+import CharacterSearch from '../Searches/CharacterSearch';
+import RelationSearch from '../Searches/RelationSearch';
 import axios from 'axios';
 
 export const UpdateAnime = ({ match }) => {
     const { id } = useParams();
-    console.log("characterId: ", id);
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         titles: {
             romaji: '',
@@ -31,6 +32,7 @@ export const UpdateAnime = ({ match }) => {
             border: '',
         },
         characters: [],
+        relations: [],
         activityTimestamp: 0,
     });
 
@@ -80,6 +82,8 @@ export const UpdateAnime = ({ match }) => {
         'Live Action',
     ];
     const availableCountry = ['China', 'Japan', 'South Korea', 'Taiwan'];
+    const availableRole = ["Main", "Supporting", "Background"];
+    const availableRelation = ["Adaptation", "Source", "Prequel", "Sequel", "Side Story", "Character", "Summary", "Alternative", "Spin Off", "Other", "Compilations", "Contains"];
 
     const handleModalClose = () => {
         setActiveModal(null);
@@ -92,10 +96,13 @@ export const UpdateAnime = ({ match }) => {
         setActiveModal('characterSearch');
     };
     const handleSelectExistingCharacter = (selectedCharacters) => {
+        const charactersWithDefaultRole = selectedCharacters.map((character) => ({
+          ...character,
+          role: "", // Set the default role to an empty string
+        }));
         setFormData((prevFormData) => ({
-        ...prevFormData,
-        characters: [...prevFormData.characters, ...selectedCharacters],
-        typeofCharacter: 'Supporting'
+          ...prevFormData,
+          characters: [...prevFormData.characters, ...charactersWithDefaultRole],
         }));
         setShowCharacterSearch(false);
     };
@@ -128,16 +135,51 @@ export const UpdateAnime = ({ match }) => {
     };
     // ---------------------------------------------------------------
 
+    // Handle Relation type / Removal --------------------------------
+    const handleRelationTypeChange = (e, index) => {
+        const newType = e.target.value;
+        updateRelationType(index, newType);
+    };
+    const updateRelationType = (index, newType) => {
+        setFormData((prevFormData) => {
+        const updatedRelations = [...prevFormData.relations];
+        updatedRelations[index].typeofRelation = newType;
+        return {
+            ...prevFormData,
+            relations: updatedRelations,
+        };
+        });
+    };
+    const handleRemoveRelation = (index) => {};
+    // ---------------------------------------------------------------
+
+    // Relation ------------------------------------------------------
+    const handleAddRelation = () => {
+        setActiveModal('relationSearch');
+    }
+    const handleSelectRelation = (selectedRelations) => {
+        const relationsWithDefaultRelation = selectedRelations.map((relation) => ({
+        ...relation,
+        typeofRelation: "",
+        }));
+        setFormData((prevFormData) => ({
+        ...prevFormData,
+        relations: [...prevFormData.relations, ...relationsWithDefaultRelation],
+        }));
+    };
+    // ---------------------------------------------------------------
+
     // Create Charater ------------------------------
     const handleAddCharacter = (newCharacter) => {
         setActiveModal('createCharacter');
     };
-    const handleAddingCharacter = (selectedCharacters) => {
+    const handleAddingCharacter = (selectedCharacter) => {
+        // Assuming selectedCharacter is a single character object
         setFormData((prevFormData) => ({
-        ...prevFormData,
-        characters: [...prevFormData.characters, selectedCharacters],
-        role: 'Supporting'
+          ...prevFormData,
+          characters: [...prevFormData.characters, { ...selectedCharacter, role: "" }],
         }));
+      
         setShowModal(false);
     };
     // ----------------------------------------------
@@ -167,6 +209,7 @@ export const UpdateAnime = ({ match }) => {
     };
     // --------------------------------------------
 
+    // Retrieve information
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -197,10 +240,26 @@ export const UpdateAnime = ({ match }) => {
                         }
                     }) || []
                 );
+
+                const relationsWithDetails = await Promise.all(
+                    animeData?.relations.map(async (relation) => {
+                        try {
+                            const referenceResponse = await axios.get(`http://localhost:8080/anime/${relation.relationId}`);
+                            return {
+                                ...relation,
+                                ...referenceResponse.data,
+                            };
+                        } catch (error) {
+                            console.error(`Error fetching details for reference ${relation.relationId}:`, error);
+                            return relation;
+                        }
+                    }) || []
+                );
     
                 setFormData((prevFormData) => ({
                     ...prevFormData,
                     characters: charactersWithDetails,
+                    relations: relationsWithDetails,
                 }));
             } catch (error) {
                 console.error('Error fetching anime details:', error);
@@ -210,40 +269,7 @@ export const UpdateAnime = ({ match }) => {
         fetchData();
     }, [id]);
     
-         
-
-    const handleChange = (e) => {
-        const { name, value, type } = e.target;
-
-        if (name.startsWith('titles.') || name.startsWith('typings.') || name.startsWith('lengths.') || name.startsWith('images.')) {
-            const [mainField, subField] = name.split('.');
-
-            setFormData((prev) => ({
-                ...prev,
-                [mainField]: {
-                    ...prev[mainField],
-                    [subField]: type === 'select-multiple' ? [value] : value,
-                },
-            }));
-        } else if (name.startsWith('characters.')) {
-            const [mainField, subField] = name.split('.');
-
-            setFormData((prev) => ({
-                ...prev,
-                characters: prev.characters.map((item, index) =>
-                    index.toString() === subField
-                        ? { ...item, [mainField]: type === 'select-multiple' ? [...item[mainField], value] : value }
-                        : item
-                ),
-            }));
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: type === 'select-multiple' ? (value || []) : value,
-            }));            
-        }
-    };
-
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -276,31 +302,8 @@ export const UpdateAnime = ({ match }) => {
 
             if (res.status === 200) {
                 console.log('Anime and characters updated successfully!', res.data);
-                setFormData({
-                    titles: {
-                        romaji: '',
-                        english: '',
-                        Native: '',
-                    },
-                    typings: {
-                        Format: '',
-                        Source: '',
-                        CountryOfOrigin: '',
-                    },
-                    lengths: {
-                        Episodes: 0,
-                        EpisodeDuration: 0,
-                    },
-                    genres: [],
-                    description: '',
-                    images: {
-                        image: '',
-                        border: '',
-                    },
-                    characters: [],
-                    activityTimestamp: 0,
-                });
-                setSelectedGenres([]);
+                
+                navigate(`/anime/${id}`);
             } else {
                 console.error('Failed to update anime:', res.data);
             }
@@ -309,8 +312,42 @@ export const UpdateAnime = ({ match }) => {
         } finally {
             setIsLoading(false);
         }
-    };
+    };   
 
+    // handle change in form
+    const handleChange = (e) => {
+        const { name, value, type } = e.target;
+
+        if (name.startsWith('titles.') || name.startsWith('typings.') || name.startsWith('lengths.') || name.startsWith('images.')) {
+            const [mainField, subField] = name.split('.');
+
+            setFormData((prev) => ({
+                ...prev,
+                [mainField]: {
+                    ...prev[mainField],
+                    [subField]: type === 'select-multiple' ? [value] : value,
+                },
+            }));
+        } else if (name.startsWith('characters.') || name.startsWith("relations.")) {
+            const [mainField, subField] = name.split('.');
+
+            setFormData((prev) => ({
+                ...prev,
+                characters: prev.characters.map((item, index) =>
+                    index.toString() === subField
+                        ? { ...item, [mainField]: type === 'select-multiple' ? [...item[mainField], value] : value }
+                        : item
+                ),
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: type === 'select-multiple' ? (value || []) : value,
+            }));            
+        }
+    };
+    
+    // handle changing threw data fields
     const handleTabChange = (tab) => {
         setActiveTab(tab);
     };
@@ -537,6 +574,14 @@ export const UpdateAnime = ({ match }) => {
         <>
         <div className="section">
             <h2>Characters</h2>
+            <div className='character-button'>
+                <button type="button" onClick={() => handleAddExistingCharacter()}>
+                Add Existing Character
+                </button>
+                <button type="button" onClick={() => handleAddCharacter()}>
+                Create Character
+                </button>
+            </div>
             <div className="characters">
             {formData.characters.map((character, index) => (
                 <div key={index} className="character">
@@ -560,9 +605,12 @@ export const UpdateAnime = ({ match }) => {
                         value={character.role}
                         onChange={(e) => handleCharacterTypeChange(e, index)}
                     >
-                        <option value="Main">Main</option>
-                        <option value="Supporting">Supporting</option>
-                        <option value="Background">Background</option>
+                        <option value="" disabled>Select Role</option>
+                        {availableRole.map((role) => (
+                        <option key={role} value={role}>
+                            {role}
+                        </option>
+                        ))}
                     </select>
                     </div>
                 </div>
@@ -573,16 +621,57 @@ export const UpdateAnime = ({ match }) => {
                 </div>
             ))}
             </div>
-            <button type="button" onClick={() => handleAddExistingCharacter()}>
-            Add Existing Character
-            </button>
-            <button type="button" onClick={() => handleAddCharacter()}>
-            Create Character
-            </button>
-            {/* Conditionally render CharacterSearch component */}
         </div>
         </>
     );
+    const renderRelationsSection = () => (
+        <>
+          <div className="section">
+            <h2>Relations</h2>
+            <div className="character-button">
+              <button type="button" onClick={() => handleAddRelation()}>
+                Add Relation
+              </button>
+            </div>
+            <div className="characters">
+              {formData.relations.map((relation, index) => (
+                <div key={index} className="character">
+                  <div className="character-info">
+                    <img
+                      src={relation.images.image}
+                      alt={`Relation ${index + 1}`}
+                      className="character-image"
+                    />
+                    <div className="character-details">
+                      <p>
+                        {relation.titles &&
+                          `${relation.titles.english || ''}`}
+                      </p>
+                      <label htmlFor={`relationType-${index}`}>Type:</label>
+                      <select
+                        id={`relationType-${index}`}
+                        name={`relationType-${index}`}
+                        value={relation.typeofRelation}
+                        onChange={(e) => handleRelationTypeChange(e, index)}
+                      >
+                        <option value="" disabled>Select Relation</option>
+                        {availableRelation.map((relation) => (
+                          <option key={relation} value={relation}>
+                            {relation}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => handleRemoveRelation(index)}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      );
     // ------------------------------------
 
     console.log("fomr data: ", formData);
@@ -596,6 +685,7 @@ export const UpdateAnime = ({ match }) => {
             <button onClick={() => handleTabChange("general")}>General</button>
             <button onClick={() => handleTabChange("images")}>Images</button>
             <button onClick={() => handleTabChange("characters")}>Characters</button>
+            <button onClick={() => handleTabChange("relations")}>Relations</button>
             {/* Add more buttons for additional tabs */}
         </div>
 
@@ -603,6 +693,7 @@ export const UpdateAnime = ({ match }) => {
             {activeTab === "general" && renderGeneralSection()}
             {activeTab === "images" && renderImagesSection()}
             {activeTab === "characters" && renderCharactersSection()}
+            {activeTab === "relations" && renderRelationsSection()}
         </form>
 
         {activeModal && (
@@ -627,6 +718,12 @@ export const UpdateAnime = ({ match }) => {
                 {activeModal === 'characterSearch' && (
                     <CharacterSearch
                     onCharacterSelected={handleSelectExistingCharacter}
+                    onClose={() => setActiveModal(null)}
+                    />
+                )}
+                {activeModal === 'relationSearch' && (
+                    <RelationSearch
+                    onRelationSelected={handleSelectRelation}
                     onClose={() => setActiveModal(null)}
                     />
                 )}
