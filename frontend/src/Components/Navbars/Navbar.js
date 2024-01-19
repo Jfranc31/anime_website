@@ -7,8 +7,9 @@ const Navbar = () => {
         <div className="logo">React Anime App</div>
         <div className="Navbar" id="Navbar">
           <a href="/">Home</a>
-          <a href="/addanime">Add Anime</a>
-          <a href="/addmanga">Add Manga</a>
+          {/* <a href="/addanime">Add Anime</a>
+          <a href="/addmanga">Add Manga</a> */}
+          <a href="/add">Add</a>
           <a href="/characters">Characters</a>
           <a href="/animes">Animes</a>
           <a href="/mangas">Mangas</a>

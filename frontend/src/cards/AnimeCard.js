@@ -1,7 +1,7 @@
 // src/cards/AnimeCard.js
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 
 function AnimeCard({ anime, onTopRightButtonClick }) {
     const [isHovered, setIsHovered] = useState(false);
@@ -20,10 +20,11 @@ function AnimeCard({ anime, onTopRightButtonClick }) {
               </Link>
             </div>
           </div>
+          {/* Button for top-right action */}
           {isHovered && (
-            <>
-              Hello
-            </>
+            <button className="top-right-button" onClick={() => onTopRightButtonClick(anime)}>
+              Edit
+            </button>
           )}
         </div>
       );

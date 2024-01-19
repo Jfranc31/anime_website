@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'
 
-function MangaCard({ manga }) {
+function MangaCard({ manga, onTopRightButtonClick }) {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
@@ -21,9 +21,9 @@ function MangaCard({ manga }) {
             </div>
           </div>
           {isHovered && (
-            <>
-                Hello
-            </>
+            <button className='top-right-button' onClick={() => onTopRightButtonClick(manga)}>
+                Edit
+            </button>
           )}
         </div>
     );

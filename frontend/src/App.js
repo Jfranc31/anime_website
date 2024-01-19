@@ -3,8 +3,6 @@ import Profile from './pages/Profile';
 import { Login } from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
-import AddAnime from './pages/AddAnime';
-import AddManga from './pages/AddManga';
 import Animes from './pages/Animes';
 import Mangas from './pages/Mangas';
 import Characters from './pages/Characters';
@@ -20,6 +18,7 @@ import CharacterDetails from './Components/Details/CharacterDetails';
 import { UpdateAnime } from './Components/Updates/UpdateAnime';
 import { UpdateManga } from './Components/Updates/UpdateManga';
 import { UpdateCharacter } from './Components/Updates/UpdateCharacter';
+import AddSection from './pages/Add';
 
 function App() {
   const [userData, setUserData] = useState({});
@@ -48,11 +47,12 @@ function App() {
             <Route path="/animes" element={<Animes />} />
             <Route path="/mangas" element={<Mangas />} />
             <Route path='/characters' element={<Characters />} />
-            <Route path="/addanime" element={<AddAnime />} />
-            <Route path='/anime/:id' element={<AnimeDetails />}/>
+            <Route path="/add/*" element={userData && userData._id ? <AddSection /> : <Login />} />
+            {/* <Route path="/add/anime" element={<AddAnime />} /> */}
+            <Route path='/anime/:id' element={userData && userData._id ? <AnimeDetails /> : <Animes/>}/>
             <Route path='/anime/:id/update' element={<UpdateAnime />}/>
-            <Route path='/addmanga' element={<AddManga />}/>
-            <Route path='/manga/:id' element={<MangaDetails />}/>
+            {/* <Route path='/add/manga' element={<AddManga />}/> */}
+            <Route path='/manga/:id' element={userData && userData._id ? <MangaDetails /> : <Mangas/>}/>
             <Route path='/manga/:id/update' element={<UpdateManga />}/>
             <Route path='/characters/:id' element={<CharacterDetails />}/>
             <Route path='/characters/:id/update' element={<UpdateCharacter />}/>

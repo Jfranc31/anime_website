@@ -5,6 +5,7 @@ import characterRoutes from "./routes/characterRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
+import UserModel from "./Models/userModel.js";
 
 const app = express();
 app.use(express.json())
@@ -64,76 +65,9 @@ app.get('/searchrelations', async (req, res) => {
 /*=================================
             put
 ===================================*/
-app.put('/browse/:id/status', async (req, res) => {
-    try {
-        const animeId = req.params.id;
-        const { status } = req.body;
 
-        // Find the anime by ID
-        const anime = await AnimeModel.findById(animeId);
 
-        if (!anime) {
-            return res.status(404).json({ message: 'Anime not found' });
-        }
 
-        console.log('Before Update - Current Episode:', anime.currentEpisode, 'Status:', anime.status, 'Status', status);
-
-        anime.status = status;
-        if (anime.status === 'Planning') {
-            anime.currentEpisode = 0;
-        } else if (anime.status === 'Completed') {
-            anime.currentEpisode = anime.episodes;
-        }
-
-        // Save the updated anime
-        anime.activityTimestamp = Date.now();
-        await anime.save();
-
-        console.log('After Update - Current Episode:', anime.currentEpisode, 'Status:', anime.status);
-
-        res.json({ message: 'Status updated successfully' });
-    } catch (error) {
-        console.error('Failed to update status:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-});
-
-app.put('/browse/:id/currentEpisode', async(req, res) => {
-    try {
-        const animeId = req.params.id;
-        const { currentEpisode } = req.body;
-
-        const anime = await AnimeModel.findById(animeId);
-
-        if (!anime) {
-            return res.status(404).json({ message: 'Anime not found' });
-        }
-
-        console.log('Before Update - Current Episode:', anime.currentEpisode, 'Status:', anime.status);
-
-        anime.currentEpisode = currentEpisode;
-        if(anime.currentEpisode === 0){
-            anime.status = 'Planning';
-        }else if(anime.currentEpisode >= anime.episodes) {
-            anime.currentEpisode = anime.episodes;
-            anime.status = 'Completed';
-        } else {
-            anime.status = 'Watching';
-        }
-
-        // Save the updated anime
-        anime.activityTimestamp = Date.now();
-        await anime.save();
-
-        console.log('After Update - Current Episode:', anime.currentEpisode, 'Status:', anime.status);
-
-        res.json({ message: 'Status updated successfully' });
-                
-    } catch (error) {
-        console.error('Failed to update status:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-})
 
 app.put('/anime/:id/notes', async (req, res) => {
     try {
@@ -160,16 +94,39 @@ app.put('/anime/:id/notes', async (req, res) => {
         get and post
 ===================================*/
 
-// Example endpoint to get the latest activities
-app.get('/latest-activities', async (req, res) => {
+// Assuming you have AnimeModel and MangaModel imported
+
+app.get('/latest-activities/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
     try {
-        const activities = await AnimeModel.find().sort({ activityTimestamp: -1 }).limit(10);
+        const user = await UserModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Populate anime details for each activity
+        const userAnimeActivities = await Promise.all(user.animes.slice(0, 10).map(async (activity) => {
+            const animeDetails = await AnimeModel.findById(activity.animeId);
+            return { ...activity.toObject(), animeDetails };
+        }));
+
+        // Populate manga details for each activity
+        const userMangaActivities = await Promise.all(user.mangas.slice(0, 10).map(async (activity) => {
+            const mangaDetails = await MangaModel.findById(activity.mangaId);
+            return { ...activity.toObject(), mangaDetails };
+        }));
+
+        const activities = [...userAnimeActivities, ...userMangaActivities];
         res.json(activities);
     } catch (error) {
         console.error('Error fetching latest activities:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+
+
 
 app.get('/anime/:id/notes', async (req, res) => {
     try {
