@@ -1,4 +1,8 @@
-// /routes/userRoutes.js
+/**
+ * /routes/userRoutes.js
+ * Description: Defines the routes related to user in the Express application.
+ */
+
 import express from 'express';
 import userController from '../controllers/userController.js';
 

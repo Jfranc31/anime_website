@@ -1,10 +1,17 @@
-// src/Components/Details/MangaDetails.js
+/**  
+ * src/Components/Details/MangaDetails.js 
+ * Description: React component for rendering details of a manga.
+*/
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
 
+/**
+ * Functional component representing details of a manga.
+ * @returns {JSX.Element} - Rendered manga details component.
+*/
 const MangaDetails = () => {
   const { id } = useParams();
   const {userData,setUserData} = useContext(data)
@@ -17,93 +24,6 @@ const MangaDetails = () => {
     currentChapter: 0,
     currentVolume: 0,
   });
-  const [activeModal, setActiveModal] = useState(false);
-
-  const availableStatus = ["Planning", "Reading", "Completed"];
-
-  const handleModalClose = () => {
-    setActiveModal(false);
-  };
-
-  const handleUpdate = () => {
-    setActiveModal(true);
-  };
-
-  const handleAddToMyList = async () => {
-    // Make a request to add the manga to the user's list
-    try {
-      const response = await axios.post(`http://localhost:8080/users/${userData._id}/addManga`, {
-        mangaId: mangaDetails._id,
-        status: "Planning",
-        currentChapter: 0,
-        currentVolume: 0,
-      });
-
-      // Assume the response includes updated user data
-      console.log(response.data.message);
-
-      setIsMangaAdded(true);
-
-    } catch (error) {
-      console.error('Error adding manga to user list:', error);
-    }
-  };
-
-  const handleStatusChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      status: e.target.value,
-    });
-  };
-
-  const handleChapterChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      currentChapter: e.target.value,
-    });
-  };
-
-  const handleVolumeChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      currentVolume: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    // Make a request to update user progress
-    try {
-      const response = await axios.post(`http://localhost:8080/users/${userData._id}/updateManga`, {
-        mangaId: mangaDetails._id,
-        status: userProgress.status,
-        currentChapter: userProgress.currentChapter,
-        currentVolume: userProgress.currentVolume,
-      });
-
-      handleModalClose();
-  
-      // Assume the response includes updated user data
-      const updatedUser = response.data.user;
-
-      // Update the local state with the new user data
-      setUserData(updatedUser); // Assuming setUserData is a function to update user data in context
-      setMangaDetails(mangaDetails); // Optionally update manga details if needed
-      const existingMangaIndex = updatedUser?.mangas?.findIndex(manga => manga.mangaId.toString() === id.toString());
-      // Update userProgress state with the new status and current chapter and volume
-      setUserProgress({
-          status: updatedUser.mangas[existingMangaIndex].status,
-          currentChapter: updatedUser.mangas[existingMangaIndex].currentChapter,
-          currentVolume: updatedUser.mangas[existingMangaIndex].currentVolume,
-      });
-
-      console.log(response.data.message);
-
-    } catch (error) {
-      console.error('Error updating user progress:', error);
-    }
-  };
 
   const [activeSection, setActiveSection] = useState('relations');
 
@@ -219,6 +139,7 @@ useEffect(() => {
     return <div>Loading...</div>;
   }
 
+  console.log("CH: ", userProgress, isMangaAdded);
   return (
     <div>
       <div className='anime-page'>
@@ -239,10 +160,32 @@ useEffect(() => {
 
       {/* Add an Update button */}
       <Link to={`/manga/${mangaDetails._id}/update`}>
-          <button className='update-anime-button'>Update Anime</button>
+          <button className='update-anime-button'>Edit Manga</button>
       </Link>
 
       <AnimeNavbar showRelations={showRelations} showCharacters={showCharacters} />
+
+      {/* Series Data */}
+      <div className='series-data'>
+        <h3>Format</h3>
+        <div>{mangaDetails.typings.Format}</div>
+        <h3>Source</h3>
+        <div>{mangaDetails.typings.Source}</div>
+        <h3>Start Date</h3>
+        <div>{mangaDetails.releaseData.startDate.month}/{mangaDetails.releaseData.startDate.day}/{mangaDetails.releaseData.startDate.year}</div>
+        {mangaDetails.releaseData.endDate.year && (
+          <>
+            <h3>End Date</h3>
+            <div>{mangaDetails.releaseData.endDate.month}/{mangaDetails.releaseData.endDate.day}/{mangaDetails.releaseData.endDate.year}</div>
+          </>
+        )}
+        <h3>Genres</h3>
+        <div className='genres'>
+          {mangaDetails.genres.map((genre, index) => (
+            <div key={index}>{genre}</div>
+          ))}
+        </div>
+      </div>
 
       {/* Overview Section */}
       <div className={`anime-page-relations ${activeSection === 'relations' ? 'show' : 'hide'}`}>
@@ -254,7 +197,7 @@ useEffect(() => {
                           <img src={relation.relationDetails?.images.image} alt={relation.relationDetails?.titles.english || 'Unknown'} />
                           <div className='title-progress'>
                           <Link to={`/${relation.contentType}/${relation.relationDetails?._id}`}>
-                              <div className='anime-title'>{relation.relationDetails?.titles.english}</div>
+                              {/* <div className='anime-title'>{relation.relationDetails?.titles.english}</div> */}
                               <div className='anime-title'>{relation.typeofRelation}</div>
                           </Link>
                           </div>
@@ -283,74 +226,6 @@ useEffect(() => {
               ))}
           </div>
       </div>
-          
-      {/* Form for updating user progress */}
-      {activeModal === true && (
-        <div className="character-modal-overlay" onClick={handleModalClose}>
-          <div className="character-modal" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="character-modal-header">
-              <h1>Update Status</h1>
-              <button className="character-modal-close" onClick={handleModalClose}>
-                &times;
-              </button>
-            </div>
-            {/* Modal Body */}
-            <div className="character-modal-body">
-              <form onSubmit={handleSubmit}>
-              <div>
-                <label htmlFor="userProgress.status">Format:</label>
-                <div></div>
-                <select
-                  type="userProgress.status"
-                  id="userProgress.status"
-                  name="userProgress.status"
-                  value={userProgress.status}
-                  onChange={(handleStatusChange)}
-                >
-                  <option value="" disabled>Select Status</option>
-                  {availableStatus.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <label>Current Chapter:</label>
-              <input
-                type="text"
-                value={userProgress.currentChapter}
-                onChange={handleChapterChange}
-              />
-
-              <label>Current Volume:</label>
-              <input
-                type="text"
-                value={userProgress.currentVolume}
-                onChange={handleVolumeChange}
-              />
-
-              <button type="submit">Update Progress</button>
-            </form>
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* Add to My List button */}
-      {!isMangaAdded && (
-        <button onClick={handleAddToMyList} className='update'>
-          Add to My List
-        </button>
-      )}
-
-      {/* Update button only if the anime is added */}
-      {isMangaAdded && (
-        <button onClick={handleUpdate} className='update'>
-          Update
-        </button>
-      )}
     </div>
   );
 };

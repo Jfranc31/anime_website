@@ -1,7 +1,20 @@
-// src/Components/ListEditors/MangaEditor.js
+/**
+ * src/Components/ListEditors/MangaEditor.js
+ * Description: React component for editing details of a manga.
+*/
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+/**
+ * Functional component for editing details of a manga.
+ * @param {Object} props - Props passed to the component.
+ * @param {Object} props.manga - Manga object containing details like titles, images, etc.
+ * @param {string} props.userId - User ID associated with the manga.
+ * @param {function} props.closeModal - Function to close the modal.
+ * @param {function} props.onMangaDelete - Function to handle manga deletion.
+ * @returns {JSX.Element} - Rendered manga editor component.
+*/
 const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
     const [mangaDetails, setMangaDetails] = useState(null);
     const [userProgress, setUserProgress] = useState({
@@ -66,7 +79,7 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
         try {
             var response;
             if(isInUserList){
-                response = await axios.post(`http://localhost:8080/users/${userId}/updatedManga`, {
+                response = await axios.post(`http://localhost:8080/users/${userId}/updateManga`, {
                     mangaId: manga._id,
                     status: userProgress.status,
                     currentChapter: userProgress.currentChapter,
@@ -75,9 +88,9 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
             } else {
                 response = await axios.post(`http://localhost:8080/users/${userId}/addManga`, {
                     mangaId: mangaDetails._id,
-                status: "Planning",
-                currentChapter: 0,
-                currentVolume: 0,
+                status: userProgress.status || "Planning",
+                currentChapter: userProgress.currentChapter || 0,
+                currentVolume: userProgress.currentVolume || 0,
                 });
             }
 

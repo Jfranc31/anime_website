@@ -1,7 +1,20 @@
-// src/Components/ListEditors/AnimeEditor.js
+/**
+ * src/Components/ListEditors/AnimeEditor.js
+ * Description: React component for editing details of an anime.
+*/
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+/**
+ * Functional component for editing details of an anime.
+ * @param {Object} props - Props passed to the component.
+ * @param {Object} props.anime - Anime object containing details like titles, images, etc.
+ * @param {string} props.userId - User ID associated with the anime.
+ * @param {function} props.closeModal - Function to close the modal.
+ * @param {function} props.onAnimeDelete - Function to handle anime deletion.
+ * @returns {JSX.Element} - Rendered anime editor component.
+ */
 const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
   const [animeDetails, setAnimeDetails] = useState(null);
   const [userProgress, setUserProgress] = useState({
@@ -77,8 +90,8 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
       } else {
         response = await axios.post(`http://localhost:8080/users/${userId}/addAnime`, {
             animeId: animeDetails._id,
-            status: "Planning",
-            currentEpisode: 0,
+            status: userProgress.status || "Planning",
+            currentEpisode: userProgress.currentEpisode || 0,
         });
       }
   

@@ -1,6 +1,11 @@
-// /models/characterModel.js
+/**
+ *  /models/characterModel.js
+ * Description: Mongoose model for the 'CharacterModel' collection in MongoDB.
+ */
+
 import mongoose from '../db/mongoose.js';
 
+// Defining the schema for the 'CharacterModel' collection
 const characterSchema = new mongoose.Schema({
     names: {
         givenName: {
@@ -67,6 +72,7 @@ const characterSchema = new mongoose.Schema({
     ],
 });
 
+// Creating the 'CharacterModel' using the schema
 const CharacterModel = mongoose.model("CharacterModel",characterSchema)
 
 export default CharacterModel;

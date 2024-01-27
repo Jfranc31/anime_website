@@ -1,6 +1,7 @@
 // src/components/AddAnime.js
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import CreateCharacter from "../Components/CreateCharacter";
 import CharacterSearch from "../Components/Searches/CharacterSearch";
@@ -14,13 +15,26 @@ export default function AddAnime() {
         english: '',
         Native: '',
     },
+    releaseData: {
+      releaseStatus: "",
+      startDate: {
+          year: "",
+          month:"",
+          day: "",
+      },
+      endDate: {
+          year: "",
+          month: "",
+          day: "",
+      }
+  },
     typings: {
         Format: '',
         Source: '',
         CountryOfOrigin: '',
     },
     lengths: {
-        Episodes: 0,
+        Episodes: "",
         EpisodeDuration: 0,
     },
     genres: [],
@@ -35,6 +49,7 @@ export default function AddAnime() {
     activityTimestamp: 0,
 });
 
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("general");
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -61,7 +76,13 @@ export default function AddAnime() {
     'Supernatural',
     'Thriller',
 ];
-
+const availableStatus = [
+  'Finished Releasing', 
+  'Currently Releasing', 
+  'Not Yet Released', 
+  'Cancelled', 
+  'Hiatus'
+];
 const availableFormats = [
     'TV', 
     'TV Short', 
@@ -326,6 +347,7 @@ const handleSelectRelation = (type, selectedRelations) => {
         });
         setSelectedGenres([]);
         // You might want to redirect the user to a different page on success
+        navigate('/animes');
       } else {
         // Handle errors from the backend
         console.error('Failed to add anime:', res.data);
@@ -339,37 +361,26 @@ const handleSelectRelation = (type, selectedRelations) => {
   // handle change in form
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-  
-    // Check if the changed field is part of the nested structure
-    if (name.startsWith("titles.") || name.startsWith("typings.") || name.startsWith("lengths.") || name.startsWith("images.") || name.startsWith("DOB.")) {
-      const [mainField, subField] = name.split(".");
-  
-      // Ensure that typings is an object with nested properties
-      setFormData((prev) => ({
-        ...prev,
-        [mainField]: {
-          ...prev[mainField],
-          [subField]: type === 'select-multiple' ? [value] : value,
-        },
-      }));
-    } else if (name.startsWith("characters.") || name.startsWith('mangaRelations.') || name.startsWith('animeRelations.')) {
-      const [mainField, subField] = name.split(".");
-  
-      setFormData((prev) => ({
-        ...prev,
-        characters: prev.characters.map((item, index) =>
-          index.toString() === subField
-            ? { ...item, [mainField]: type === 'select-multiple' ? [...item[mainField], value] : value }
-            : item
-        ),
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === 'select-multiple' ? [value] : value,
-      }));
-    }
-  };
+
+    const updateNestedProperty = (prev, keys, newValue) => {
+        const [currentKey, ...restKeys] = keys;
+
+        if (!restKeys.length) {
+            // If no more keys left, update the value directly
+            return { ...prev, [currentKey]: type === 'select-multiple' ? [newValue] : newValue };
+        }
+
+        // Continue updating nested properties
+        return {
+            ...prev,
+            [currentKey]: updateNestedProperty(prev[currentKey] || {}, restKeys, newValue),
+        };
+    };
+
+    const updatedFormData = updateNestedProperty(formData, name.split('.'), value);
+
+    setFormData(updatedFormData);
+};
 
   // handle changing threw data fields
   const handleTabChange = (tab) => {
@@ -420,6 +431,90 @@ const handleSelectRelation = (type, selectedRelations) => {
           </div>
         </div>
       </div>
+
+      <div className='section'>
+            <h2>Release Data</h2>
+            <div className='grid'>
+                <div>
+                    <label htmlFor="releaseData.releaseStatus">Release Status:</label>
+                    <div></div>
+                    <select
+                    type="releaseData.releaseStatus"
+                    id="releaseData.releaseStatus"
+                    name="releaseData.releaseStatus"
+                    value={formData.releaseData.releaseStatus}
+                    onChange={(handleChange)}
+                    >
+                    <option value="" disabled>Select Status</option>
+                    {availableStatus.map((status) => (
+                        <option key={status} value={status}>
+                            {status}
+                        </option>
+                    ))}
+                    </select>
+                </div>
+                <div>
+                    <h2>Release Date</h2>
+                    <label htmlFor="releaseData.startDate.year">Year:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.startDate.year"
+                    name="releaseData.startDate.year"
+                    value={formData.releaseData.startDate.year}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.startDate.month">Month:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.startDate.month"
+                    name="releaseData.startDate.month"
+                    value={formData.releaseData.startDate.month}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.startDate.day">Day:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.startDate.day"
+                    name="releaseData.startDate.day"
+                    value={formData.releaseData.startDate.day}
+                    onChange={handleChange}
+                    />
+                </div>
+                <div>
+                    <h2>End Date</h2>
+                    <label htmlFor="releaseData.endDate.year">Year:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.endDate.year"
+                    name="releaseData.endDate.year"
+                    value={formData.releaseData.endDate.year}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.endDate.month">Month:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.endDate.month"
+                    name="releaseData.endDate.month"
+                    value={formData.releaseData.endDate.month}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.endDate.day">Day:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.endDate.day"
+                    name="releaseData.endDate.day"
+                    value={formData.releaseData.endDate.day}
+                    onChange={handleChange}
+                    />
+                </div>
+            </div>
+        </div>
 
       <div className="section">
         <h2>Typing</h2>

@@ -1,6 +1,11 @@
-// /models/userModel.js
+/**
+ * /models/userModel.js
+ * Description: Mongoose model for the 'UserModel' collection in MongoDB.
+ */
+
 import mongoose from 'mongoose';
 
+// Defining the schema for the 'UserModel' collection
 const userSchema = new mongoose.Schema({
     firstName : String,
     lastName : String,
@@ -45,6 +50,7 @@ const userSchema = new mongoose.Schema({
     }],
 })
 
+// Creating the 'UserModel' using the schema
 const UserModel = new mongoose.model("UserModel",userSchema)
 
 export default UserModel;

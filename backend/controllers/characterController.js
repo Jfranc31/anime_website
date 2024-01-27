@@ -1,8 +1,19 @@
-// /controllers/characterController.js
+/**
+ * controllers/characterController.js
+ * Description: Controller for handling character-related operations.
+ */
+
 import CharacterModel from "../Models/characterModel.js";
 import AnimeModel from "../Models/animeModel.js";
 import MangaModel from "../Models/mangaModel.js";
 
+/**
+ * @function getAllCharacters
+ * @description Get all character documents from the database.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of character documents.
+ */
 const getAllCharacters = async (req, res) => {
     try{
         const characters = await CharacterModel.find({});
@@ -13,6 +24,13 @@ const getAllCharacters = async (req, res) => {
     }
 };
 
+/**
+ * @function searchForCharacters
+ * @description Search for characters based on a provided query string.
+ * @param {Object} req - Express request object with query parameter.
+ * @param {Object} res - Express response object.
+ * @return {Object} - Object containing an array of found characters.
+ */
 const searchForCharacters = async (req, res) => {
     try {
         const searchTerm = req.query.query;
@@ -34,6 +52,13 @@ const searchForCharacters = async (req, res) => {
     }
 };
 
+/**
+ * @function getCharacterInfo
+ * @description Get information about a specific character.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Object} - Character document.
+ */
 const getCharacterInfo = async (req, res) => {
     try {
         const characterID = req.params.id;
@@ -48,6 +73,13 @@ const getCharacterInfo = async (req, res) => {
     }
 };
 
+/**
+ * @function createCharacter
+ * @description Create a new character document in the database.
+ * @param {Object} req - Express request object with character data.
+ * @param {Object} res - Express response object.
+ * @return {Object} - Created character document.
+ */
 const createCharacter = async (req, res) => {
     try {
         const { names, about, gender, age, DOB, characterImage, animes, mangas } = req.body;
@@ -126,6 +158,13 @@ const createCharacter = async (req, res) => {
     }
 };
 
+/**
+ * @function updateCharacter
+ * @description Update an existing character document in the database.
+ * @param {Object} req - Express request object with updated character data.
+ * @param {Object} res - Express response object.
+ * @return {Object} - Success message.
+ */
 const updateCharacter = async (req, res) => {
     try {
         const characterId = req.params.id;

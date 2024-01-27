@@ -35,8 +35,8 @@ export const UpdateManga = ({ match }) => {
             CountryOfOrigin: '',
         },
         lengths: {
-            Episodes: 0,
-            EpisodeDuration: 0,
+            chapters: "",
+            volumes: "",
         },
         genres: [],
         description: '',

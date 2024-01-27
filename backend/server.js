@@ -1,3 +1,8 @@
+/**
+ * server.js
+ * Description: Main server file for the Express application.
+ */
+
 import express from "express"
 import animeRoutes from "./routes/animeRoutes.js";
 import mangaRoutes from "./routes/mangaRoutes.js";
@@ -7,10 +12,16 @@ import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
 
+// Creating an Express application
 const app = express();
+
+// Middleware to parse JSON requests
 app.use(express.json())
+
+// Middleware to parse URL-encoded requests
 app.use(express.urlencoded({extended : false}))
 
+// Middleware for Cross-Origin Resource Sharing (CORS)
 import cors from 'cors';
 app.use(cors({
     origin: 'http://localhost:3000',
@@ -18,12 +29,13 @@ app.use(cors({
     credentials: true,
 }));
 
+// Using defined routes for different entities
 app.use('/animes', animeRoutes);
 app.use('/mangas', mangaRoutes);
 app.use('/characters', characterRoutes);
 app.use('/users', userRoutes);
 
-
+// Route for searching relations based on a query term and content type
 app.get('/searchrelations', async (req, res) => {
     try {
         const searchTerm = req.query.query;
@@ -62,40 +74,7 @@ app.get('/searchrelations', async (req, res) => {
     }
 });
 
-/*=================================
-            put
-===================================*/
-
-
-
-
-app.put('/anime/:id/notes', async (req, res) => {
-    try {
-        const animeId = req.params.id;
-        const { notes } = req.body;
-
-        const anime = await AnimeModel.findById(animeId);
-
-        if (!anime) {
-            return res.status(404).json({ message: 'Anime not found' });
-        }
-
-        anime.notes = notes;
-        await anime.save();
-
-        res.json({ message: 'Notes updated successfully' });
-    } catch (error) {
-        console.error('Failed to update notes:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-});
-
-/*=================================
-        get and post
-===================================*/
-
-// Assuming you have AnimeModel and MangaModel imported
-
+// Route for fetching the latest activities for a specific user
 app.get('/latest-activities/:userId', async (req, res) => {
     const userId = req.params.userId;
 
@@ -126,7 +105,26 @@ app.get('/latest-activities/:userId', async (req, res) => {
     }
 });
 
+app.put('/anime/:id/notes', async (req, res) => {
+    try {
+        const animeId = req.params.id;
+        const { notes } = req.body;
 
+        const anime = await AnimeModel.findById(animeId);
+
+        if (!anime) {
+            return res.status(404).json({ message: 'Anime not found' });
+        }
+
+        anime.notes = notes;
+        await anime.save();
+
+        res.json({ message: 'Notes updated successfully' });
+    } catch (error) {
+        console.error('Failed to update notes:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
 app.get('/anime/:id/notes', async (req, res) => {
     try {
@@ -142,9 +140,6 @@ app.get('/anime/:id/notes', async (req, res) => {
     }
 });
 
-/*============================
-        DELETE
-=============================*/
 app.delete('/browse/:id', async (req, res) => {
     console.log(req.body);
     try {
@@ -191,6 +186,7 @@ app.delete('/anime/:id/notes', async (req, res) => {
 /*============================
         listen
 =============================*/
+// Starting the Express server
 app.listen(8080,()=>{
     console.log("Server is runing at port 8080")
 })

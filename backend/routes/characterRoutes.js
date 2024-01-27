@@ -1,4 +1,8 @@
-// /routes/characterRoutes.js
+/**
+ * /routes/characterRoutes.js
+ * Description: Defines the routes related to character in the Express application.
+ */
+
 import express from 'express';
 import characterController from '../controllers/characterController.js';
 

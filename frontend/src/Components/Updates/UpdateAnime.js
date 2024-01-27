@@ -16,13 +16,26 @@ export const UpdateAnime = ({ match }) => {
             english: '',
             Native: '',
         },
+        releaseData: {
+            releaseStatus: "",
+            startDate: {
+                year: "",
+                month:"",
+                day: "",
+            },
+            endDate: {
+                year: "",
+                month: "",
+                day: "",
+            }
+        },
         typings: {
             Format: '',
             Source: '',
             CountryOfOrigin: '',
         },
         lengths: {
-            Episodes: 0,
+            Episodes: "",
             EpisodeDuration: 0,
         },
         genres: [],
@@ -63,7 +76,13 @@ export const UpdateAnime = ({ match }) => {
         'Supernatural',
         'Thriller',
     ];
-
+    const availableStatus = [
+        'Finished Releasing', 
+        'Currently Releasing', 
+        'Not Yet Released', 
+        'Cancelled', 
+        'Hiatus'
+    ];
     const availableFormats = [
         'TV', 
         'TV Short', 
@@ -338,9 +357,22 @@ export const UpdateAnime = ({ match }) => {
             role: character.role,
         }));
 
+        const animeRelationsArray = formData.animeRelations.map((relation) => ({
+            relationId: relation._id,
+            typeofRelation: relation.typeofRelation
+          }));
+      
+          const mangaRelationsArray = formData.mangaRelations.map((relation) => ({
+            relationId: relation._id,
+            typeofRelation: relation.typeofRelation
+          }));
+
+        // Create a new object with character array
         const updatedFormData = {
             ...formData,
             characters: charactersArray,
+            animeRelations: animeRelationsArray,
+            mangaRelations: mangaRelationsArray
         };
 
         try {
@@ -365,34 +397,25 @@ export const UpdateAnime = ({ match }) => {
     // handle change in form
     const handleChange = (e) => {
         const { name, value, type } = e.target;
-
-        if (name.startsWith('titles.') || name.startsWith('typings.') || name.startsWith('lengths.') || name.startsWith('images.')) {
-            const [mainField, subField] = name.split('.');
-
-            setFormData((prev) => ({
+    
+        const updateNestedProperty = (prev, keys, newValue) => {
+            const [currentKey, ...restKeys] = keys;
+    
+            if (!restKeys.length) {
+                // If no more keys left, update the value directly
+                return { ...prev, [currentKey]: type === 'select-multiple' ? [newValue] : newValue };
+            }
+    
+            // Continue updating nested properties
+            return {
                 ...prev,
-                [mainField]: {
-                    ...prev[mainField],
-                    [subField]: type === 'select-multiple' ? [value] : value,
-                },
-            }));
-        } else if (name.startsWith('characters.') || name.startsWith('mangaRelations.') || name.startsWith('animeRelations.')) {
-            const [mainField, subField] = name.split('.');
-
-            setFormData((prev) => ({
-                ...prev,
-                characters: prev.characters.map((item, index) =>
-                    index.toString() === subField
-                        ? { ...item, [mainField]: type === 'select-multiple' ? [...item[mainField], value] : value }
-                        : item
-                ),
-            }));
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: type === 'select-multiple' ? (value || []) : value,
-            }));            
-        }
+                [currentKey]: updateNestedProperty(prev[currentKey] || {}, restKeys, newValue),
+            };
+        };
+    
+        const updatedFormData = updateNestedProperty(formData, name.split('.'), value);
+    
+        setFormData(updatedFormData);
     };
     
     // handle changing threw data fields
@@ -440,6 +463,90 @@ export const UpdateAnime = ({ match }) => {
                 onChange={handleChange}
                 />
             </div>
+            </div>
+        </div>
+
+        <div className='section'>
+            <h2>Release Data</h2>
+            <div className='grid'>
+                <div>
+                    <label htmlFor="releaseData.releaseStatus">Release Status:</label>
+                    <div></div>
+                    <select
+                    type="releaseData.releaseStatus"
+                    id="releaseData.releaseStatus"
+                    name="releaseData.releaseStatus"
+                    value={formData.releaseData.releaseStatus}
+                    onChange={(handleChange)}
+                    >
+                    <option value="" disabled>Select Status</option>
+                    {availableStatus.map((status) => (
+                        <option key={status} value={status}>
+                            {status}
+                        </option>
+                    ))}
+                    </select>
+                </div>
+                <div>
+                    <h2>Release Date</h2>
+                    <label htmlFor="releaseData.startDate.year">Year:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.startDate.year"
+                    name="releaseData.startDate.year"
+                    value={formData.releaseData.startDate.year}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.startDate.month">Month:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.startDate.month"
+                    name="releaseData.startDate.month"
+                    value={formData.releaseData.startDate.month}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.startDate.day">Day:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.startDate.day"
+                    name="releaseData.startDate.day"
+                    value={formData.releaseData.startDate.day}
+                    onChange={handleChange}
+                    />
+                </div>
+                <div>
+                    <h2>End Date</h2>
+                    <label htmlFor="releaseData.endDate.year">Year:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.endDate.year"
+                    name="releaseData.endDate.year"
+                    value={formData.releaseData.endDate.year}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.endDate.month">Month:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.endDate.month"
+                    name="releaseData.endDate.month"
+                    value={formData.releaseData.endDate.month}
+                    onChange={handleChange}
+                    />
+                    <label htmlFor="releaseData.endDate.day">Day:</label>
+                    <div></div>
+                    <input
+                    type="text"
+                    id="releaseData.endDate.day"
+                    name="releaseData.endDate.day"
+                    value={formData.releaseData.endDate.day}
+                    onChange={handleChange}
+                    />
+                </div>
             </div>
         </div>
 

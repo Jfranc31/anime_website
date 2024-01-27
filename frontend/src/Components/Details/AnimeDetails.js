@@ -1,10 +1,18 @@
-// src/Components/Details/AnimeDetails.js
+/**
+ * src/Components/Details/AnimeDetails.js
+ * Description: React component for rendering details of an anime.
+*/
+
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
 
+/**
+ * Functional component representing details of an anime.
+ * @returns {JSX.Element} - Rendered anime details component.
+*/
 const AnimeDetails = () => {
   const { id } = useParams();
   const {userData,setUserData} = useContext(data)
@@ -16,83 +24,6 @@ const AnimeDetails = () => {
     status: 'Planning',
     currentEpisode: 0,
   });
-  const [activeModal, setActiveModal] = useState(false);
-
-  const availableStatus = ["Planning", "Watching", "Completed"];
-
-  const handleModalClose = () => {
-    setActiveModal(false);
-  };
-
-  const handleUpdate = () => {
-    setActiveModal(true);
-  };
-
-  const handleAddToMyList = async () => {
-    // Make a request to add the anime to the user's list
-    try {
-      const response = await axios.post(`http://localhost:8080/users/${userData._id}/addAnime`, {
-        animeId: animeDetails._id,
-        status: "Planning",
-        currentEpisode: 0,
-      });
-
-      // Assume the response includes updated user data
-      console.log(response.data.message);
-
-      setIsAnimeAdded(true);
-
-    } catch (error) {
-      console.error('Error adding anime to user list:', error);
-    }
-  };
-
-  const handleStatusChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      status: e.target.value,
-    });
-  };
-  
-  const handleEpisodeChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      currentEpisode: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    // Make a request to update user progress
-    try {
-      const response = await axios.post(`http://localhost:8080/users/${userData._id}/updateAnime`, {
-        animeId: animeDetails._id,
-        status: userProgress.status,
-        currentEpisode: userProgress.currentEpisode,
-      });
-
-      handleModalClose();
-  
-      // Assume the response includes updated user data
-      const updatedUser = response.data.user;
-
-      // Update the local state with the new user data
-      setUserData(updatedUser); // Assuming setUserData is a function to update user data in context
-      setAnimeDetails(animeDetails); // Optionally update anime details if needed
-      const existingAnimeIndex = updatedUser?.animes?.findIndex(anime => anime.animeId.toString() === id.toString());
-      // Update userProgress state with the new status and current episode
-      setUserProgress({
-          status: updatedUser.animes[existingAnimeIndex].status,
-          currentEpisode: updatedUser.animes[existingAnimeIndex].currentEpisode,
-      });
-
-      console.log(response.data.message);
-
-    } catch (error) {
-      console.error('Error updating user progress:', error);
-    }
-  };
 
   const [activeSection, setActiveSection] = useState('relations');
 
@@ -206,7 +137,7 @@ const AnimeDetails = () => {
     return <div>Loading...</div>;
   }
   
-console.log("CH: ", userProgress, isAnimeAdded);
+console.log("CH: ", isAnimeAdded, userProgress);
   return (
     <div>
       <div className='anime-page'>
@@ -227,10 +158,40 @@ console.log("CH: ", userProgress, isAnimeAdded);
 
       {/* Add an Update button */}
       <Link to={`/anime/${animeDetails._id}/update`}>
-        <button className='update-anime-button'>Update Anime</button>
+        <button className='update-anime-button'>Edit Anime</button>
       </Link>
 
       <AnimeNavbar showRelations={showRelations} showCharacters={showCharacters} />
+
+      {/* Series Data */}
+      <div className='series-data'>
+        <h3>Format</h3>
+        <div>{animeDetails.typings.Format}</div>
+        <h3>Source</h3>
+        <div>{animeDetails.typings.Source}</div>
+        <h3>Start Date</h3>
+        <div>{animeDetails.releaseData.startDate.month}/{animeDetails.releaseData.startDate.day}/{animeDetails.releaseData.startDate.year}</div>
+        {animeDetails.releaseData.endDate.year && (
+          <>
+            <h3>End Date</h3>
+            <div>{animeDetails.releaseData.endDate.month}/{animeDetails.releaseData.endDate.day}/{animeDetails.releaseData.endDate.year}</div>
+          </>
+        )}
+        {animeDetails.lengths.Episodes && (
+          <>
+            <h3>Episodes</h3>
+            <div>{animeDetails.lengths.Episodes}</div>
+          </>
+        )}
+        <h3>Episode Duration</h3>
+        <div>{animeDetails.lengths.EpisodeDuration}{" mins"}</div>
+        <h3>Genres</h3>
+        <div className='genres'>
+          {animeDetails.genres.map((genre, index) => (
+            <div key={index}>{genre}</div>
+          ))}
+        </div>
+      </div>
 
       {/* Overview Section */}
       <div className={`anime-page-relations ${activeSection === 'relations' ? 'show' : 'hide'}`}>
@@ -242,7 +203,7 @@ console.log("CH: ", userProgress, isAnimeAdded);
                 <img src={relation.relationDetails?.images.image} alt={relation.relationDetails?.titles.english || 'Unknown'} />
                 <div className='title-progress'>
                 <Link to={`/${relation.contentType}/${relation.relationDetails?._id}`}>
-                    <div className='anime-title'>{relation.relationDetails?.titles.english}</div>
+                    {/* <div className='anime-title'>{relation.relationDetails?.titles.english}</div> */}
                     <div className='anime-title'>{relation.typeofRelation}</div>
                 </Link>
                 </div>
@@ -271,67 +232,6 @@ console.log("CH: ", userProgress, isAnimeAdded);
           ))}
         </div>
       </div>
-      
-      {/* Form for updating user progress */}
-      {activeModal === true && (
-      <div className="character-modal-overlay" onClick={handleModalClose}>
-        <div className="character-modal" onClick={(e) => e.stopPropagation()}>
-          {/* Modal Header */}
-          <div className="character-modal-header">
-            <h1>Update Status</h1>
-            <button className="character-modal-close" onClick={handleModalClose}>
-              &times;
-            </button>
-          </div>
-          {/* Modal Body */}
-          <div className="character-modal-body">
-            <form onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="userProgress.status">Format:</label>
-              <div></div>
-              <select
-                type="userProgress.status"
-                id="userProgress.status"
-                name="userProgress.status"
-                value={userProgress.status}
-                onChange={(handleStatusChange)}
-              >
-                <option value="" disabled>Select Status</option>
-                {availableStatus.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-              <label>Current Episode:</label>
-              <input
-                type="text"
-                value={userProgress.currentEpisode}
-                onChange={handleEpisodeChange}
-              />
-
-              <button type="submit">Update Progress</button>
-            </form>
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* Add to My List button */}
-      {!isAnimeAdded && (
-        <button onClick={handleAddToMyList} className='update'>
-          Add to My List
-        </button>
-      )}
-
-      {/* Update button only if the anime is added */}
-      {isAnimeAdded && (
-        <button onClick={handleUpdate} className='update'>
-          Update
-        </button>
-      )}
     </div>
   );
 };

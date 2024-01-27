@@ -1,6 +1,11 @@
-// /models/animeModel.js
+/**
+ * /models/animeModel.js
+ * Description: Mongoose model for the 'AnimeModel' collection in MongoDB.
+ */
+
 import mongoose from '../db/mongoose.js';
 
+// Defining the schema for the 'AnimeModel' collection
 const animeSchema = new mongoose.Schema({
     titles: {
         romaji: {
@@ -13,6 +18,34 @@ const animeSchema = new mongoose.Schema({
         Native: {
             type: String,
         }
+    },
+    releaseData: {
+        releaseStatus: {
+            type: String,
+            enum: ['Finished Releasing', 'Currently Releasing', 'Not Yet Released', 'Cancelled', 'Hiatus']
+        },
+        startDate: {
+            year: {
+                type: String
+            },
+            month: {
+                type: String
+            },
+            day: {
+                type: String
+            },
+        },
+        endDate: {
+            year: {
+                type: String
+            },
+            month: {
+                type: String
+            },
+            day: {
+                type: String
+            },
+        },
     },
     typings: {
         Format: {
@@ -31,7 +64,6 @@ const animeSchema = new mongoose.Schema({
     lengths:{
         Episodes: {
             type: Number,
-            required: true
         },
         EpisodeDuration: {
             type: Number,
@@ -95,6 +127,7 @@ const animeSchema = new mongoose.Schema({
     },
 });
 
+// Creating the 'AnimeModel' using the schema
 const AnimeModel = mongoose.model('AnimeModel', animeSchema);
 
 export default AnimeModel;

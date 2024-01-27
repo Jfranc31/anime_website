@@ -3,6 +3,13 @@
 import React, { useState } from "react";
 import axios from 'axios';
 
+/**
+ * Functional component for character search.
+ * @param {Object} props - Props passed to the component.
+ * @param {function} props.onCharacterSelected - Function to handle character selection.
+ * @param {function} props.onClose - Function to close the character search.
+ * @returns {JSX.Element} - Rendered character search component.
+*/
 export default function CharacterSearch({ onCharacterSelected, onClose }) {
     const [characters, setCharacters] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');

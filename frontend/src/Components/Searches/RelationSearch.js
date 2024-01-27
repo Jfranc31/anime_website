@@ -3,6 +3,14 @@
 import React, { useState } from "react";
 import axios from 'axios';
 
+/**
+ * Functional component for relation search.
+ * @param {Object} props - Props passed to the component.
+ * @param {function} props.onRelationSelected - Function to handle relation selection.
+ * @param {string} props.searchType - Type of relation being searched (e.g., 'anime', 'manga').
+ * @param {function} props.onClose - Function to close the relation search.
+ * @returns {JSX.Element} - Rendered relation search component.
+*/
 export default function RelationSearch({ onRelationSelected, searchType, onClose }) {
     const [relations, setRelations] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');

@@ -1,8 +1,15 @@
-// src/Components/Details/CharacterDetails.js
+/**  
+ * src/Components/Details/CharacterDetails.js
+ * Description: React component for rendering details of a character.
+*/
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 
+/**
+ * Functional component representing details of a character.
+ * @returns {JSX.Element} - Rendered character details component.
+*/
 const CharacterDetails = () => {
   const { id } = useParams();
   const [characterDetails, setCharacterDetails] = useState(null);
@@ -78,7 +85,7 @@ const CharacterDetails = () => {
   return (
     <div>
       <div className='character-page'>
-        <h1>{[characterDetails.names.givenName, " ", characterDetails.names.surName]}</h1>
+        <h1>{characterDetails.names.givenName} {characterDetails.names.middleName} {characterDetails.names.surName}</h1>
         <h3>{characterDetails.names.alterNames}</h3>
       </div>
 

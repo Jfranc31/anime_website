@@ -1,6 +1,7 @@
 // src/components/AddManga.js
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import CreateCharacter from "../Components/CreateCharacter";
 import CharacterSearch from "../Components/Searches/CharacterSearch";
@@ -32,8 +33,8 @@ export default function AddManga() {
             CountryOfOrigin: '',
         },
         lengths: {
-            chapters: 0,
-            volumes: 0,
+            chapters: "",
+            volumes: "",
         },
         genres: [],
         description: '',
@@ -47,6 +48,7 @@ export default function AddManga() {
         activityTimestamp: 0,
     });
 
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('general');
     const [formErrors, setFormErrors] = useState({});
     const [selectedGenres, setSelectedGenres] = useState([]);
@@ -349,6 +351,7 @@ export default function AddManga() {
                     activityTimestamp: 0,
                 });
                 setSelectedGenres([]);
+                navigate('/mangas');
             } else {
                 console.error('Failed to update manga:', res.data);
             }

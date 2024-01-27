@@ -1,4 +1,8 @@
-// /routes/mangaRoutes.js
+/**
+ * /routes/mangaRoutes.js
+ * Description: Defines the routes related to manga in the Express application.
+ */
+
 import express from 'express';
 import mangaController from '../controllers/mangaController.js';
 

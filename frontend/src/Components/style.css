@@ -3,7 +3,7 @@
 ==============================================*/
 .container{
   max-width: 500px;
-  max-height: 300px;
+  max-height: auto;
   padding: 50px 20px;
   width: 400px;
   box-shadow: 1px 1px 10px rgba(0,0,0,0.1);
@@ -743,7 +743,7 @@ margin-bottom: 30px;
   background-color: #d32f2f; /* Darker shade for hover effect */
 }
 .character-button {
-  margin-left: 70%;
+  margin-left: 60%;
 }
 .character-button button {
   background-color: lightblue;
@@ -763,7 +763,7 @@ margin-bottom: 30px;
               Anime Page css
 ==============================================*/
 .mydiv{
-  height: 20px;
+  height: 75%;
 }
 .update {
   position: relative;
@@ -797,39 +797,41 @@ margin-bottom: 30px;
   position: absolute;
   left: 20%;
   text-align: left;
-  top: 5%;
+  top: 3%;
   max-width: 60%;
   /* margin-top: 20px; */
 }
 .anime-page-info-bk{
   min-height: 23%;
-  top: 50%; /* Updated to start from the top of the page */
+  top: 43%; /* Updated to start from the top of the page */
   left: 0;
   right: 0;
-  padding: 50px 20px;
-  width: 97.6%;
+  padding: 3% 2%;
+  width: 97.8%;
+  height: 23%;
   box-shadow: 1px 1px 10px rgba(0,0,0,0.1);
   border-radius: 0px;
   overflow: hidden;
   background: rgba(26, 28, 30, 0.8);
   position: absolute; /* Ensure it stays within the flow of the document */
-  margin-top: -4%; /* Add margin-top to create space from the top */
-  /* margin-right: 50%; */
 }
 .anime-page-img{
-  margin-bottom: 30px;
+  margin-bottom: 15%;
   left: 5%;
   top: 32%;
+  height: 33%;
+  width: 18%;
   position: absolute;
   align-items: center;
   color: rgb(200, 195, 188);
   z-index: 3;
 }
 .anime-page-img img{
-  width: 45%;
-  height: 5%;
+  width: 70%;
+  height: 100%;
   object-fit: cover;
-  margin-right: 20px;
+  align-items: center;
+  margin-right: 2%;
   z-index: 3;
 }
 .anime-page-notes{
@@ -841,9 +843,8 @@ margin-bottom: 30px;
 .anime-page-relations{
   position: absolute;
   top: 75%;
-  left: 10%;
+  left: 20%;
   color: gray;
-  text-align: center;
   width: 80%; 
   margin: 0 auto;
   padding: 20px; 
@@ -851,12 +852,39 @@ margin-bottom: 30px;
 .anime-page-characters{
   position: absolute;
   top: 75%;
-  left: 10%;
+  left: 20%;
   color: gray;
-  text-align: center;
   width: 80%; 
   margin: 0 auto; 
   padding: 20px;
+}
+.series-data {
+  position: absolute;
+  text-align: left;
+  background: rgba(26, 28, 30, 0.8);
+  color: gray;
+  top: 80%; /* Adjust the spacing between the title and series data */
+  left: 6%;
+  padding: 1%;
+  width: auto; /* Allow the container to adjust its width based on content */
+  white-space: nowrap; /* Prevent line breaks in the series data */
+}
+.series-data h3 {
+  margin: 0; /* Remove default margin for h3 */
+  font-size: 1em; /* Adjust font size if necessary */
+}
+.series-data div {
+  margin-bottom: 10px; /* Add space between each title-info pair */
+}
+.series-data div:last-child {
+  margin-bottom: 0; /* Remove margin for the last div to avoid extra space */
+}
+.series-data .genres {
+  display: flex;
+  flex-direction: column; /* Display genres vertically */
+}
+.series-data .genres div {
+  margin-bottom: 0; /* Remove margin between genres */
 }
 .character-page-references{
   position: absolute;
@@ -911,9 +939,9 @@ margin-bottom: 30px;
 .anime-navbar {
   position: absolute;
   margin-top: 11%;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
+  left: 43%;
+  /* transform: translateX(-50%); */
+  /* display: flex; */
   justify-content: center;
   padding: 10px;
   
@@ -924,9 +952,9 @@ margin-bottom: 30px;
   cursor: pointer;
   font-size: 14px;
   padding: 0 12px;
-  line-height: 20px;
-  height: 30px;
-  max-height: 30px;
+  line-height: 20%;
+  height: 30%;
+  max-height: 30%;
   background: none;
   font-weight: 700;
   border: 0;
@@ -997,7 +1025,7 @@ margin-bottom: 30px;
 }
 .character-modal {
   position: absolute;
-  top: 50%;
+  top: 60%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #04aa6d;
@@ -1070,8 +1098,8 @@ margin-bottom: 30px;
   top: 10%;
   position: absolute;
   align-items: center;
-  width: 14%;
-  height: 37%;
+  width: 13%;
+  height: 35%;
   color: rgb(200, 195, 188);
   z-index: 3;
 }
@@ -1117,7 +1145,7 @@ margin-bottom: 30px;
   width: 10%;
   height: 5%;
   left: 16.5%;
-  top: 48%;
+  top: 46%;
   z-index: 1000;
 }
 /*============================================*/

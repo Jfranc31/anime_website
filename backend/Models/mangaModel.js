@@ -1,6 +1,11 @@
-// /models/mangaModel.js
+/**
+ * /models/mangaModel.js
+ * Description: Mongoose model for the 'MangaModel' collection in MongoDB.
+ */
+
 import mongoose from "../db/mongoose.js";
 
+// Defining the schema for the 'MangaModel' collection
 const mangaSchema = new mongoose.Schema({
     titles: {
         romaji: {
@@ -59,11 +64,9 @@ const mangaSchema = new mongoose.Schema({
     lengths:{
         chapters: {
             type: Number,
-            required: true
         },
         volumes: {
             type: Number,
-            required: true
         }
     },
     genres: [
@@ -123,6 +126,7 @@ const mangaSchema = new mongoose.Schema({
     },
 });
 
+// Creating the 'MangaModel' using the schema
 const MangaModel = mongoose.model('MangaModel', mangaSchema);
 
 export default MangaModel;

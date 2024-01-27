@@ -1,4 +1,8 @@
-// /routes/animeRoutes.js
+/**
+ * /routes/animeRoutes.js
+ * Description: Defines the routes related to anime in the Express application.
+ */
+
 import express from 'express';
 import animeController from '../controllers/animeController.js';
 

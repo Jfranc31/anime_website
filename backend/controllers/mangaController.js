@@ -1,9 +1,20 @@
-// /controllers/mangaController.js
+/**
+ * controllers/mangaController.js
+ * Description: Controller for handling manga-related operations.
+ */
+
 import MangaModel from "../Models/mangaModel.js";
 import CharacterModel from "../Models/characterModel.js";
 import AnimeModel from "../Models/animeModel.js";
 import { getReverseRelationType } from "../functions.js";
 
+/**
+ * @function getAllManga
+ * @description Get all manga documents from the database.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of manga documents.
+ */
 const getAllManga = async (req, res) => {
     try {
         const mangas = await MangaModel.find({});
@@ -14,6 +25,13 @@ const getAllManga = async (req, res) => {
     }
 };
 
+/**
+ * @function getMangaInfo
+ * @description Get information about a specific manga.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Object} - Manga document.
+ */
 const getMangaInfo = async (req, res) => {
     try {
         const mangaID = req.params.id;
@@ -28,6 +46,13 @@ const getMangaInfo = async (req, res) => {
     }
 };
 
+/**
+ * @function createManga
+ * @description Create a new manga document in the database.
+ * @param {Object} req - Express request object with manga data.
+ * @param {Object} res - Express response object.
+ * @return {Object} - Created manga document.
+ */
 const createManga = async (req, res) => {
     try {
         const { titles, releaseData, typings, lengths, genres, description, images, characters, mangaRelations, animeRelations, activityTimestamp } =req.body;
@@ -146,6 +171,13 @@ const createManga = async (req, res) => {
     }
 };
 
+/**
+ * @function updateManga
+ * @description Update an existing manga document in the database.
+ * @param {Object} req - Express request object with updated manga data.
+ * @param {Object} res - Express response object.
+ * @return {Object} - Success message.
+ */
 const updateManga = async (req, res) => {
     const { id } = req.params;
 
@@ -173,30 +205,34 @@ const updateManga = async (req, res) => {
                 const { characterId, role } = characterInfo;
         
                 // Use updateOne to atomically update the document
-                const result = await CharacterModel.updateOne(
+                var exisitingCharacter = await CharacterModel.findOne(
                     {
                         _id: characterId,
-                        'mangas.mangaId': { $ne: updatedManga._id }, // Ensure mangaId is not already present
-                    },
-                    {
-                        $push: {
-                            mangas: {
-                                mangaId: updatedManga._id,
-                                role: role,
-                            },
-                        },
+                        'mangas.mangaId': id, // Ensure mangaId is not already present
                     }
                 );
         
                 // Check if the document was modified (i.e., updated)
-                if (result.nModified > 0) {
+                if (!exisitingCharacter) {
                     // Document was updated, return the updated character
-                    const updatedCharacter = await CharacterModel.findById(characterId);
-                    return updatedCharacter;
+                    exisitingCharacter = await CharacterModel.findByIdAndUpdate(
+                        characterId,
+                        {
+                            $push: {
+                                mangas: {
+                                    mangaId: id,
+                                    role: role,
+                                },
+                            },
+                        },
+                        { new: true, upsert: true }
+                    );
+
+                } else {
+                    exisitingCharacter.mangas.find(manga => String(manga.mangaId) === id).role = role;
+                    exisitingCharacter = await exisitingCharacter.save();
                 }
-        
-                // Document was not updated, return null
-                return null;
+                return exisitingCharacter;
             })
         );
 
@@ -206,7 +242,7 @@ const updateManga = async (req, res) => {
                 const { relationId, typeofRelation } = relationInfo;
 
                 // Update the relation on the current manga
-                const result = await MangaModel.updateOne(
+                let animeRelationResult = await MangaModel.updateOne(
                     {
                         _id: id,
                         'animeRelations.relationId': relationId,
@@ -219,11 +255,46 @@ const updateManga = async (req, res) => {
                 );
 
                 // Check if the document was modified (i.e., updated)
-                if (result.nModified > 0) {
+                if (animeRelationResult.nModified > 0) {
                     // Document was updated, return the updated relation
                     const updatedManga = await MangaModel.findById(id);
                     return updatedManga.mangaRelations.find((r) => String(r.relationId) === String(relationId));
-                } else {
+                } else if (animeRelationResult.matchedCount === 0) {
+                    const reverseRelationType = getReverseRelationType(typeofRelation);
+                    animeRelationResult = await MangaModel.findByIdAndUpdate(
+                        id,
+                        {
+                            $push: {
+                                animeRelations: {
+                                    relationId: relationId,
+                                    typeofRelation: typeofRelation,
+                                },
+                            }
+                        },
+                        { new: true }
+                    );
+
+                    // Handle the opposite relation for the related anime
+                    const reverseRelationAnime = await AnimeModel.findByIdAndUpdate(
+                        relationId,
+                        {
+                            $push: {
+                                mangaRelations: {
+                                    relationId: id,
+                                    typeofRelation: reverseRelationType,
+                                },
+                            }
+                        },
+                        { new: true }
+                    );
+
+                    // Return both the updated relation on the current manga and the reverse anime
+                    return [
+                        animeRelationResult,
+                        reverseRelationAnime ? reverseRelationAnime.mangaRelations.find((r) => String(r.relationId) === String(id)) : null,
+                    ];
+                }
+                else {
                     // Document was not updated, try updating the reverse relation on the related anime
                     const reverseRelationAnime = await AnimeModel.findOneAndUpdate(
                         {
@@ -239,7 +310,7 @@ const updateManga = async (req, res) => {
 
                     // Return both the updated relation on the current manga and the reverse relation anime
                     return [
-                        updatedManga.animeRelations.find((r) => String(r.relationId) === String(relationId)),
+                        animeRelationResult,
                         reverseRelationAnime ? reverseRelationAnime.mangaRelations.find((r) => String(r.relationId) === String(id)) : null,
                     ];
                 }
@@ -251,7 +322,7 @@ const updateManga = async (req, res) => {
                 const { relationId, typeofRelation } = relationInfo;
 
                 // update the relation on the current manga
-                const result = await MangaModel.updateOne(
+                let mangaRelationResult = await MangaModel.updateOne(
                     {
                         _id: id,
                         'mangaRelations.relationId': relationId,
@@ -264,10 +335,44 @@ const updateManga = async (req, res) => {
                 );
 
                 // Check if the document was modified (i.e., updated)
-                if (result.nModified > 0) {
+                if (mangaRelationResult.nModified > 0) {
                     // Document was updated, return the updated relation
                     const updatedManga = await MangaModel.findById(id);
                     return updatedManga.mangaRelations.find((r) => String(r.relationId) === String(relationId));
+                } else if (mangaRelationResult.matchedCount === 0) {
+                    const reverseRelationType = getReverseRelationType(typeofRelation);
+                    mangaRelationResult = await MangaModel.findByIdAndUpdate(
+                        id,
+                        {
+                            $push: {
+                                mangaRelations: {
+                                    relationId: relationId,
+                                    typeofRelation: typeofRelation,
+                                },
+                            },
+                        },
+                        { new: true }
+                    );
+
+                    // Handle the opposite relation for the related manga
+                    const reverseRelationManga = await MangaModel.findByIdAndUpdate(
+                        relationId,
+                        {
+                            $push: {
+                                mangaRelations: {
+                                    relationId: id,
+                                    typeofRelation: reverseRelationType,
+                                },
+                            }
+                        },
+                        { new: true }
+                    );
+
+                    // Return both the updated relation on the current manga and the reverse manga
+                    return [
+                        mangaRelationResult,
+                        reverseRelationManga ? reverseRelationManga.mangaRelations.find((r) => String(r.relationId) === String(id)) : null,
+                    ];
                 } else {
                     // Document was not updated, try updating the reverse relation on the related manga
                     const reverseRelationManga = await MangaModel.findOneAndUpdate(
@@ -284,7 +389,7 @@ const updateManga = async (req, res) => {
 
                     // Return both the updated relation on the current manga and the reverse relation for manga
                     return [
-                        updatedManga.mangaRelations.find((r) => String(r.relationId) === String(relationId)),
+                        mangaRelationResult,
                         reverseRelationManga ? reverseRelationManga.mangaRelations.find((r) => String(r.relationId) === String(id)) : null,
                     ];
                 }
