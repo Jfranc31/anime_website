@@ -858,7 +858,18 @@ export default function AddManga() {
             <div className="character-modal" onClick={(e) => e.stopPropagation()}>
                 {/* Modal Header */}
                 <div className="character-modal-header">
-                <h2>{activeModal === 'createCharacter' ? 'Create Character' : 'Search Character'}</h2>
+                <h2>{
+                    activeModal === 'createCharacter' 
+                    ? 'Create Character' 
+                    : activeModal === 'characterSearch'
+                    ? 'Search Character'
+                    : activeModal === 'animeRelationSearch'
+                    ? 'Search Anime'
+                    : activeModal === 'mangaRelationSearch'
+                    ? 'Search Manga'
+                    : ''
+                    }
+                </h2>
                 <button className="character-modal-close" onClick={handleModalClose}>
                     &times;
                 </button>

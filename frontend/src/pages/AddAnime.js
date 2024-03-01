@@ -856,7 +856,15 @@ const handleSelectRelation = (type, selectedRelations) => {
             {/* Modal Header */}
             <div className="character-modal-header">
               <h1>{
-                activeModal === 'createCharacter' ? 'Create Character' : 'Search Character'
+                activeModal === 'createCharacter' 
+                ? 'Create Character' 
+                : activeModal === 'characterSearch'
+                ? 'Search Character'
+                : activeModal === 'animeRelationSearch'
+                ? 'Search Anime'
+                : activeModal === 'mangaRelationSearch'
+                ? 'Search Manga'
+                : ''
               }</h1>
               <button className="character-modal-close" onClick={handleModalClose}>
                 &times;

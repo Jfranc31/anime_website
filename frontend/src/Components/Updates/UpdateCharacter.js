@@ -102,7 +102,7 @@ export const UpdateCharacter = ({ match }) => {
 
   return (
     <div className="update-character-container">
-      <form className="form-container" onSubmit={handleSubmit}>
+      <form className="character-form-container" onSubmit={handleSubmit}>
         <div className="section">
           <h3>Names</h3>
           <div className="grid">

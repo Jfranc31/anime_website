@@ -8,6 +8,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
+import AnimeEditor from '../ListEditors/AnimeEditor';
 
 /**
  * Functional component representing details of an anime.
@@ -20,6 +21,7 @@ const AnimeDetails = () => {
   const [isAnimeAdded, setIsAnimeAdded] = useState(null);
   const [charactersDetails, setCharactersDetails] = useState([]);
   const [relationsDetails, setRelationsDetails] = useState([]);
+  const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
   const [userProgress, setUserProgress] = useState({
     status: 'Planning',
     currentEpisode: 0,
@@ -136,6 +138,24 @@ const AnimeDetails = () => {
   if (!animeDetails) {
     return <div>Loading...</div>;
   }
+
+  const onAnimeDelete = (animeId) => {
+    // Implement logic to update the user's anime list after deletion
+    setUserData((prevUserData) => {
+      const updatedUser = { ...prevUserData };
+      const updatedAnimes = updatedUser.animes.filter((anime) => anime.animeId !== animeId);
+      updatedUser.animes = updatedAnimes;
+      return updatedUser;
+    });
+  };
+
+  const handleModalClose = () => {
+    setIsAnimeEditorOpen(false);
+  };
+
+  const openEditor = () => {
+    setIsAnimeEditorOpen(true);
+  };
   
 console.log("CH: ", isAnimeAdded, userProgress);
   return (
@@ -160,6 +180,21 @@ console.log("CH: ", isAnimeAdded, userProgress);
       <Link to={`/anime/${animeDetails._id}/update`}>
         <button className='update-anime-button'>Edit Anime</button>
       </Link>
+
+      <button className='open-editor-button' onClick={openEditor}>Open Editor</button>
+
+      {/* Render AnimeEditor modal conditionally */}
+      {isAnimeEditorOpen && (
+          <div className="character-modal-overlay" onClick={handleModalClose}>
+
+              <AnimeEditor
+                  anime={animeDetails}
+                  userId={userData._id}
+                  closeModal={handleModalClose}
+                  onAnimeDelete={onAnimeDelete}
+              />
+          </div>
+      )}
 
       <AnimeNavbar showRelations={showRelations} showCharacters={showCharacters} />
 

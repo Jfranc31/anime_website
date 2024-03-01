@@ -49,21 +49,24 @@ const Home = () => {
     return mangaList.find((manga) => manga._id === mangaId);
   };
 
-  // const filterAnimeByWatching = () => {
-  //   return latestActivities.filter((activity) => 
-  //     userAnimeList.some((userAnime) => userAnime.status === 'Watching' && userAnime.animeId === activity._id)
-  //   );
-  // };
+  const filterAnimeByWatching = () => {
+    return latestActivities.filter((activity) =>
+      userAnimeList.some(
+        (userAnime) =>
+          userAnime.status === 'Watching' && userAnime.animeId === activity.animeDetails?._id
+      )
+    );
+  };
   
-  // const filterMangaByReading = () => {
-  //   return latestActivities.filter((activity) =>
-  //     userMangaList.some(
-  //       (userManga) => userManga.status === 'Reading' && userManga.mangaId === activity._id
-  //     )
-  //   );
-  // };
+  const filterMangaByReading = () => {
+    return latestActivities.filter((activity) =>
+      userMangaList.some(
+        (userManga) => userManga.status === 'Reading' && userManga.mangaId === activity.mangaDetails?._id
+      )
+    );
+  };
   
-  console.log(latestActivities);
+  console.log(userAnimeList, filterAnimeByWatching);
 
   return (
       <div className='activity-page'>
@@ -101,7 +104,7 @@ const Home = () => {
 
         <div className='activity-progress-container-bk'>
           <ul className='activity-progress-container'>
-            {userAnimeList.map((activity) => (
+            {filterAnimeByWatching().map((activity) => (
               <li key={activity.animeId}>
                 <div className='activity-progress-container-img'>
                   <Link to={`/anime/${activity.animeId}`}>
@@ -149,7 +152,7 @@ const Home = () => {
 
         <div className='manga-activity-progress-container-bk'>
           <ul className='activity-manga-progress-container'>
-            {userMangaList.map((activity) => (
+            {filterMangaByReading().map((activity) => (
               <li key={activity.mangaId}>
                 <div className='activity-progress-container-img'>
                   <Link to={`/manga/${activity.mangaId}`}>

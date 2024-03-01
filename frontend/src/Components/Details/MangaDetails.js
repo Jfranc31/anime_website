@@ -7,6 +7,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
+import MangaEditor from '../ListEditors/MangaEditor';
 
 /**
  * Functional component representing details of a manga.
@@ -19,6 +20,7 @@ const MangaDetails = () => {
   const [isMangaAdded, setIsMangaAdded] = useState(null);
   const [charactersDetails, setCharactersDetails] = useState([]);
   const [relationsDetails, setRelationsDetails] = useState([]);
+  const [isMangaEditorOpen, setIsMangaEditorOpen] = useState(false);
   const [userProgress, setUserProgress] = useState({
     status: 'Planning',
     currentChapter: 0,
@@ -139,7 +141,25 @@ useEffect(() => {
     return <div>Loading...</div>;
   }
 
-  console.log("CH: ", userProgress, isMangaAdded);
+  const onMangaDelete = (mangaId) => {
+    // Implement logic to update the user's anime list after deletion
+    setUserData((prevUserData) => {
+      const updatedUser = { ...prevUserData };
+      const updatedMangas = updatedUser.mangas.filter((manga) => manga.mangaId !== mangaId);
+      updatedUser.animes = updatedMangas;
+      return updatedUser;
+    });
+  };
+
+  const handleModalClose = () => {
+    setIsMangaEditorOpen(false);
+  };
+
+  const openEditor = () => {
+    setIsMangaEditorOpen(true);
+  };
+
+  console.log("CH: ", userProgress, isMangaAdded, mangaDetails);
   return (
     <div>
       <div className='anime-page'>
@@ -162,6 +182,21 @@ useEffect(() => {
       <Link to={`/manga/${mangaDetails._id}/update`}>
           <button className='update-anime-button'>Edit Manga</button>
       </Link>
+
+      <button className='open-editor-button' onClick={openEditor}>Open Editor</button>
+
+      {/* Render AnimeEditor modal conditionally */}
+      {isMangaEditorOpen && (
+          <div className="character-modal-overlay" onClick={handleModalClose}>
+
+              <MangaEditor
+                  manga={mangaDetails}
+                  userId={userData._id}
+                  closeModal={handleModalClose}
+                  onAnimeDelete={onMangaDelete}
+              />
+          </div>
+      )}
 
       <AnimeNavbar showRelations={showRelations} showCharacters={showCharacters} />
 
