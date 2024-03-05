@@ -17,10 +17,9 @@ The Anime Project is a web application designed to track and manage anime series
 
 - **Frontend**: React.js
 - **Backend**: Node.js
-- **Database**: [Database Name]
-- **Authentication**: [Authentication Method, e.g., JWT]
-- **Styling**: CSS/SCSS
-- **APIs**: [Any external APIs used, if applicable]
+- **Database**: MongoDB
+- **Authentication**: Session-based authentication using cookies
+- **Styling**: CSS
 
 ## Getting Started
 
@@ -65,5 +64,3 @@ If you have any questions or feedback, feel free to contact the project maintain
 - GitHub: github.com/Jfranc31
 
 ---
-
-Feel free to customize this template with specific details about your project, such as the database used, external APIs integrated, or any additional features implemented.
