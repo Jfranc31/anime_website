@@ -38,8 +38,12 @@ export const UpdateCharacter = ({ match }) => {
   useEffect(() => {
     const fetchCharacterDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/characters/character/${id}`);
-        console.log('Character details response:', response.data); // Log the response
+        const response = await axios.get(
+          `http://localhost:8080/characters/character/${id}`
+        );
+        console.log(
+          'Character details response:', response.data
+        ); // Log the response
         setCharacterData(response.data);
       } catch (error) {
         console.error('Error fetching character details:', error);
@@ -81,7 +85,9 @@ export const UpdateCharacter = ({ match }) => {
       console.log('Submitting form...', characterData);
   
       // Make the API call to update character details
-      const res = await axios.put(`http://localhost:8080/characters/character/${id}`, characterData);
+      const res = await axios.put(
+        `http://localhost:8080/characters/character/${id}`, characterData
+      );
   
       console.log('Response from server:', res.data);
   
@@ -248,7 +254,10 @@ export const UpdateCharacter = ({ match }) => {
               />
               {characterData.characterImage && (
                 <div className="image-preview">
-                  <img src={characterData.characterImage} alt="Character Preview" />
+                  <img 
+                    src={characterData.characterImage} 
+                    alt="Character Preview" 
+                  />
                 </div>
               )}
             </div>

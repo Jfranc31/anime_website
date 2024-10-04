@@ -22,7 +22,14 @@ const animeSchema = new mongoose.Schema({
     releaseData: {
         releaseStatus: {
             type: String,
-            enum: ['Finished Releasing', 'Currently Releasing', 'Not Yet Released', 'Cancelled', 'Hiatus']
+            enum: 
+                [
+                    'Finished Releasing', 
+                    'Currently Releasing', 
+                    'Not Yet Released', 
+                    'Cancelled', 
+                    'Hiatus'
+                ]
         },
         startDate: {
             year: {
@@ -54,7 +61,21 @@ const animeSchema = new mongoose.Schema({
         },
         Source: {
             type: String,
-            enum: ["Original", "Manga", "Anime", "Light Novel", "Web Novel", "Novel", "Doujinshi", "Video Game", "Visual Novel", "Comic", "Game", "Live Action"]
+            enum: 
+                [
+                    "Original", 
+                    "Manga", 
+                    "Anime", 
+                    "Light Novel", 
+                    "Web Novel", 
+                    "Novel", 
+                    "Doujinshi", 
+                    "Video Game", 
+                    "Visual Novel", 
+                    "Comic", 
+                    "Game", 
+                    "Live Action"
+                ]
         },
         CountryOfOrigin: {
             type: String,
@@ -105,7 +126,21 @@ const animeSchema = new mongoose.Schema({
             },
             typeofRelation: {
                 type: String,
-                enum: ['Adaptation', 'Source', 'Prequel', 'Sequel', 'Side Story', 'Character', 'Summary', 'Alternative', 'Spin Off', 'Other', 'Compilations', 'Contains'],
+                enum: 
+                    [
+                        'Adaptation', 
+                        'Source', 
+                        'Prequel', 
+                        'Sequel', 
+                        'Side Story', 
+                        'Character', 
+                        'Summary', 
+                        'Alternative', 
+                        'Spin Off', 
+                        'Other', 
+                        'Compilations', 
+                        'Contains'
+                    ],
             },
         }
     ],  
@@ -117,7 +152,21 @@ const animeSchema = new mongoose.Schema({
             },
             typeofRelation: {
                 type: String,
-                enum: ['Adaptation', 'Source', 'Prequel', 'Sequel', 'Side Story', 'Character', 'Summary', 'Alternative', 'Spin Off', 'Other', 'Compilations', 'Contains'],
+                enum: 
+                    [
+                        'Adaptation', 
+                        'Source', 
+                        'Prequel', 
+                        'Sequel', 
+                        'Side Story', 
+                        'Character', 
+                        'Summary', 
+                        'Alternative', 
+                        'Spin Off', 
+                        'Other', 
+                        'Compilations', 
+                        'Contains'
+                    ],
             },
         }
     ],

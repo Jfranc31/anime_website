@@ -12,9 +12,11 @@ export const MangaProvider = ({ children }) => {
             try {
 
                 // Fetch data from your API
-                const response = await fetch('http://localhost:8080/mangas/mangas', {
-                    credentials: 'include',
-                });
+                const response = await fetch(
+                    'http://localhost:8080/mangas/mangas', {
+                        credentials: 'include',
+                    }
+                );
 
                 const data = await response.json();
 
@@ -45,7 +47,9 @@ export const useMangaContext = () => {
     const context = useContext(MangaContext);
 
     if (!context) {
-      throw new Error('useAnimeContext must be used within an MangaProvider');
+        throw new Error(
+            'useAnimeContext must be used within an MangaProvider'
+        );
     }
 
     return context;

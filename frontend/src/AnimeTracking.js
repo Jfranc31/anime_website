@@ -25,10 +25,18 @@ const AnimeTracking = ({ animeId, userId }) => {
     return (
         <div>
             <label>Status:</label>
-            <input type="text" value={status} onChange={(e) => setStatus(e.target.value)} />
+            <input 
+                type="text" 
+                value={status} 
+                onChange={(e) => setStatus(e.target.value)} 
+            />
 
             <label>Current Episode:</label>
-            <input type="text" value={currentEpisode} onChange={(e) => setCurrentEpisode(e.target.value)} />
+            <input 
+                type="text" 
+                value={currentEpisode} 
+                onChange={(e) => setCurrentEpisode(e.target.value)} 
+            />
 
             <button onClick={handleUpdateShow}>Update Show</button>
         </div>

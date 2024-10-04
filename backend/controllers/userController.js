@@ -10,7 +10,7 @@ import bcrypt from 'bcrypt';
 
 /**
  * @function registerUser
- * @description Register a new user by hashing the password before saving to the database.
+ * @description Register a new user by hashing the password before saving to db
  * @param {Object} req - Express request object with user data.
  * @param {Object} res - Express response object.
  * @return {Object} - Success or error message.
@@ -46,7 +46,8 @@ const registerUser = async (req, res) => {
 
 /**
  * @function loginUser
- * @description Log in a user by comparing the provided password with the hashed password in the database.
+ * @description Log in a user by comparing the provided password with the 
+ *              hashed password in the database.
  * @param {Object} req - Express request object with login credentials.
  * @param {Object} res - Express response object.
  * @return {Object} - Success or error message along with user information.
@@ -58,10 +59,13 @@ const loginUser = async (req, res) => {
         const user = await UserModel.findOne({ email: email });
 
         if (!user) {
-            return res.status(404).json({ message: "This email id is not registered" });
+            return res.status(404).json({ 
+                message: "This email id is not registered" 
+            });
         }
 
-        // Compare the provided password with the hashed password in the database
+        // Compare the provided password with the hashed password in the 
+        // database
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (passwordMatch) {
@@ -101,7 +105,8 @@ const getUserInfo = async (req, res) => {
  * @description Add an anime to a user's list.
  * @param {Object} req - Express request object with user ID and anime data.
  * @param {Object} res - Express response object.
- * @return {Object} - Success or error message along with updated user information.
+ * @return {Object} - Success or error message along with updated user 
+ *                    information.
  */
 const addAnime = async (req, res) => {
     const { userId } = req.params;
@@ -129,7 +134,9 @@ const addAnime = async (req, res) => {
         // Fetch the updated user with populated anime details
         const updatedUser = await UserModel.findById(userId);
 
-        return res.json({ message: "Anime updated successfully", user: updatedUser });
+        return res.json({ 
+            message: "Anime updated successfully", user: updatedUser 
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Internal Server Error" });
@@ -141,7 +148,8 @@ const addAnime = async (req, res) => {
  * @description Add a manga to a user's list.
  * @param {Object} req - Express request object with user ID and manga data.
  * @param {Object} res - Express response object.
- * @return {Object} - Success or error message along with updated user information.
+ * @return {Object} - Success or error message along with updated user 
+ *                    information.
  */
 const addManga = async (req, res) => {
     const { userId } = req.params;
@@ -167,7 +175,9 @@ const addManga = async (req, res) => {
         // Fetch the updated user with populated manga details
         const updatedUser = await UserModel.findById(userId);
 
-        return res.json({ message: "Manga updated successfully", user: updatedUser });
+        return res.json({ 
+            message: "Manga updated successfully", user: updatedUser 
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Internal Server Error" });
@@ -177,9 +187,11 @@ const addManga = async (req, res) => {
 /**
  * @function updateUserAnime
  * @description Update the status and progress of an anime in a user's list.
- * @param {Object} req - Express request object with user ID and updated anime data.
+ * @param {Object} req - Express request object with user ID and updated anime 
+ *                       data.
  * @param {Object} res - Express response object.
- * @return {Object} - Success or error message along with updated user information.
+ * @return {Object} - Success or error message along with updated user 
+ *                    information.
  */
 const updateUserAnime = async (req, res) => {
     const { userId } = req.params;
@@ -194,53 +206,72 @@ const updateUserAnime = async (req, res) => {
         }
 
         // Check if the anime is already in the user's list
-        const existingAnimeIndex = user.animes.findIndex(anime => anime.animeId.toString() === animeId.toString());
+        const existingAnimeIndex = user.animes.findIndex(
+            anime => anime.animeId.toString() === animeId.toString()
+        );
 
 
         if (existingAnimeIndex !== -1) {
-            const anime = await AnimeModel.findById(animeId).select('lengths.Episodes');
+            const anime = 
+                await AnimeModel.findById(animeId).select('lengths.Episodes');
     
             // Check if max episodes is 0 (indicating no limit)
-            const maxEpisodes = anime.lengths.Episodes === null ? null : anime.lengths.Episodes;
+            const maxEpisodes = 
+                anime.lengths.Episodes === null ? 
+                null : anime.lengths.Episodes;
     
             // Update the existing show
             if (status === "Completed") {
                 user.animes[existingAnimeIndex].status = status;
                 user.animes[existingAnimeIndex].currentEpisode = maxEpisodes;
             } else if (status === "Planning") {
-                if (currentEpisode > 0 && (currentEpisode < maxEpisodes || maxEpisodes === null)) {
+                if (
+                    currentEpisode > 0 && 
+                    (currentEpisode < maxEpisodes || maxEpisodes === null)
+                ) {
                     user.animes[existingAnimeIndex].status = "Watching";
-                    user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
+                    user.animes[existingAnimeIndex].currentEpisode = 
+                        currentEpisode;
                 } else if (currentEpisode >= maxEpisodes) {
                     if (maxEpisodes !== null) {
                         user.animes[existingAnimeIndex].status = "Completed";
-                        user.animes[existingAnimeIndex].currentEpisode = maxEpisodes;
+                        user.animes[existingAnimeIndex].currentEpisode = 
+                            maxEpisodes;
                     } else {
                         user.animes[existingAnimeIndex].status = status;
-                        user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
+                        user.animes[existingAnimeIndex].currentEpisode = 
+                            currentEpisode;
                     }
                 } else {
                     user.animes[existingAnimeIndex].status = status;
-                    user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
+                    user.animes[existingAnimeIndex].currentEpisode = 
+                        currentEpisode;
                 }
             } else {
                 user.animes[existingAnimeIndex].status = status;
                 if (currentEpisode >= maxEpisodes) {
                     if (maxEpisodes !== null) {
                         user.animes[existingAnimeIndex].status = "Completed";
-                        user.animes[existingAnimeIndex].currentEpisode = maxEpisodes;
+                        user.animes[existingAnimeIndex].currentEpisode = 
+                            maxEpisodes;
                     } else {
-                        user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
+                        user.animes[existingAnimeIndex].currentEpisode = 
+                            currentEpisode;
                     }
                 } else {
-                    user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
+                    user.animes[existingAnimeIndex].currentEpisode = 
+                        currentEpisode;
                 }
             }
 
             const activity = new Date();
 
-            user.animes[existingAnimeIndex].activityTimestamp = activity.toLocaleString('en-US');
-            console.log(activity, user.animes[existingAnimeIndex].activityTimestamp);
+            user.animes[existingAnimeIndex].activityTimestamp = 
+                activity.toLocaleString('en-US');
+            console.log(
+                activity, 
+                user.animes[existingAnimeIndex].activityTimestamp
+            );
 
             // Save the updated user
             await user.save();
@@ -248,9 +279,13 @@ const updateUserAnime = async (req, res) => {
             // Fetch the updated user with populated anime details
             const updatedUser = await UserModel.findById(userId);
 
-            return res.json({ message: "Anime updated successfully", user: updatedUser });
+            return res.json({ 
+                message: "Anime updated successfully", user: updatedUser 
+            });
         } else {
-            return res.status(404).json({ message: "Anime not found in user's list" });
+            return res.status(404).json({ 
+                message: "Anime not found in user's list" 
+            });
         }
     } catch (error) {
         console.error(error);
@@ -261,9 +296,11 @@ const updateUserAnime = async (req, res) => {
 /**
  * @function updateUserManga
  * @description Update the status and progress of a manga in a user's list.
- * @param {Object} req - Express request object with user ID and updated manga data.
+ * @param {Object} req - Express request object with user ID and updated manga 
+ *                       data.
  * @param {Object} res - Express response object.
- * @return {Object} - Success or error message along with updated user information.
+ * @return {Object} - Success or error message along with updated user 
+ *                    information.
  */
 const updateUserManga = async (req, res) => {
     const { userId } = req.params;
@@ -276,14 +313,22 @@ const updateUserManga = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const existingMangaIndex = user.mangas.findIndex(manga => manga.mangaId.toString() === mangaId.toString());
+        const existingMangaIndex = user.mangas.findIndex(
+            manga => manga.mangaId.toString() === mangaId.toString()
+        );
 
         if (existingMangaIndex !== -1) {
-            const mangaChapters = await MangaModel.findById(mangaId).select('lengths.chapters');
-            const mangaVolumes = await MangaModel.findById(mangaId).select('lengths.volumes');
+            const mangaChapters = 
+                await MangaModel.findById(mangaId).select('lengths.chapters');
+            const mangaVolumes = 
+                await MangaModel.findById(mangaId).select('lengths.volumes');
 
-            const maxChapters = mangaChapters.lengths.chapters === null ? currentChapter : mangaChapters.lengths.chapters;
-            const maxVolumes = mangaVolumes.lengths.volumes === null ? currentVolume : mangaVolumes.lengths.volumes;
+            const maxChapters = 
+                mangaChapters.lengths.chapters === null ? 
+                currentChapter : mangaChapters.lengths.chapters;
+            const maxVolumes = 
+                mangaVolumes.lengths.volumes === null ? 
+                currentVolume : mangaVolumes.lengths.volumes;
 
             console.log("Current Chapter:", currentChapter);
             console.log("Current Volume:", currentVolume);
@@ -299,8 +344,10 @@ const updateUserManga = async (req, res) => {
                     (currentChapter <= maxChapters || maxChapters === null) &&
                     (currentVolume <= maxVolumes || maxVolumes === null)) {
                     user.mangas[existingMangaIndex].status = "Reading";
-                    user.mangas[existingMangaIndex].currentChapter = currentChapter;
-                    user.mangas[existingMangaIndex].currentVolume = currentVolume;
+                    user.mangas[existingMangaIndex].currentChapter = 
+                        currentChapter;
+                    user.mangas[existingMangaIndex].currentVolume = 
+                        currentVolume;
                 } else {
                     user.mangas[existingMangaIndex].status = status;
                     user.mangas[existingMangaIndex].currentChapter = 0;
@@ -309,13 +356,16 @@ const updateUserManga = async (req, res) => {
             } else {
                 user.mangas[existingMangaIndex].status = status;
                 if (currentChapter <= maxChapters || maxChapters === null) {
-                    user.mangas[existingMangaIndex].currentChapter = currentChapter;
+                    user.mangas[existingMangaIndex].currentChapter = 
+                        currentChapter;
                 } else {
                     user.mangas[existingMangaIndex].status = "Completed";
-                    user.mangas[existingMangaIndex].currentChapter = maxChapters;
+                    user.mangas[existingMangaIndex].currentChapter = 
+                        maxChapters;
                 }
                 if (currentVolume <= maxVolumes || maxVolumes === null) {
-                    user.mangas[existingMangaIndex].currentVolume = currentVolume;
+                    user.mangas[existingMangaIndex].currentVolume = 
+                        currentVolume;
                 } else {
                     user.mangas[existingMangaIndex].status = "Completed";
                     user.mangas[existingMangaIndex].currentVolume = maxVolumes;
@@ -323,15 +373,20 @@ const updateUserManga = async (req, res) => {
             }
 
             const activity = new Date();
-            user.mangas[existingMangaIndex].activityTimestamp = activity.toLocaleString('en-US');
+            user.mangas[existingMangaIndex].activityTimestamp = 
+                activity.toLocaleString('en-US');
 
             await user.save();
 
             const updatedUser = await UserModel.findById(userId);
 
-            return res.json({ message: "Manga updated successfully", user: updatedUser });
+            return res.json({ 
+                message: "Manga updated successfully", user: updatedUser 
+            });
         } else {
-            return res.status(404).json({ message: "Manga not found in user's list" });
+            return res.status(404).json({ 
+                message: "Manga not found in user's list" 
+            });
         }
     } catch (error) {
         console.error(error);
@@ -353,7 +408,9 @@ const removeAnime = async (req, res) => {
     try{
         const user = await UserModel.findById(userId);
 
-        const animeIndex = user.animes.findIndex((userAnime) => userAnime.animeId.toString() === animeId);
+        const animeIndex = 
+            user.animes.findIndex((userAnime) => 
+                userAnime.animeId.toString() === animeId);
         console.log(animeIndex);
 
         if (animeIndex !== -1) {
@@ -385,7 +442,9 @@ const removeManga = async (req, res) => {
     try{
         const user = await UserModel.findById(userId);
 
-        const mangaIndex = user.mangas.findIndex((userManga) => userManga.mangaId.toString() === mangaId);
+        const mangaIndex = 
+            user.mangas.findIndex((userManga) => 
+                userManga.mangaId.toString() === mangaId);
         console.log(mangaIndex);
 
         if (mangaIndex !== -1) {

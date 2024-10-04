@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+
 import CreateCharacter from "../Components/CreateCharacter";
 import CharacterSearch from "../Components/Searches/CharacterSearch";
 import RelationSearch from "../Components/Searches/RelationSearch";
@@ -134,23 +135,25 @@ export default function AddManga() {
         setActiveModal(null);
     };
 
-    // Existing Character --------------------------------------------
+    //#region Existing Character ----------------------------------------------
     const handleAddExistingCharacter = () => {
         setActiveModal('characterSearch');
     };
     const handleSelectExistingCharacter = (selectedCharacters) => {
-        const charactersWithDefaultRole = selectedCharacters.map((character) => ({
-        ...character,
-        role: "", // Set the default role to an empty string
-        }));
+        const charactersWithDefaultRole = selectedCharacters.map((character) => 
+            ({
+                ...character,
+                role: "", // Set the default role to an empty string
+            })
+        );
         setFormData((prevFormData) => ({
         ...prevFormData,
         characters: [...prevFormData.characters, ...charactersWithDefaultRole],
         }));
     };
-    // ---------------------------------------------------------------
+    //#endregion --------------------------------------------------------------
 
-    // Handle Character type / Removal -------------------------------
+    //#region Handle Character type / Removal ---------------------------------
     const handleCharacterTypeChange = (e, index) => {
         const newType = e.target.value;
         updateCharacterType(index, newType);
@@ -175,9 +178,9 @@ export default function AddManga() {
         };
         });
     };
-    // ---------------------------------------------------------------
+    //#endregion --------------------------------------------------------------
 
-    // Handle Relation type / Removal --------------------------------
+    //#region Handle Relation type / Removal ----------------------------------
     const handleRelationTypeChange = (e, type, index) => {
         const newType = e.target.value;
         updateRelationType(type, index, newType);
@@ -204,38 +207,46 @@ export default function AddManga() {
             };
         });
     };
-    // ---------------------------------------------------------------
+    //#endregion --------------------------------------------------------------
 
-    // Relation ------------------------------------------------------
+    //#region Relation --------------------------------------------------------
     const handleAddRelation = (type) => {
         setActiveModal(`${type}RelationSearch`);
     };
     const handleSelectRelation = (type, selectedRelations) => {
-        const relationsWithDefaultRelation = selectedRelations.map((relation) => ({
-            ...relation,
-            typeofRelation: "",
-        }));
+        const relationsWithDefaultRelation = selectedRelations.map(
+            (relation) => ({
+                ...relation,
+                typeofRelation: "",
+            })
+        );
         setFormData((prevFormData) => ({
             ...prevFormData,
-            [`${type}Relations`]: [...prevFormData[`${type}Relations`], ...relationsWithDefaultRelation],
+            [`${type}Relations`]: 
+                [...prevFormData[`${type}Relations`],
+                ...relationsWithDefaultRelation
+            ],
         }));
     };
-    // ---------------------------------------------------------------
+    //#endregion --------------------------------------------------------------
 
-    // Create Charater ------------------------------
+    //#region Create Character ------------------------------------------------
     const handleAddCharacter = (newCharacter) => {
         setActiveModal('createCharacter');
     };
     const handleAddingCharacter = (selectedCharacter) => {
         // Assuming selectedCharacter is a single character object
         setFormData((prevFormData) => ({
-        ...prevFormData,
-        characters: [...prevFormData.characters, { ...selectedCharacter, role: "" }],
+            ...prevFormData,
+            characters: [
+                ...prevFormData.characters, 
+                { ...selectedCharacter, role: "" }
+            ],
         }));
     };
-    // ----------------------------------------------
+    //#endregion --------------------------------------------------------------
 
-    // Genre Related-------------------------------
+    //#region Genre Related----------------------------------------------------
     const handleGenreChange = (selectedGenre) => {
         setSelectedGenres((prevGenres) => {
             const updatedGenres = [...prevGenres];
@@ -264,7 +275,7 @@ export default function AddManga() {
             genres: prevData.genres.filter((genre) => genre !== removedGenre),
         }));
     };
-    // --------------------------------------------
+    //#endregion --------------------------------------------------------------
 
     // Handle form submission
     const handleSubmit = async (e) => {
@@ -284,15 +295,19 @@ export default function AddManga() {
             role: character.role,
         }));
 
-        const animeRelationsArray = formData.animeRelations.map((relation) => ({
-            relationId: relation._id,
-            typeofRelation: relation.typeofRelation
-          }));
-      
-          const mangaRelationsArray = formData.mangaRelations.map((relation) => ({
-            relationId: relation._id,
-            typeofRelation: relation.typeofRelation
-          }));
+        const animeRelationsArray = formData.animeRelations.map(
+            (relation) => ({
+                relationId: relation._id,
+                typeofRelation: relation.typeofRelation
+            })
+        );
+    
+        const mangaRelationsArray = formData.mangaRelations.map(
+            (relation) => ({
+                relationId: relation._id,
+                typeofRelation: relation.typeofRelation
+            })
+        );
 
         const updatedFormData = {
             ...formData,
@@ -304,12 +319,16 @@ export default function AddManga() {
         try {
             console.log('Current formData:', updatedFormData);
 
-            const res = await axios.post(`http://localhost:8080/mangas/addmanga`, updatedFormData);
+            const res = await axios.post(
+                `http://localhost:8080/mangas/addmanga`, updatedFormData
+            );
 
             console.log('Response from backend:', res.data);
 
             if (res.status === 201) {
-                console.log('Manga and characters updated successfully!', res.data);
+                console.log(
+                    'Manga and characters updated successfully!', res.data
+                );
                 
                 setFormData({
                     titles: {
@@ -369,17 +388,30 @@ export default function AddManga() {
     
             if (!restKeys.length) {
                 // If no more keys left, update the value directly
-                return { ...prev, [currentKey]: type === 'select-multiple' ? [newValue] : newValue };
+                return { 
+                    ...prev, 
+                    [currentKey]: 
+                        type === 'select-multiple' ? [newValue] : newValue 
+                };
             }
     
             // Continue updating nested properties
             return {
                 ...prev,
-                [currentKey]: updateNestedProperty(prev[currentKey] || {}, restKeys, newValue),
+                [currentKey]: 
+                    updateNestedProperty(
+                        prev[currentKey] || {}, 
+                        restKeys, 
+                        newValue
+                    ),
             };
         };
     
-        const updatedFormData = updateNestedProperty(formData, name.split('.'), value);
+        const updatedFormData = updateNestedProperty(
+            formData, 
+            name.split('.'), 
+            value
+        );
     
         setFormData(updatedFormData);
     };
@@ -392,7 +424,7 @@ export default function AddManga() {
 
     console.log("FormData: ", formData);
 
-    // Data Fields ------------------------
+    //#region Data Fields -----------------------------------------------------
     const renderGeneralSection = () => (
         <>
         <div className="section">
@@ -439,7 +471,9 @@ export default function AddManga() {
             <h2>Release Data</h2>
             <div className='grid'>
                 <div>
-                    <label htmlFor="releaseData.releaseStatus">Release Status:</label>
+                    <label htmlFor="releaseData.releaseStatus">
+                        Release Status:
+                    </label>
                     <div></div>
                     <select
                     type="releaseData.releaseStatus"
@@ -559,7 +593,9 @@ export default function AddManga() {
                 </select>
             </div>
             <div>
-                <label htmlFor="typings.CountryOfOrigin">Country of Origin:</label>
+                <label htmlFor="typings.CountryOfOrigin">
+                    Country of Origin:
+                </label>
                 <div></div>
                 <select
                 type="typings.CountryOfOrigin"
@@ -630,11 +666,19 @@ export default function AddManga() {
                         {selectedGenres.map((genre) => (
                             <div key={genre} className="selected-genre">
                                 {genre}
-                                <button onClick={() => handleRemoveGenre(genre)}>x</button>
+                                <button 
+                                    onClick={() => handleRemoveGenre(genre)}
+                                >
+                                    x
+                                </button>
                             </div>
                         ))}
                     </div>
-                    {formErrors.genres && <div className="error-message">{formErrors.genres}</div>}
+                    {formErrors.genres && (
+                        <div className="error-message">
+                            {formErrors.genres}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -652,6 +696,7 @@ export default function AddManga() {
         </div>
         </>
     );
+
     const renderImagesSection = () => (
         <>
         <div className="section">
@@ -697,11 +742,14 @@ export default function AddManga() {
         <div className="section">
             <h2>Characters</h2>
             <div className='character-button'>
-                <button type="button" onClick={() => handleAddExistingCharacter()}>
-                Add Existing Character
+                <button 
+                    type="button" 
+                    onClick={() => handleAddExistingCharacter()}
+                >
+                    Add Existing Character
                 </button>
                 <button type="button" onClick={() => handleAddCharacter()}>
-                Create Character
+                    Create Character
                 </button>
             </div>
             <div className="characters">
@@ -718,7 +766,14 @@ export default function AddManga() {
                     <div className="character-details">
                     <p>
                         {character.names &&
-                        `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
+                            [
+                                character.names.givenName, 
+                                character.names.middleName, 
+                                character.names.surName
+                            ]
+                            .filter(Boolean) // Removes any empty / false value
+                            .join(' ') // Joins the names with a single space
+                        }
                     </p>
                     <label htmlFor={`characterType-${index}`}>Type:</label>
                     <select
@@ -737,7 +792,10 @@ export default function AddManga() {
                     </div>
                 </div>
                 {/* Add a button to remove the character */}
-                <button type="button" onClick={() => handleRemoveCharacter(index)}>
+                <button 
+                    type="button" 
+                    onClick={() => handleRemoveCharacter(index)}
+                >
                     Remove
                 </button>
                 </div>
@@ -751,10 +809,16 @@ export default function AddManga() {
             <div className="section">
                 <h2>Relations</h2>
                 <div className="character-button">
-                    <button type="button" onClick={() => handleAddRelation('anime')}>
+                    <button 
+                        type="button" 
+                        onClick={() => handleAddRelation('anime')}
+                    >
                         Add Anime Relation
                     </button>
-                    <button type="button" onClick={() => handleAddRelation('manga')}>
+                    <button 
+                        type="button" 
+                        onClick={() => handleAddRelation('manga')}
+                    >
                         Add Manga Relation
                     </button>
                 </div>
@@ -772,23 +836,45 @@ export default function AddManga() {
                                         {relation.titles &&
                                             `${relation.titles.english || ''}`}
                                     </p>
-                                    <label htmlFor={`animeRelationType-${index}`}>Type:</label>
+                                    <label 
+                                        htmlFor={`animeRelationType-${index}`}
+                                    >
+                                        Type:
+                                    </label>
                                     <select
                                         id={`animeRelationType-${index}`}
                                         name={`animeRelationType-${index}`}
                                         value={relation.typeofRelation}
-                                        onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
+                                        onChange={
+                                            (e) => handleRelationTypeChange(
+                                                e, 
+                                                'anime', 
+                                                index
+                                            )
+                                        }
                                     >
-                                        <option value="" disabled>Select Relation</option>
-                                        {availableRelation.map((relationType) => (
-                                            <option key={relationType} value={relationType}>
-                                                {relationType}
-                                            </option>
-                                        ))}
+                                        <option value="" disabled>
+                                            Select Relation
+                                        </option>
+                                        {availableRelation.map(
+                                            (relationType) => (
+                                                <option 
+                                                    key={relationType} 
+                                                    value={relationType}
+                                                >
+                                                    {relationType}
+                                                </option>
+                                            )
+                                        )}
                                     </select>
                                 </div>
                             </div>
-                            <button type="button" onClick={() => handleRemoveRelation('anime', index)}>
+                            <button 
+                                type="button" 
+                                onClick={
+                                    () => handleRemoveRelation('anime', index)
+                                }
+                            >
                                 Remove
                             </button>
                         </div>
@@ -806,23 +892,45 @@ export default function AddManga() {
                                         {relation.titles &&
                                             `${relation.titles.english || ''}`}
                                     </p>
-                                    <label htmlFor={`mangaRelationType-${index}`}>Type:</label>
+                                    <label 
+                                        htmlFor={`mangaRelationType-${index}`}
+                                    >
+                                        Type:
+                                    </label>
                                     <select
                                         id={`mangaRelationType-${index}`}
                                         name={`mangaRelationType-${index}`}
                                         value={relation.typeofRelation}
-                                        onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
+                                        onChange={
+                                            (e) => handleRelationTypeChange(
+                                                e, 
+                                                'manga', 
+                                                index
+                                            )
+                                        }
                                     >
-                                        <option value="" disabled>Select Relation</option>
-                                        {availableRelation.map((relationType) => (
-                                            <option key={relationType} value={relationType}>
-                                                {relationType}
-                                            </option>
-                                        ))}
+                                        <option value="" disabled>
+                                            Select Relation
+                                        </option>
+                                        {availableRelation.map(
+                                            (relationType) => (
+                                                <option 
+                                                    key={relationType} 
+                                                    value={relationType}
+                                                >
+                                                    {relationType}
+                                                </option>
+                                            )
+                                        )}
                                     </select>
                                 </div>
                             </div>
-                            <button type="button" onClick={() => handleRemoveRelation('manga', index)}>
+                            <button 
+                                type="button" 
+                                onClick={
+                                    () => handleRemoveRelation('manga', index)
+                                }
+                            >
                                 Remove
                             </button>
                         </div>
@@ -831,22 +939,38 @@ export default function AddManga() {
             </div>
         </>
     );
-    // ------------------------------------
+    //#endregion --------------------------------------------------------------
 
     return (
         <div className="add-anime-container">
         <div className="add-anime-container-tabs">
-            <button className="add-anime-btn" form="submitAnime" type="submit" >
-            Submit
+            <button 
+                className="add-anime-btn" 
+                form="submitAnime" 
+                type="submit"
+            >
+                Submit
             </button>
-            <button onClick={() => handleTabChange("general")}>General</button>
-            <button onClick={() => handleTabChange("images")}>Images</button>
-            <button onClick={() => handleTabChange("characters")}>Characters</button>
-            <button onClick={() => handleTabChange("relations")}>Relations</button>
+            <button onClick={() => handleTabChange("general")}>
+                General
+            </button>
+            <button onClick={() => handleTabChange("images")}>
+                Images
+            </button>
+            <button onClick={() => handleTabChange("characters")}>
+                Characters
+            </button>
+            <button onClick={() => handleTabChange("relations")}>
+                Relations
+            </button>
             {/* Add more buttons for additional tabs */}
         </div>
 
-        <form className="form-container" id="submitAnime"  onSubmit={handleSubmit}>
+        <form 
+            className="form-container" 
+            id="submitAnime"  
+            onSubmit={handleSubmit}
+        >
             {activeTab === "general" && renderGeneralSection()}
             {activeTab === "images" && renderImagesSection()}
             {activeTab === "characters" && renderCharactersSection()}
@@ -854,29 +978,38 @@ export default function AddManga() {
         </form>
 
         {activeModal && (
-            <div className="character-modal-overlay" onClick={handleModalClose}>
-            <div className="character-modal" onClick={(e) => e.stopPropagation()}>
+            <div 
+                className="character-modal-overlay" 
+                onClick={handleModalClose}
+            >
+            <div 
+                className="character-modal" 
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Modal Header */}
                 <div className="character-modal-header">
-                <h2>{
-                    activeModal === 'createCharacter' 
-                    ? 'Create Character' 
-                    : activeModal === 'characterSearch'
-                    ? 'Search Character'
-                    : activeModal === 'animeRelationSearch'
-                    ? 'Search Anime'
-                    : activeModal === 'mangaRelationSearch'
-                    ? 'Search Manga'
-                    : ''
-                    }
-                </h2>
-                <button className="character-modal-close" onClick={handleModalClose}>
-                    &times;
-                </button>
+                    <h2>{
+                        activeModal === 'createCharacter' 
+                        ? 'Create Character' 
+                        : activeModal === 'characterSearch'
+                        ? 'Search Character'
+                        : activeModal === 'animeRelationSearch'
+                        ? 'Search Anime'
+                        : activeModal === 'mangaRelationSearch'
+                        ? 'Search Manga'
+                        : ''
+                        }
+                    </h2>
+                    <button 
+                        className="character-modal-close" 
+                        onClick={handleModalClose}
+                    >
+                        &times;
+                    </button>
                 </div>
                 {/* Modal Body */}
                 <div className="character-modal-body">
-                {/* Render the corresponding modal content based on activeModal state */}
+                {/* Render the corresponding modal based on activeModal */}
                 {activeModal === 'createCharacter' && (
                     <CreateCharacter
                     onCharacterCreated={handleAddingCharacter}

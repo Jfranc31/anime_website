@@ -42,7 +42,12 @@ app.get('/searchrelations', async (req, res) => {
         const contentType = req.query.contentType;
         let foundRelations = [];
 
-        console.log('Relation Search - Search Term:', searchTerm, 'Content Type:', contentType);
+        console.log(
+            'Relation Search - Search Term:', 
+            searchTerm, 
+            'Content Type:', 
+            contentType
+        );
 
 
         if (contentType === 'anime') {
@@ -62,7 +67,7 @@ app.get('/searchrelations', async (req, res) => {
                 ]
             });
         } else {
-            // Invalid content type, return an empty array or handle accordingly
+            // Invalid content type, return an empty array or handle according
             res.json({ relations: [] });
             return;
         }
@@ -86,16 +91,24 @@ app.get('/latest-activities/:userId', async (req, res) => {
         }
 
         // Populate anime details for each activity
-        const userAnimeActivities = await Promise.all(user.animes.slice(0, 10).map(async (activity) => {
-            const animeDetails = await AnimeModel.findById(activity.animeId);
-            return { ...activity.toObject(), animeDetails };
-        }));
+        const userAnimeActivities = 
+            await Promise.all(user.animes.slice(0, 10).map(
+                async (activity) => {
+                    const animeDetails = 
+                        await AnimeModel.findById(activity.animeId);
+                    return { ...activity.toObject(), animeDetails };
+                }
+            ));
 
         // Populate manga details for each activity
-        const userMangaActivities = await Promise.all(user.mangas.slice(0, 10).map(async (activity) => {
-            const mangaDetails = await MangaModel.findById(activity.mangaId);
-            return { ...activity.toObject(), mangaDetails };
-        }));
+        const userMangaActivities = 
+            await Promise.all(user.mangas.slice(0, 10).map(
+                async (activity) => {
+                const mangaDetails = 
+                    await MangaModel.findById(activity.mangaId);
+                return { ...activity.toObject(), mangaDetails };
+                }
+            ));
 
         const activities = [...userAnimeActivities, ...userMangaActivities];
         res.json(activities);

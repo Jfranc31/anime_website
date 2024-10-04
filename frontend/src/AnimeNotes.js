@@ -7,7 +7,9 @@ const AnimeNotes = ({ animeId }) => {
     useEffect(() => {
         const fetchNotes = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/anime/${animeId}/notes`);
+                const response = await axios.get(
+                    `http://localhost:8080/anime/${animeId}/notes`
+                );
                 setNotes(response.data.notes);
             } catch (error) {
                 console.error('Error fetching anime notes:', error);
@@ -19,7 +21,9 @@ const AnimeNotes = ({ animeId }) => {
 
     const handleSaveNotes = async () => {
         try {
-            await axios.put(`http://localhost:8080/anime/${animeId}/notes`, { notes });
+            await axios.put(
+                `http://localhost:8080/anime/${animeId}/notes`, { notes }
+            );
             console.log('Notes saved successfully');
         } catch (error) {
             console.error('Failed to save notes:', error);

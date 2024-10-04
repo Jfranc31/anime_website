@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+
 import CreateCharacter from "../Components/CreateCharacter";
 import CharacterSearch from "../Components/Searches/CharacterSearch";
 import RelationSearch from "../Components/Searches/RelationSearch";
@@ -11,50 +12,50 @@ export default function AddAnime() {
   // Initialize state for form data
   const [formData, setFormData] = useState({
     titles: {
-        romaji: '',
-        english: '',
-        Native: '',
+      romaji: '',
+      english: '',
+      Native: '',
     },
     releaseData: {
       releaseStatus: "",
       startDate: {
-          year: "",
-          month:"",
-          day: "",
+        year: "",
+        month:"",
+        day: "",
       },
       endDate: {
-          year: "",
-          month: "",
-          day: "",
+        year: "",
+        month: "",
+        day: "",
       }
-  },
+    },
     typings: {
-        Format: '',
-        Source: '',
-        CountryOfOrigin: '',
+      Format: '',
+      Source: '',
+      CountryOfOrigin: '',
     },
     lengths: {
-        Episodes: "",
-        EpisodeDuration: 0,
+      Episodes: "",
+      EpisodeDuration: 0,
     },
     genres: [],
     description: '',
     images: {
-        image: '',
-        border: '',
+      image: '',
+      border: '',
     },
     characters: [],
     mangaRelations: [],
     animeRelations:[],
     activityTimestamp: 0,
-});
+  });
 
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("general");
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
-  
+
   const availableGenres = [
     'Action',
     'Adventure',
@@ -75,15 +76,15 @@ export default function AddAnime() {
     'Sports',
     'Supernatural',
     'Thriller',
-];
-const availableStatus = [
-  'Finished Releasing', 
-  'Currently Releasing', 
-  'Not Yet Released', 
-  'Cancelled', 
-  'Hiatus'
-];
-const availableFormats = [
+  ];
+  const availableStatus = [
+    'Finished Releasing', 
+    'Currently Releasing', 
+    'Not Yet Released', 
+    'Cancelled', 
+    'Hiatus'
+  ];
+  const availableFormats = [
     'TV', 
     'TV Short', 
     'Movie', 
@@ -91,8 +92,8 @@ const availableFormats = [
     'OVA', 
     'ONA', 
     'Music'
-];
-const availableSource = [
+  ];
+  const availableSource = [
     'Original',
     'Manga',
     'Anime',
@@ -105,19 +106,19 @@ const availableSource = [
     'Comic',
     'Game',
     'Live Action',
-];
-const availableCountry = [
+  ];
+  const availableCountry = [
     'China', 
     'Japan', 
     'South Korea', 
     'Taiwan'
-];
-const availableRole = [
+  ];
+  const availableRole = [
     "Main", 
     "Supporting", 
     "Background"
-];
-const availableRelation = [
+  ];
+  const availableRelation = [
     "Adaptation", 
     "Source", 
     "Prequel", 
@@ -130,13 +131,13 @@ const availableRelation = [
     "Other", 
     "Compilations", 
     "Contains"
-];
+  ];
 
-const handleModalClose = () => {
+  const handleModalClose = () => {
     setActiveModal(null);
-};
+  };
 
-// Existing Character --------------------------------------------
+//#region Existing Character --------------------------------------------------
   const handleAddExistingCharacter = () => {
     setActiveModal('characterSearch');
   };
@@ -150,9 +151,9 @@ const handleModalClose = () => {
       characters: [...prevFormData.characters, ...charactersWithDefaultRole],
     }));
   };
-// ---------------------------------------------------------------
+//#endregion ------------------------------------------------------------------
 
-// Handle Character type / Removal -------------------------------
+//#region Handle Character type / Removal -------------------------------------
   const handleCharacterTypeChange = (e, index) => {
     const newType = e.target.value;
     updateCharacterType(index, newType);
@@ -177,54 +178,53 @@ const handleModalClose = () => {
       };
     });
   };
-// ---------------------------------------------------------------
+//#endregion ------------------------------------------------------------------
 
-// Handle Relation type / Removal --------------------------------
-const handleRelationTypeChange = (e, type, index) => {
-  const newType = e.target.value;
-  updateRelationType(type, index, newType);
-};
+//#region Handle Relation type / Removal --------------------------------------
+  const handleRelationTypeChange = (e, type, index) => {
+    const newType = e.target.value;
+    updateRelationType(type, index, newType);
+  };
+  const updateRelationType = (type, index, newType) => {
+    setFormData((prevFormData) => {
+        const updatedRelations = [...prevFormData[`${type}Relations`]];
+        updatedRelations[index].typeofRelation = newType;
+        return {
+            ...prevFormData,
+            [`${type}Relations`]: updatedRelations,
+        };
+    });
+  };
+  const handleRemoveRelation = (type, index) => {
+    setFormData((prevData) => {
+        const updatedRelations = [...prevData[`${type}Relations`]];
+        updatedRelations.splice(index, 1);
+        return {
+            ...prevData,
+            [`${type}Relations`]: updatedRelations,
+        };
+    });
+  };
+//#endregion ------------------------------------------------------------------
 
-const updateRelationType = (type, index, newType) => {
-  setFormData((prevFormData) => {
-      const updatedRelations = [...prevFormData[`${type}Relations`]];
-      updatedRelations[index].typeofRelation = newType;
-      return {
-          ...prevFormData,
-          [`${type}Relations`]: updatedRelations,
-      };
-  });
-};
+//#region Relation ------------------------------------------------------------
+  const handleAddRelation = (type) => {
+    setActiveModal(`${type}RelationSearch`);
+  };
+  const handleSelectRelation = (type, selectedRelations) => {
+    const relationsWithDefaultRelation = selectedRelations.map((relation) => ({
+        ...relation,
+        typeofRelation: "",
+    }));
+    setFormData((prevFormData) => ({
+        ...prevFormData,
+        [`${type}Relations`]: [...prevFormData[`${type}Relations`], 
+        ...relationsWithDefaultRelation],
+    }));
+  };
+//#endregion ------------------------------------------------------------------
 
-const handleRemoveRelation = (type, index) => {
-  setFormData((prevData) => {
-      const updatedRelations = [...prevData[`${type}Relations`]];
-      updatedRelations.splice(index, 1);
-      return {
-          ...prevData,
-          [`${type}Relations`]: updatedRelations,
-      };
-  });
-};
-// ---------------------------------------------------------------
-  
-// Relation ------------------------------------------------------
-const handleAddRelation = (type) => {
-  setActiveModal(`${type}RelationSearch`);
-};
-const handleSelectRelation = (type, selectedRelations) => {
-  const relationsWithDefaultRelation = selectedRelations.map((relation) => ({
-      ...relation,
-      typeofRelation: "",
-  }));
-  setFormData((prevFormData) => ({
-      ...prevFormData,
-      [`${type}Relations`]: [...prevFormData[`${type}Relations`], ...relationsWithDefaultRelation],
-  }));
-};
-// ---------------------------------------------------------------
-
-// Create Charater ------------------------------
+//#region Create Character ----------------------------------------------------
   const handleAddCharacter = (newCharacter) => {
     setActiveModal('createCharacter');
   };
@@ -232,12 +232,13 @@ const handleSelectRelation = (type, selectedRelations) => {
     // Assuming selectedCharacter is a single character object
     setFormData((prevFormData) => ({
       ...prevFormData,
-      characters: [...prevFormData.characters, { ...selectedCharacter, role: "" }],
+      characters: [...prevFormData.characters, 
+        { ...selectedCharacter, role: "" }],
     }));
   };
-// ----------------------------------------------
+//#endregion ------------------------------------------------------------------
 
-  // Genre Related-------------------------------
+//#region Genre Related--------------------------------------------------------
   const handleGenreChange = (selectedGenre) => {
     setSelectedGenres((prevGenres) => {
         const updatedGenres = [...prevGenres];
@@ -266,9 +267,9 @@ const handleSelectRelation = (type, selectedRelations) => {
         genres: prevData.genres.filter((genre) => genre !== removedGenre),
     }));
   };
-  // --------------------------------------------
+//#endregion ------------------------------------------------------------------
 
-  // Handle form submission
+// Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -282,7 +283,8 @@ const handleSelectRelation = (type, selectedRelations) => {
       return;
     }
   
-    // Create an array of character objects with character and typeofCharacter properties
+    // Create an array of character objects with character and typeofCharacter 
+    // properties
     const charactersArray = formData.characters.map((character) => ({
       characterId: character._id, // Assuming _id is the character ID
       role: character.role,
@@ -310,7 +312,9 @@ const handleSelectRelation = (type, selectedRelations) => {
       console.log('Current formData:', updatedFormData);
   
       // Use axios.post to send the form data to your backend API endpoint
-      const res = await axios.post('http://localhost:8080/animes/addanime', updatedFormData);
+      const res = await axios.post(
+        'http://localhost:8080/animes/addanime', updatedFormData
+      );
   
       console.log('Response from backend:', res.data);
   
@@ -358,38 +362,45 @@ const handleSelectRelation = (type, selectedRelations) => {
     }
   };
 
-  // handle change in form
+// handle change in form
   const handleChange = (e) => {
     const { name, value, type } = e.target;
 
     const updateNestedProperty = (prev, keys, newValue) => {
-        const [currentKey, ...restKeys] = keys;
+      const [currentKey, ...restKeys] = keys;
 
-        if (!restKeys.length) {
-            // If no more keys left, update the value directly
-            return { ...prev, [currentKey]: type === 'select-multiple' ? [newValue] : newValue };
-        }
-
-        // Continue updating nested properties
-        return {
-            ...prev,
-            [currentKey]: updateNestedProperty(prev[currentKey] || {}, restKeys, newValue),
+      if (!restKeys.length) {
+        // If no more keys left, update the value directly
+        return { 
+          ...prev, 
+          [currentKey]: type === 'select-multiple' ? [newValue] : newValue 
         };
+      }
+
+      // Continue updating nested properties
+      return {
+        ...prev,
+        [currentKey]: updateNestedProperty(
+          prev[currentKey] || {}, restKeys, newValue
+        ),
+      };
     };
 
-    const updatedFormData = updateNestedProperty(formData, name.split('.'), value);
+    const updatedFormData = updateNestedProperty(
+      formData, name.split('.'), value
+    );
 
     setFormData(updatedFormData);
-};
+  };
 
-  // handle changing threw data fields
+// handle changing threw data fields
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
 
   console.log("FormData: ", formData);
   
-  // Data Fields ------------------------
+//#region Data Fields -------------------------------------------------------
   const renderGeneralSection = () => (
     <>
       <div className="section">
@@ -436,7 +447,9 @@ const handleSelectRelation = (type, selectedRelations) => {
             <h2>Release Data</h2>
             <div className='grid'>
                 <div>
-                    <label htmlFor="releaseData.releaseStatus">Release Status:</label>
+                    <label htmlFor="releaseData.releaseStatus">
+                      Release Status:
+                    </label>
                     <div></div>
                     <select
                     type="releaseData.releaseStatus"
@@ -631,7 +644,11 @@ const handleSelectRelation = (type, selectedRelations) => {
                 </div>
               ))}
             </div>
-          {formErrors.genres && <div className="error-message">{formErrors.genres}</div>}
+          {formErrors.genres && (
+            <div className="error-message">
+              {formErrors.genres}
+            </div>
+          )}
           </div>
         </div>
       </div>
@@ -714,8 +731,15 @@ const handleSelectRelation = (type, selectedRelations) => {
                 />
                 <div className="character-details">
                 <p>
-                    {character.names &&
-                    `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
+                  {character.names &&
+                    [
+                      character.names.givenName, 
+                      character.names.middleName, 
+                      character.names.surName
+                    ]
+                      .filter(Boolean) // This removes any empty or false value
+                      .join(' ') // Joins the names with a single space
+                  }
                 </p>
                 <label htmlFor={`characterType-${index}`}>Type:</label>
                 <select
@@ -774,7 +798,9 @@ const handleSelectRelation = (type, selectedRelations) => {
                     id={`animeRelationType-${index}`}
                     name={`animeRelationType-${index}`}
                     value={relation.typeofRelation}
-                    onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
+                    onChange={
+                      (e) => handleRelationTypeChange(e, 'anime', index)
+                    }
                   >
                     <option value="" disabled>Select Relation</option>
                     {availableRelation.map((relationType) => (
@@ -785,7 +811,9 @@ const handleSelectRelation = (type, selectedRelations) => {
                   </select>
                 </div>
               </div>
-              <button type="button" onClick={() => handleRemoveRelation('anime', index)}>
+              <button type="button" onClick={
+                () => handleRemoveRelation('anime', index)
+                }>
                   Remove
               </button>
             </div>
@@ -808,7 +836,9 @@ const handleSelectRelation = (type, selectedRelations) => {
                     id={`mangaRelationType-${index}`}
                     name={`mangaRelationType-${index}`}
                     value={relation.typeofRelation}
-                    onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
+                    onChange={
+                      (e) => handleRelationTypeChange(e, 'manga', index)
+                    }
                   >
                     <option value="" disabled>Select Relation</option>
                     {availableRelation.map((relationType) => (
@@ -819,7 +849,9 @@ const handleSelectRelation = (type, selectedRelations) => {
                   </select>
                 </div>
               </div>
-              <button type="button" onClick={() => handleRemoveRelation('manga', index)}>
+              <button type="button" onClick={
+                () => handleRemoveRelation('manga', index)
+                }>
                   Remove
               </button>
             </div>
@@ -828,7 +860,7 @@ const handleSelectRelation = (type, selectedRelations) => {
       </div>
     </>
   );
-  // ------------------------------------
+//#endregion ----------------------------------------------------------------
 
   return (
     <div className="add-anime-container">
@@ -836,14 +868,26 @@ const handleSelectRelation = (type, selectedRelations) => {
         <button className="add-anime-btn" form="submitAnime" type="submit" >
           Submit
         </button>
-        <button onClick={() => handleTabChange("general")}>General</button>
-        <button onClick={() => handleTabChange("images")}>Images</button>
-        <button onClick={() => handleTabChange("characters")}>Characters</button>
-        <button onClick={() => handleTabChange("relations")}>Relations</button>
+        <button onClick={() => handleTabChange("general")}>
+          General
+        </button>
+        <button onClick={() => handleTabChange("images")}>
+          Images
+        </button>
+        <button onClick={() => handleTabChange("characters")}>
+          Characters
+        </button>
+        <button onClick={() => handleTabChange("relations")}>
+          Relations
+        </button>
         {/* Add more buttons for additional tabs */}
       </div>
 
-      <form className="form-container" id="submitAnime"  onSubmit={handleSubmit}>
+      <form 
+        className="form-container" 
+        id="submitAnime"  
+        onSubmit={handleSubmit}
+      >
         {activeTab === "general" && renderGeneralSection()}
         {activeTab === "images" && renderImagesSection()}
         {activeTab === "characters" && renderCharactersSection()}
@@ -852,7 +896,10 @@ const handleSelectRelation = (type, selectedRelations) => {
 
       {activeModal && (
         <div className="character-modal-overlay" onClick={handleModalClose}>
-          <div className="character-modal" onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="character-modal" 
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="character-modal-header">
               <h1>{
@@ -866,13 +913,16 @@ const handleSelectRelation = (type, selectedRelations) => {
                 ? 'Search Manga'
                 : ''
               }</h1>
-              <button className="character-modal-close" onClick={handleModalClose}>
+              <button 
+                className="character-modal-close" 
+                onClick={handleModalClose}
+              >
                 &times;
               </button>
             </div>
             {/* Modal Body */}
             <div className="character-modal-body">
-              {/* Render the corresponding modal content based on activeModal state */}
+              {/* Render the corresponding modal based on activeModal state */}
               {activeModal === 'createCharacter' && (
                 <CreateCharacter
                   onCharacterCreated={handleAddingCharacter}

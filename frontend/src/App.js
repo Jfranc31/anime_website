@@ -43,19 +43,35 @@ function App() {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path='/profile' element={userData && userData._id ? <Profile /> : <Login/>}/>
+            <Route 
+              path='/profile' 
+              element={userData && userData._id ? <Profile /> : <Login/>}
+            />
             <Route path="/animes" element={<Animes />} />
             <Route path="/mangas" element={<Mangas />} />
             <Route path='/characters' element={<Characters />} />
-            <Route path="/add/*" element={userData && userData._id ? <AddSection /> : <Login />} />
+            <Route 
+              path="/add/*" element={userData && userData._id ? 
+              <AddSection /> : <Login />} 
+            />
             {/* <Route path="/add/anime" element={<AddAnime />} /> */}
-            <Route path='/anime/:id' element={userData && userData._id ? <AnimeDetails /> : <Animes/>}/>
+            <Route 
+              path='/anime/:id' 
+              element={userData && userData._id ? 
+              <AnimeDetails /> : <Animes/>}
+            />
             <Route path='/anime/:id/update' element={<UpdateAnime />}/>
             {/* <Route path='/add/manga' element={<AddManga />}/> */}
-            <Route path='/manga/:id' element={userData && userData._id ? <MangaDetails /> : <Mangas/>}/>
+            <Route 
+              path='/manga/:id' 
+              element={userData && userData._id ? 
+              <MangaDetails /> : <Mangas/>}
+            />
             <Route path='/manga/:id/update' element={<UpdateManga />}/>
             <Route path='/characters/:id' element={<CharacterDetails />}/>
-            <Route path='/characters/:id/update' element={<UpdateCharacter />}/>
+            <Route 
+              path='/characters/:id/update' element={<UpdateCharacter />}
+            />
           </Routes>
         </Router>
       </data.Provider>

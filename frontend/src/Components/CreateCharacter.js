@@ -52,7 +52,9 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
 
     try {
       // Make API call to create character
-      const res = await axios.post('http://localhost:8080/characters/addcharacter', characterData);
+      const res = await axios.post(
+        'http://localhost:8080/characters/addcharacter', characterData
+      );
 
       if (res.status === 201) {
         // Call the callback function passed from the parent component
@@ -236,7 +238,10 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
               />
               {characterData.characterImage && (
                 <div className="image-preview">
-                  <img src={characterData.characterImage} alt="Character Preview" />
+                  <img 
+                    src={characterData.characterImage} 
+                    alt="Character Preview" 
+                  />
                 </div>
               )}
             </div>

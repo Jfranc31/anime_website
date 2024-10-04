@@ -6,7 +6,7 @@ import axios from 'axios';
 /**
  * Functional component for character search.
  * @param {Object} props - Props passed to the component.
- * @param {function} props.onCharacterSelected - Function to handle character selection.
+ * @param {function} props.onCharacterSelected - Func handle character select.
  * @param {function} props.onClose - Function to close the character search.
  * @returns {JSX.Element} - Rendered character search component.
 */
@@ -17,7 +17,10 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
 
     const handleSearch = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/characters/searchcharacters?query=${searchQuery}`);
+            const response = await axios.get(
+                `http://localhost:8080/characters/searchcharacters?query=
+                ${searchQuery}`
+            );
             const charactersArray = response.data.characters;
 
             if (Array.isArray(charactersArray)) {
@@ -33,7 +36,9 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
     const handleCharacterClick = (character) => {
         setSelectedCharacters((prevSelected) => {
             if (prevSelected.includes(character)) {
-                return prevSelected.filter((selected) => selected !== character);
+                return prevSelected.filter(
+                    (selected) => selected !== character
+                );
             } else {
                 return [...prevSelected, character];
             }
@@ -60,19 +65,31 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
                 {characters.map((character) => (
                     <li 
                         key={character._id} 
-                        className={`character-card ${selectedCharacters.includes(character) ? 'selected' : ''}`}
+                        className={
+                            `character-card 
+                            ${selectedCharacters.includes(character) ? 
+                                'selected' : 
+                                ''}`
+                        }
                         onClick={() => handleCharacterClick(character)}
                     >
                         <div className="img-container">
-                            <img src={character.characterImage} alt={character.names.givenName} />
+                            <img 
+                                src={character.characterImage} 
+                                alt={character.names.givenName} 
+                            />
                             <div className="character-name">
-                                {character.names.givenName} {character.names.middleName} {character.names.surName}
+                                {character.names.givenName} 
+                                {character.names.middleName} 
+                                {character.names.surName}
                             </div>
                         </div>
                     </li>
                 ))}
             </div>
-            <button onClick={handleConfirmSelection}>Confirm Selection</button>
+            <button onClick={handleConfirmSelection}>
+                Confirm Selection
+            </button>
         </div>
     );
 }

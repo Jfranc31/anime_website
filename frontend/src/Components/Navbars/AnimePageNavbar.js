@@ -15,10 +15,20 @@ const AnimeNavbar = ({ showRelations, showCharacters }) => {
 
   return (
     <div className="anime-navbar">
-      <button onClick={handleRelationsClick} className="nav-link" id="relations-link" type="button">
+      <button 
+        onClick={handleRelationsClick} 
+        className="nav-link" 
+        id="relations-link" 
+        type="button"
+      >
         Relations
       </button>
-      <button onClick={handleCharactersClick} className="nav-link" id="characters-link" type="button">
+      <button 
+        onClick={handleCharactersClick} 
+        className="nav-link" 
+        id="characters-link" 
+        type="button"
+      >
         Characters
       </button>
     </div>
