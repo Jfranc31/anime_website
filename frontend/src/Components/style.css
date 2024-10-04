@@ -362,8 +362,7 @@ form input:hover{
     position: relative;
     display: block;
     overflow: auto;
-    /* border: 1px solid #ddd; */
-    width: 100%;
+    width: 196.96px;
     height: 296.78px;
     overflow: hidden;
   }

@@ -105,7 +105,7 @@ const Mangas =() => {
                     <input
                         type='text'
                         id='searchInput'
-                        name='seatchInput'
+                        name='searchInput'
                         placeholder='Search...'
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
