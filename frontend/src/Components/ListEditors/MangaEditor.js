@@ -9,7 +9,7 @@ import axios from 'axios';
 /**
  * Functional component for editing details of a manga.
  * @param {Object} props - Props passed to the component.
- * @param {Object} props.manga - Manga object containing details like name, etc
+ * @param {Object} props.manga - Manga object containing details like titles, images, etc.
  * @param {string} props.userId - User ID associated with the manga.
  * @param {function} props.closeModal - Function to close the modal.
  * @param {function} props.onMangaDelete - Function to handle manga deletion.
@@ -32,34 +32,19 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
         const fetchMangaDetails = async () => {
             console.log("isInUserList:", isInUserList);
             try {
-                const mangaResponse = await axios.get(
-                    `http://localhost:8080/mangas/manga/${manga._id}`
-                );
-                const userResponse = await axios.get(
-                    `http://localhost:8080/users/${userId}/current`
-                );
+                const mangaResponse = await axios.get(`http://localhost:8080/mangas/manga/${manga._id}`);
+                const userResponse = await axios.get(`http://localhost:8080/users/${userId}/current`);
                 const currentUser = userResponse.data;
-                const existingMangaIndex = currentUser?.mangas?.findIndex(
-                    (userManga) => userManga.mangaId === manga._id
-                );
+                const existingMangaIndex = currentUser?.mangas?.findIndex((userManga) => userManga.mangaId === manga._id);
                 if(existingMangaIndex !== -1) {
                     setIsInUserList(true)
                 }
                 setMangaDetails(mangaResponse.data);
                 if (currentUser) {
                     setUserProgress({
-                        status: 
-                            existingMangaIndex !== -1 ? 
-                            currentUser.mangas[existingMangaIndex].status : 
-                            '',
-                        currentChapter: 
-                            existingMangaIndex !== -1 ? 
-                            currentUser.mangas[existingMangaIndex].currentChapter :
-                            0,
-                        currentVolume: 
-                            existingMangaIndex !== -1 ? 
-                            currentUser.mangas[existingMangaIndex].currentVolume : 
-                            0,
+                        status: existingMangaIndex !== -1 ? currentUser.mangas[existingMangaIndex].status : '',
+                        currentChapter: existingMangaIndex !== -1 ? currentUser.mangas[existingMangaIndex].currentChapter : 0,
+                        currentVolume: existingMangaIndex !== -1 ? currentUser.mangas[existingMangaIndex].currentVolume : 0,
                     });
                 }
             } catch (error) {
@@ -71,22 +56,22 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
 
     const handleStatusChange = (e) => {
         setUserProgress({
-            ...userProgress,
-            status: e.target.value,
+          ...userProgress,
+          status: e.target.value,
         });
     };
 
     const handleChapterChange = (e) => {
         setUserProgress({
-            ...userProgress,
-            currentChapter: e.target.value,
+          ...userProgress,
+          currentChapter: e.target.value,
         });
     };
 
     const handleVolumeChange = (e) => {
         setUserProgress({
-            ...userProgress,
-            currentVolume: e.target.value,
+          ...userProgress,
+          currentVolume: e.target.value,
         });
     };
 
@@ -94,33 +79,25 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
         try {
             var response;
             if(isInUserList){
-                response = await axios.post(
-                    `http://localhost:8080/users/${userId}/updateManga`, 
-                    {
-                        mangaId: manga._id,
-                        status: userProgress.status,
-                        currentChapter: userProgress.currentChapter,
-                        currentVolume: userProgress.currentVolume,
-                    }
-                );
+                response = await axios.post(`http://localhost:8080/users/${userId}/updateManga`, {
+                    mangaId: manga._id,
+                    status: userProgress.status,
+                    currentChapter: userProgress.currentChapter,
+                    currentVolume: userProgress.currentVolume,
+                });
             } else {
-                response = await axios.post(
-                    `http://localhost:8080/users/${userId}/addManga`, 
-                    {
-                        mangaId: mangaDetails._id,
-                        status: userProgress.status || "Planning",
-                        currentChapter: userProgress.currentChapter || 0,
-                        currentVolume: userProgress.currentVolume || 0,
-                    }
-                );
+                response = await axios.post(`http://localhost:8080/users/${userId}/addManga`, {
+                    mangaId: mangaDetails._id,
+                status: userProgress.status || "Planning",
+                currentChapter: userProgress.currentChapter || 0,
+                currentVolume: userProgress.currentVolume || 0,
+                });
             }
 
             if(response.data.success) {
                 closeModal();
             } else {
-                console.error(
-                    'Error updating user progress:', response.data.message
-                );
+                console.error('Error updating user progress:', response.data.message);
             }
         } catch (error) {
             console.error('Error updating user progress:', error);
@@ -129,12 +106,9 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
 
     const handleDelete = async () => {
         try {
-            await axios.post(
-                `http://localhost:8080/users/${userId}/removeManga`, 
-                {
-                    mangaId: manga._id,
-                }
-            );
+            await axios.post(`http://localhost:8080/users/${userId}/removeManga`, {
+            mangaId: manga._id,
+            });
 
             onMangaDelete(manga._id);
             closeModal();
@@ -148,16 +122,11 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
             {/* Modal Header */}
             <div className='modal-header'>
                 <h2>{mangaDetails?.titles?.english || ''}</h2>
-                <img 
-                    src={manga?.images?.border} 
-                    alt={manga?.titles?.english} 
-                />
+                <img src={manga?.images?.border} alt={manga?.titles?.english} />
                 <button className='character-modal-close' onClick={closeModal}>
                     &times;
                 </button>
-                <button type='submit' className='modal-save-btn' form='submit'>
-                    Save
-                </button>
+                <button type='submit' className='modal-save-btn' form='submit'>Save</button>
             </div>
             <div className='modal-body'>
                 {/* Modal Body */}
@@ -179,9 +148,7 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
                         </select>
                     </div>
                     <div className='grid'>
-                        <label htmlFor='userProgress.currentChapter'>
-                            Current Chapter:
-                        </label>
+                        <label htmlFor='userProgress.currentChapter'>Current Chapter:</label>
                         <input
                             type='number'
                             id='userProgress.currentChapter'
@@ -191,9 +158,7 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
                         />
                     </div>
                     <div className='grid'>
-                        <label htmlFor='userProgress.currentVolume'>
-                            Current Volume:
-                        </label>
+                        <label htmlFor='userProgress.currentVolume'>Current Volume:</label>
                         <input
                             type='number'
                             id='userProgress.currentVolume'
@@ -203,12 +168,7 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
                         />
                     </div>
                     {isInUserList && (
-                        <button 
-                            className='modal-delete-btn' 
-                            onClick={handleDelete}
-                        >
-                            Delete
-                        </button>
+                        <button className='modal-delete-btn' onClick={handleDelete}>Delete</button>
                     )}
                 </form>
             </div>

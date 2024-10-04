@@ -24,20 +24,12 @@ export const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post(
-            "http://localhost:8080/users/login", 
-            user, 
-            { withCredentials: true }
-        )
+        axios.post("http://localhost:8080/users/login", user, { withCredentials: true })
             .then((res) => {
                 alert(res.data.message);
 
                 // Set a cookie named 'userInfo' with user data
-                Cookies.set(
-                    'userInfo', 
-                    JSON.stringify(res.data.user), 
-                    { expires: 29 }
-                );
+                Cookies.set('userInfo', JSON.stringify(res.data.user), { expires: 29 });
 
                 setUserData(res.data.user);
                 navigate("/");
@@ -54,33 +46,14 @@ export const Login = () => {
         <div className='container'>
             <form onSubmit={handleSubmit}>
                 <label htmlFor='email'>Email Id</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    name='email' 
-                    value={user.email} 
-                    onChange={handleChange} 
-                    autoComplete="email" 
-                />
+                <input type="email" id="email" name='email' value={user.email} onChange={handleChange} autoComplete="email" />
 
                 <label htmlFor="password">Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name='password' 
-                    value={user.password} 
-                    onChange={handleChange} 
-                    autoComplete="current-password" 
-                />
+                <input type="password" id="password" name='password' value={user.password} onChange={handleChange} autoComplete="current-password" />
 
                 <div className='btn-container'>
                     <button className="btn" type='submit'>Login</button>
-                    <button 
-                        className="btn" 
-                        onClick={()=>navigate("/register")}
-                    >
-                        Register
-                    </button>
+                    <button className="btn" onClick={()=>navigate("/register")}>Register</button>
                 </div>
             </form>
         </div>

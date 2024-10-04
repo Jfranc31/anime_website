@@ -16,28 +16,21 @@ const Characters = () => {
     }, [setCharacterList]);
 
     const filteredCharacter = Array.isArray(characterList)
-        ? characterList.filter(character => {
-            const givenName = 
-                (character.names && character.names.givenName) || '';
-            const middleName = 
-                (character.names && character.names.middleName) || '';
-            const surName = 
-                (character.names && character.names.surName) || '';
-            const alterName = 
-                (character.names && character.names.alterNames) || '';
+    ? characterList.filter(character => {
+        const givenName = (character.names && character.names.givenName) || '';
+        const middleName = (character.names && character.names.middleName) || '';
+        const surName = (character.names && character.names.surName) || '';
+        const alterName = (character.names && character.names.alterNames) || '';
 
-            const searchInputLower = searchInput.toLowerCase();
+        const matchesSearch =
+            givenName.toLowerCase().includes(searchInput.toLowerCase()) ||
+            middleName.toLowerCase().includes(searchInput.toLowerCase()) ||
+            surName.toLowerCase().includes(searchInput.toLowerCase()) ||
+            alterName.toLowerCase().includes(searchInput.toLowerCase());
 
-            const matchesSearch =
-                givenName.toLowerCase().includes(searchInputLower) ||
-                middleName.toLowerCase().includes(searchInputLower) ||
-                surName.toLowerCase().includes(searchInputLower) ||
-                alterName.toLowerCase().includes(searchInputLower);
-
-            return matchesSearch;
-            })
-        : [];
-
+        return matchesSearch;
+        })
+    : [];
 
 
     const sortedCharacter = [...filteredCharacter].sort((a, b) => {

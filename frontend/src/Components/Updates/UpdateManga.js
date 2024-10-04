@@ -135,29 +135,23 @@ export const UpdateManga = ({ match }) => {
         setActiveModal(null);
     };
 
-    //#region Existing Character ----------------------------------------------
+    // Existing Character --------------------------------------------
     const handleAddExistingCharacter = () => {
         setActiveModal('characterSearch');
     };
     const handleSelectExistingCharacter = (selectedCharacters) => {
-        const charactersWithDefaultRole = selectedCharacters.map(
-            (character) => ({
-                ...character,
-                role: "", // Set the default role to an empty string
-            })
-        );
+        const charactersWithDefaultRole = selectedCharacters.map((character) => ({
+          ...character,
+          role: "", // Set the default role to an empty string
+        }));
         setFormData((prevFormData) => ({
-            ...prevFormData,
-            characters: 
-                [
-                    ...prevFormData.characters, 
-                    ...charactersWithDefaultRole
-                ],
+          ...prevFormData,
+          characters: [...prevFormData.characters, ...charactersWithDefaultRole],
         }));
     };
-    //#endregion --------------------------------------------------------------
+    // ---------------------------------------------------------------
 
-    //#region Handle Character type / Removal ---------------------------------
+    // Handle Character type / Removal -------------------------------
     const handleCharacterTypeChange = (e, index) => {
         const newType = e.target.value;
         updateCharacterType(index, newType);
@@ -182,9 +176,9 @@ export const UpdateManga = ({ match }) => {
         };
         });
     };
-    //#endregion --------------------------------------------------------------
+    // ---------------------------------------------------------------
 
-    //#region Handle Relation type / Removal ----------------------------------
+    // Handle Relation type / Removal --------------------------------
     const handleRelationTypeChange = (e, type, index) => {
         const newType = e.target.value;
         updateRelationType(type, index, newType);
@@ -211,48 +205,38 @@ export const UpdateManga = ({ match }) => {
             };
         });
     };
-    //#endregion --------------------------------------------------------------
+    // ---------------------------------------------------------------
 
-    //#region Relation --------------------------------------------------------
+    // Relation ------------------------------------------------------
     const handleAddRelation = (type) => {
         setActiveModal(`${type}RelationSearch`);
     };
     const handleSelectRelation = (type, selectedRelations) => {
-        const relationsWithDefaultRelation = selectedRelations.map(
-            (relation) => ({
-                ...relation,
-                typeofRelation: "",
-            })
-        );
+        const relationsWithDefaultRelation = selectedRelations.map((relation) => ({
+            ...relation,
+            typeofRelation: "",
+        }));
         setFormData((prevFormData) => ({
             ...prevFormData,
-            [`${type}Relations`]: 
-                [
-                    ...prevFormData[`${type}Relations`], 
-                    ...relationsWithDefaultRelation
-                ],
+            [`${type}Relations`]: [...prevFormData[`${type}Relations`], ...relationsWithDefaultRelation],
         }));
     };
-    //#endregion --------------------------------------------------------------
+    // ---------------------------------------------------------------
 
-    //#region Create Character ------------------------------------------------
+    // Create Charater ------------------------------
     const handleAddCharacter = (newCharacter) => {
         setActiveModal('createCharacter');
     };
     const handleAddingCharacter = (selectedCharacter) => {
         // Assuming selectedCharacter is a single character object
         setFormData((prevFormData) => ({
-            ...prevFormData,
-            characters: 
-                [
-                    ...prevFormData.characters, 
-                    { ...selectedCharacter, role: "" }
-                ],
+          ...prevFormData,
+          characters: [...prevFormData.characters, { ...selectedCharacter, role: "" }],
         }));
     };
-    //#endregion --------------------------------------------------------------
+    // ----------------------------------------------
 
-    //#region Genre Related----------------------------------------------------
+    // Genre Related-------------------------------
     const handleGenreChange = (selectedGenre) => {
         if (!selectedGenres.includes(selectedGenre)) {
             setSelectedGenres((prevGenres) => [...prevGenres, selectedGenre]);
@@ -275,26 +259,17 @@ export const UpdateManga = ({ match }) => {
             genres: prevData.genres.filter((genre) => genre !== removedGenre),
         }));
     };
-    //#endregion --------------------------------------------------------------
+    // --------------------------------------------
 
     // Retrieve information
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const mangaResponse = await axios.get(
-                    `http://localhost:8080/mangas/manga/${id}`
-                );
+                const mangaResponse = await axios.get(`http://localhost:8080/mangas/manga/${id}`);
                 const { genres, ...mangaData } = mangaResponse.data;
     
                 // Extract genre values from the genres array
-                const genreValues = 
-                    Array.isArray(genres) ? 
-                    genres.map(
-                        genre => 
-                            (
-                                typeof genre === 'object' ? genre.genre : genre
-                            )
-                    ) : [];
+                const genreValues = Array.isArray(genres) ? genres.map(genre => (typeof genre === 'object' ? genre.genre : genre)) : [];
     
                 setFormData(prevData => ({
                     ...prevData,
@@ -306,20 +281,14 @@ export const UpdateManga = ({ match }) => {
                 const charactersWithDetails = await Promise.all(
                     mangaData?.characters.map(async (character) => {
                         try {
-                            const characterResponse = await axios.get(
-                                `http://localhost:8080/characters/character/
-                                ${character.characterId}`
-                            );
+                            const characterResponse = await axios.get(`http://localhost:8080/characters/character/${character.characterId}`);
                             return {
                                 ...character,
-                                ...characterResponse.data,
+                                ...characterResponse.data, // Merge character details here
                             };
                         } catch (error) {
-                            console.error(
-                                `Error fetching details for character 
-                                ${character.characterId}:`, error
-                            );
-                            return character; 
+                            console.error(`Error fetching details for character ${character.characterId}:`, error);
+                            return character; // Return the character without details in case of an error
                         }
                     }) || []
                 );
@@ -327,19 +296,13 @@ export const UpdateManga = ({ match }) => {
                 const animeRelationsWithDetails = await Promise.all(
                     mangaData?.animeRelations.map(async (relation) => {
                         try {
-                            const referenceResponse = await axios.get(
-                                `http://localhost:8080/animes/anime/
-                                ${relation.relationId}`
-                            );
+                            const referenceResponse = await axios.get(`http://localhost:8080/animes/anime/${relation.relationId}`);
                             return {
                                 ...relation,
                                 ...referenceResponse.data,
                             };
                         } catch (error) {
-                            console.error(
-                                `Error fetching details for reference 
-                                ${relation.relationId}:`, error
-                            );
+                            console.error(`Error fetching details for reference ${relation.relationId}:`, error);
                             return relation;
                         }
                     }) || []
@@ -348,19 +311,13 @@ export const UpdateManga = ({ match }) => {
                 const mangaRelationsWithDetails = await Promise.all(
                     mangaData?.mangaRelations.map(async (relation) => {
                         try {
-                            const referenceResponse = await axios.get(
-                                `http://localhost:8080/mangas/manga/
-                                ${relation.relationId}`
-                            );
+                            const referenceResponse = await axios.get(`http://localhost:8080/mangas/manga/${relation.relationId}`);
                             return {
                                 ...relation,
                                 ...referenceResponse.data,
                             };
                         } catch (error) {
-                            console.error(
-                                `Error fetching details for reference 
-                                ${relation.relationId}:`, error
-                            );
+                            console.error(`Error fetching details for reference ${relation.relationId}:`, error);
                             return relation;
                         }
                     }) || []
@@ -398,19 +355,15 @@ export const UpdateManga = ({ match }) => {
             role: character.role,
         }));
 
-        const animeRelationsArray = formData.animeRelations.map(
-            (relation) => ({
-                relationId: relation._id,
-                typeofRelation: relation.typeofRelation
-            })
-        );
-
-        const mangaRelationsArray = formData.mangaRelations.map(
-            (relation) => ({
-                relationId: relation._id,
-                typeofRelation: relation.typeofRelation
-            })
-        );
+        const animeRelationsArray = formData.animeRelations.map((relation) => ({
+            relationId: relation._id,
+            typeofRelation: relation.typeofRelation
+          }));
+      
+          const mangaRelationsArray = formData.mangaRelations.map((relation) => ({
+            relationId: relation._id,
+            typeofRelation: relation.typeofRelation
+          }));
 
         const updatedFormData = {
             ...formData,
@@ -422,16 +375,12 @@ export const UpdateManga = ({ match }) => {
         try {
             console.log('Current formData:', updatedFormData);
 
-            const res = await axios.put(
-                `http://localhost:8080/mangas/manga/${id}`, updatedFormData
-            );
+            const res = await axios.put(`http://localhost:8080/mangas/manga/${id}`, updatedFormData);
 
             console.log('Response from backend:', res.data);
 
             if (res.status === 200) {
-                console.log(
-                    'Manga and characters updated successfully!', res.data
-                );
+                console.log('Manga and characters updated successfully!', res.data);
                 
                 navigate(`/manga/${id}`);
             } else {
@@ -451,27 +400,17 @@ export const UpdateManga = ({ match }) => {
     
             if (!restKeys.length) {
                 // If no more keys left, update the value directly
-                return { 
-                    ...prev, 
-                    [currentKey]: type === 'select-multiple' ? 
-                    [newValue] : newValue 
-                };
+                return { ...prev, [currentKey]: type === 'select-multiple' ? [newValue] : newValue };
             }
     
             // Continue updating nested properties
             return {
                 ...prev,
-                [currentKey]: 
-                    updateNestedProperty(prev[currentKey] || {}, 
-                        restKeys, 
-                        newValue
-                    ),
+                [currentKey]: updateNestedProperty(prev[currentKey] || {}, restKeys, newValue),
             };
         };
     
-        const updatedFormData = updateNestedProperty(
-            formData, name.split('.'), value
-        );
+        const updatedFormData = updateNestedProperty(formData, name.split('.'), value);
     
         setFormData(updatedFormData);
     };
@@ -481,7 +420,7 @@ export const UpdateManga = ({ match }) => {
         setActiveTab(tab);
     };
 
-    //#region Data Fields -----------------------------------------------------
+    // Data Fields ------------------------
     const renderGeneralSection = () => (
         <>
         <div className="section">
@@ -528,9 +467,7 @@ export const UpdateManga = ({ match }) => {
             <h2>Release Data</h2>
             <div className='grid'>
                 <div>
-                    <label htmlFor="releaseData.releaseStatus">
-                        Release Status:
-                    </label>
+                    <label htmlFor="releaseData.releaseStatus">Release Status:</label>
                     <div></div>
                     <select
                     type="releaseData.releaseStatus"
@@ -650,9 +587,7 @@ export const UpdateManga = ({ match }) => {
                 </select>
             </div>
             <div>
-                <label htmlFor="typings.CountryOfOrigin">
-                    Country of Origin:
-                </label>
+                <label htmlFor="typings.CountryOfOrigin">Country of Origin:</label>
                 <div></div>
                 <select
                 type="typings.CountryOfOrigin"
@@ -723,22 +658,11 @@ export const UpdateManga = ({ match }) => {
                         {selectedGenres.map((genre) => (
                             <div key={genre} className="selected-genre">
                                 {genre}
-                                <button 
-                                    onClick={() => handleRemoveGenre(genre)}
-                                >
-                                    x
-                                </button>
+                                <button onClick={() => handleRemoveGenre(genre)}>x</button>
                             </div>
                         ))}
                     </div>
-                    {
-                        formErrors.genres && 
-                        (
-                            <div className="error-message">
-                                {formErrors.genres}
-                            </div>
-                        )
-                    }
+                    {formErrors.genres && <div className="error-message">{formErrors.genres}</div>}
                 </div>
             </div>
         </div>
@@ -801,14 +725,11 @@ export const UpdateManga = ({ match }) => {
         <div className="section">
             <h2>Characters</h2>
             <div className='character-button'>
-                <button 
-                    type="button" 
-                    onClick={() => handleAddExistingCharacter()}
-                >
-                    Add Existing Character
+                <button type="button" onClick={() => handleAddExistingCharacter()}>
+                Add Existing Character
                 </button>
                 <button type="button" onClick={() => handleAddCharacter()}>
-                    Create Character
+                Create Character
                 </button>
             </div>
             <div className="characters">
@@ -825,10 +746,7 @@ export const UpdateManga = ({ match }) => {
                     <div className="character-details">
                     <p>
                         {character.names &&
-                        `${character.names.givenName || ''} 
-                        ${character.names.middleName || ''} 
-                        ${character.names.surName || ''}`
-                        }
+                        `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
                     </p>
                     <label htmlFor={`characterType-${index}`}>Type:</label>
                     <select
@@ -847,10 +765,7 @@ export const UpdateManga = ({ match }) => {
                     </div>
                 </div>
                 {/* Add a button to remove the character */}
-                <button 
-                    type="button" 
-                    onClick={() => handleRemoveCharacter(index)}
-                >
+                <button type="button" onClick={() => handleRemoveCharacter(index)}>
                     Remove
                 </button>
                 </div>
@@ -864,16 +779,10 @@ export const UpdateManga = ({ match }) => {
             <div className="section">
                 <h2>Relations</h2>
                 <div className="character-button">
-                    <button 
-                        type="button" 
-                        onClick={() => handleAddRelation('anime')}
-                    >
+                    <button type="button" onClick={() => handleAddRelation('anime')}>
                         Add Anime Relation
                     </button>
-                    <button 
-                        type="button" 
-                        onClick={() => handleAddRelation('manga')}
-                    >
+                    <button type="button" onClick={() => handleAddRelation('manga')}>
                         Add Manga Relation
                     </button>
                 </div>
@@ -891,49 +800,23 @@ export const UpdateManga = ({ match }) => {
                                         {relation.titles &&
                                             `${relation.titles.english || ''}`}
                                     </p>
-                                    <label 
-                                        htmlFor={`animeRelationType-${index}`}
-                                    >
-                                        Type:
-                                    </label>
+                                    <label htmlFor={`animeRelationType-${index}`}>Type:</label>
                                     <select
                                         id={`animeRelationType-${index}`}
                                         name={`animeRelationType-${index}`}
                                         value={relation.typeofRelation}
-                                        onChange={
-                                            (e) => 
-                                                handleRelationTypeChange(e, 
-                                                    'anime', 
-                                                    index
-                                                )
-                                        }
+                                        onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
                                     >
-                                        <option value="" disabled>
-                                            Select Relation
-                                        </option>
-                                        {availableRelation.map(
-                                            (relationType) => (
-                                                <option 
-                                                    key={relationType} 
-                                                    value={relationType}
-                                                >
-                                                    {relationType}
-                                                </option>
-                                            )
-                                        )}
+                                        <option value="" disabled>Select Relation</option>
+                                        {availableRelation.map((relationType) => (
+                                            <option key={relationType} value={relationType}>
+                                                {relationType}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
-                            <button 
-                                type="button" 
-                                onClick={
-                                    () => 
-                                        handleRemoveRelation(
-                                            'anime', 
-                                            index
-                                        )
-                                }
-                            >
+                            <button type="button" onClick={() => handleRemoveRelation('anime', index)}>
                                 Remove
                             </button>
                         </div>
@@ -951,50 +834,23 @@ export const UpdateManga = ({ match }) => {
                                         {relation.titles &&
                                             `${relation.titles.english || ''}`}
                                     </p>
-                                    <label 
-                                        htmlFor={`mangaRelationType-${index}`}
-                                    >
-                                        Type:
-                                    </label>
+                                    <label htmlFor={`mangaRelationType-${index}`}>Type:</label>
                                     <select
                                         id={`mangaRelationType-${index}`}
                                         name={`mangaRelationType-${index}`}
                                         value={relation.typeofRelation}
-                                        onChange={
-                                            (e) => 
-                                                handleRelationTypeChange(
-                                                    e, 
-                                                    'manga', 
-                                                    index
-                                                )
-                                        }
+                                        onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
                                     >
-                                        <option value="" disabled>
-                                            Select Relation
-                                        </option>
-                                        {availableRelation.map(
-                                            (relationType) => (
-                                                <option 
-                                                    key={relationType} 
-                                                    value={relationType}
-                                                >
-                                                    {relationType}
-                                                </option>
-                                            )
-                                        )}
+                                        <option value="" disabled>Select Relation</option>
+                                        {availableRelation.map((relationType) => (
+                                            <option key={relationType} value={relationType}>
+                                                {relationType}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
-                            <button 
-                                type="button" 
-                                onClick={
-                                    () => 
-                                        handleRemoveRelation(
-                                            'manga', 
-                                            index
-                                        )
-                                }
-                            >
+                            <button type="button" onClick={() => handleRemoveRelation('manga', index)}>
                                 Remove
                             </button>
                         </div>
@@ -1010,33 +866,17 @@ export const UpdateManga = ({ match }) => {
     return (
         <div className="add-anime-container">
         <div className="add-anime-container-tabs">
-            <button 
-                className="add-anime-btn" 
-                form="submitAnime" 
-                type="submit" 
-            >
-                Submit
+            <button className="add-anime-btn" form="submitAnime" type="submit" >
+            Submit
             </button>
-            <button onClick={() => handleTabChange("general")}>
-                General
-            </button>
-            <button onClick={() => handleTabChange("images")}>
-                Images
-            </button>
-            <button onClick={() => handleTabChange("characters")}>
-                Characters
-            </button>
-            <button onClick={() => handleTabChange("relations")}>
-                Relations
-            </button>
+            <button onClick={() => handleTabChange("general")}>General</button>
+            <button onClick={() => handleTabChange("images")}>Images</button>
+            <button onClick={() => handleTabChange("characters")}>Characters</button>
+            <button onClick={() => handleTabChange("relations")}>Relations</button>
             {/* Add more buttons for additional tabs */}
         </div>
 
-        <form 
-            className="form-container" 
-            id="submitAnime"  
-            onSubmit={handleSubmit}
-        >
+        <form className="form-container" id="submitAnime"  onSubmit={handleSubmit}>
             {activeTab === "general" && renderGeneralSection()}
             {activeTab === "images" && renderImagesSection()}
             {activeTab === "characters" && renderCharactersSection()}
@@ -1044,14 +884,8 @@ export const UpdateManga = ({ match }) => {
         </form>
 
         {activeModal && (
-            <div 
-                className="character-modal-overlay" 
-                onClick={handleModalClose}
-            >
-            <div 
-                className="character-modal" 
-                onClick={(e) => e.stopPropagation()}
-            >
+            <div className="character-modal-overlay" onClick={handleModalClose}>
+            <div className="character-modal" onClick={(e) => e.stopPropagation()}>
                 {/* Modal Header */}
                 <div className="character-modal-header">
                 <h2>
@@ -1067,16 +901,13 @@ export const UpdateManga = ({ match }) => {
                     : ''
                     }
                 </h2>
-                <button 
-                    className="character-modal-close" 
-                    onClick={handleModalClose}
-                >
+                <button className="character-modal-close" onClick={handleModalClose}>
                     &times;
                 </button>
                 </div>
                 {/* Modal Body */}
                 <div className="character-modal-body">
-                {/* Render the corresponding modal based on activeModal*/}
+                {/* Render the corresponding modal content based on activeModal state */}
                 {activeModal === 'createCharacter' && (
                     <CreateCharacter
                     onCharacterCreated={handleAddingCharacter}

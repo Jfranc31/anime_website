@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
-
 import CreateCharacter from "../Components/CreateCharacter";
 import CharacterSearch from "../Components/Searches/CharacterSearch";
 import RelationSearch from "../Components/Searches/RelationSearch";
@@ -12,50 +11,50 @@ export default function AddAnime() {
   // Initialize state for form data
   const [formData, setFormData] = useState({
     titles: {
-      romaji: '',
-      english: '',
-      Native: '',
+        romaji: '',
+        english: '',
+        Native: '',
     },
     releaseData: {
       releaseStatus: "",
       startDate: {
-        year: "",
-        month:"",
-        day: "",
+          year: "",
+          month:"",
+          day: "",
       },
       endDate: {
-        year: "",
-        month: "",
-        day: "",
+          year: "",
+          month: "",
+          day: "",
       }
-    },
+  },
     typings: {
-      Format: '',
-      Source: '',
-      CountryOfOrigin: '',
+        Format: '',
+        Source: '',
+        CountryOfOrigin: '',
     },
     lengths: {
-      Episodes: "",
-      EpisodeDuration: 0,
+        Episodes: "",
+        EpisodeDuration: 0,
     },
     genres: [],
     description: '',
     images: {
-      image: '',
-      border: '',
+        image: '',
+        border: '',
     },
     characters: [],
     mangaRelations: [],
     animeRelations:[],
     activityTimestamp: 0,
-  });
+});
 
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("general");
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
-
+  
   const availableGenres = [
     'Action',
     'Adventure',
@@ -76,15 +75,15 @@ export default function AddAnime() {
     'Sports',
     'Supernatural',
     'Thriller',
-  ];
-  const availableStatus = [
-    'Finished Releasing', 
-    'Currently Releasing', 
-    'Not Yet Released', 
-    'Cancelled', 
-    'Hiatus'
-  ];
-  const availableFormats = [
+];
+const availableStatus = [
+  'Finished Releasing', 
+  'Currently Releasing', 
+  'Not Yet Released', 
+  'Cancelled', 
+  'Hiatus'
+];
+const availableFormats = [
     'TV', 
     'TV Short', 
     'Movie', 
@@ -92,8 +91,8 @@ export default function AddAnime() {
     'OVA', 
     'ONA', 
     'Music'
-  ];
-  const availableSource = [
+];
+const availableSource = [
     'Original',
     'Manga',
     'Anime',
@@ -106,19 +105,19 @@ export default function AddAnime() {
     'Comic',
     'Game',
     'Live Action',
-  ];
-  const availableCountry = [
+];
+const availableCountry = [
     'China', 
     'Japan', 
     'South Korea', 
     'Taiwan'
-  ];
-  const availableRole = [
+];
+const availableRole = [
     "Main", 
     "Supporting", 
     "Background"
-  ];
-  const availableRelation = [
+];
+const availableRelation = [
     "Adaptation", 
     "Source", 
     "Prequel", 
@@ -131,13 +130,13 @@ export default function AddAnime() {
     "Other", 
     "Compilations", 
     "Contains"
-  ];
+];
 
-  const handleModalClose = () => {
+const handleModalClose = () => {
     setActiveModal(null);
-  };
+};
 
-//#region Existing Character --------------------------------------------------
+// Existing Character --------------------------------------------
   const handleAddExistingCharacter = () => {
     setActiveModal('characterSearch');
   };
@@ -151,9 +150,9 @@ export default function AddAnime() {
       characters: [...prevFormData.characters, ...charactersWithDefaultRole],
     }));
   };
-//#endregion ------------------------------------------------------------------
+// ---------------------------------------------------------------
 
-//#region Handle Character type / Removal -------------------------------------
+// Handle Character type / Removal -------------------------------
   const handleCharacterTypeChange = (e, index) => {
     const newType = e.target.value;
     updateCharacterType(index, newType);
@@ -178,53 +177,54 @@ export default function AddAnime() {
       };
     });
   };
-//#endregion ------------------------------------------------------------------
+// ---------------------------------------------------------------
 
-//#region Handle Relation type / Removal --------------------------------------
-  const handleRelationTypeChange = (e, type, index) => {
-    const newType = e.target.value;
-    updateRelationType(type, index, newType);
-  };
-  const updateRelationType = (type, index, newType) => {
-    setFormData((prevFormData) => {
-        const updatedRelations = [...prevFormData[`${type}Relations`]];
-        updatedRelations[index].typeofRelation = newType;
-        return {
-            ...prevFormData,
-            [`${type}Relations`]: updatedRelations,
-        };
-    });
-  };
-  const handleRemoveRelation = (type, index) => {
-    setFormData((prevData) => {
-        const updatedRelations = [...prevData[`${type}Relations`]];
-        updatedRelations.splice(index, 1);
-        return {
-            ...prevData,
-            [`${type}Relations`]: updatedRelations,
-        };
-    });
-  };
-//#endregion ------------------------------------------------------------------
+// Handle Relation type / Removal --------------------------------
+const handleRelationTypeChange = (e, type, index) => {
+  const newType = e.target.value;
+  updateRelationType(type, index, newType);
+};
 
-//#region Relation ------------------------------------------------------------
-  const handleAddRelation = (type) => {
-    setActiveModal(`${type}RelationSearch`);
-  };
-  const handleSelectRelation = (type, selectedRelations) => {
-    const relationsWithDefaultRelation = selectedRelations.map((relation) => ({
-        ...relation,
-        typeofRelation: "",
-    }));
-    setFormData((prevFormData) => ({
-        ...prevFormData,
-        [`${type}Relations`]: [...prevFormData[`${type}Relations`], 
-        ...relationsWithDefaultRelation],
-    }));
-  };
-//#endregion ------------------------------------------------------------------
+const updateRelationType = (type, index, newType) => {
+  setFormData((prevFormData) => {
+      const updatedRelations = [...prevFormData[`${type}Relations`]];
+      updatedRelations[index].typeofRelation = newType;
+      return {
+          ...prevFormData,
+          [`${type}Relations`]: updatedRelations,
+      };
+  });
+};
 
-//#region Create Character ----------------------------------------------------
+const handleRemoveRelation = (type, index) => {
+  setFormData((prevData) => {
+      const updatedRelations = [...prevData[`${type}Relations`]];
+      updatedRelations.splice(index, 1);
+      return {
+          ...prevData,
+          [`${type}Relations`]: updatedRelations,
+      };
+  });
+};
+// ---------------------------------------------------------------
+  
+// Relation ------------------------------------------------------
+const handleAddRelation = (type) => {
+  setActiveModal(`${type}RelationSearch`);
+};
+const handleSelectRelation = (type, selectedRelations) => {
+  const relationsWithDefaultRelation = selectedRelations.map((relation) => ({
+      ...relation,
+      typeofRelation: "",
+  }));
+  setFormData((prevFormData) => ({
+      ...prevFormData,
+      [`${type}Relations`]: [...prevFormData[`${type}Relations`], ...relationsWithDefaultRelation],
+  }));
+};
+// ---------------------------------------------------------------
+
+// Create Charater ------------------------------
   const handleAddCharacter = (newCharacter) => {
     setActiveModal('createCharacter');
   };
@@ -232,13 +232,12 @@ export default function AddAnime() {
     // Assuming selectedCharacter is a single character object
     setFormData((prevFormData) => ({
       ...prevFormData,
-      characters: [...prevFormData.characters, 
-        { ...selectedCharacter, role: "" }],
+      characters: [...prevFormData.characters, { ...selectedCharacter, role: "" }],
     }));
   };
-//#endregion ------------------------------------------------------------------
+// ----------------------------------------------
 
-//#region Genre Related--------------------------------------------------------
+  // Genre Related-------------------------------
   const handleGenreChange = (selectedGenre) => {
     setSelectedGenres((prevGenres) => {
         const updatedGenres = [...prevGenres];
@@ -267,9 +266,9 @@ export default function AddAnime() {
         genres: prevData.genres.filter((genre) => genre !== removedGenre),
     }));
   };
-//#endregion ------------------------------------------------------------------
+  // --------------------------------------------
 
-// Handle form submission
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -283,8 +282,7 @@ export default function AddAnime() {
       return;
     }
   
-    // Create an array of character objects with character and typeofCharacter 
-    // properties
+    // Create an array of character objects with character and typeofCharacter properties
     const charactersArray = formData.characters.map((character) => ({
       characterId: character._id, // Assuming _id is the character ID
       role: character.role,
@@ -312,9 +310,7 @@ export default function AddAnime() {
       console.log('Current formData:', updatedFormData);
   
       // Use axios.post to send the form data to your backend API endpoint
-      const res = await axios.post(
-        'http://localhost:8080/animes/addanime', updatedFormData
-      );
+      const res = await axios.post('http://localhost:8080/animes/addanime', updatedFormData);
   
       console.log('Response from backend:', res.data);
   
@@ -362,45 +358,38 @@ export default function AddAnime() {
     }
   };
 
-// handle change in form
+  // handle change in form
   const handleChange = (e) => {
     const { name, value, type } = e.target;
 
     const updateNestedProperty = (prev, keys, newValue) => {
-      const [currentKey, ...restKeys] = keys;
+        const [currentKey, ...restKeys] = keys;
 
-      if (!restKeys.length) {
-        // If no more keys left, update the value directly
-        return { 
-          ...prev, 
-          [currentKey]: type === 'select-multiple' ? [newValue] : newValue 
+        if (!restKeys.length) {
+            // If no more keys left, update the value directly
+            return { ...prev, [currentKey]: type === 'select-multiple' ? [newValue] : newValue };
+        }
+
+        // Continue updating nested properties
+        return {
+            ...prev,
+            [currentKey]: updateNestedProperty(prev[currentKey] || {}, restKeys, newValue),
         };
-      }
-
-      // Continue updating nested properties
-      return {
-        ...prev,
-        [currentKey]: updateNestedProperty(
-          prev[currentKey] || {}, restKeys, newValue
-        ),
-      };
     };
 
-    const updatedFormData = updateNestedProperty(
-      formData, name.split('.'), value
-    );
+    const updatedFormData = updateNestedProperty(formData, name.split('.'), value);
 
     setFormData(updatedFormData);
-  };
+};
 
-// handle changing threw data fields
+  // handle changing threw data fields
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
 
   console.log("FormData: ", formData);
   
-//#region Data Fields -------------------------------------------------------
+  // Data Fields ------------------------
   const renderGeneralSection = () => (
     <>
       <div className="section">
@@ -447,9 +436,7 @@ export default function AddAnime() {
             <h2>Release Data</h2>
             <div className='grid'>
                 <div>
-                    <label htmlFor="releaseData.releaseStatus">
-                      Release Status:
-                    </label>
+                    <label htmlFor="releaseData.releaseStatus">Release Status:</label>
                     <div></div>
                     <select
                     type="releaseData.releaseStatus"
@@ -644,11 +631,7 @@ export default function AddAnime() {
                 </div>
               ))}
             </div>
-          {formErrors.genres && (
-            <div className="error-message">
-              {formErrors.genres}
-            </div>
-          )}
+          {formErrors.genres && <div className="error-message">{formErrors.genres}</div>}
           </div>
         </div>
       </div>
@@ -731,15 +714,8 @@ export default function AddAnime() {
                 />
                 <div className="character-details">
                 <p>
-                  {character.names &&
-                    [
-                      character.names.givenName, 
-                      character.names.middleName, 
-                      character.names.surName
-                    ]
-                      .filter(Boolean) // This removes any empty or false value
-                      .join(' ') // Joins the names with a single space
-                  }
+                    {character.names &&
+                    `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
                 </p>
                 <label htmlFor={`characterType-${index}`}>Type:</label>
                 <select
@@ -798,9 +774,7 @@ export default function AddAnime() {
                     id={`animeRelationType-${index}`}
                     name={`animeRelationType-${index}`}
                     value={relation.typeofRelation}
-                    onChange={
-                      (e) => handleRelationTypeChange(e, 'anime', index)
-                    }
+                    onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
                   >
                     <option value="" disabled>Select Relation</option>
                     {availableRelation.map((relationType) => (
@@ -811,9 +785,7 @@ export default function AddAnime() {
                   </select>
                 </div>
               </div>
-              <button type="button" onClick={
-                () => handleRemoveRelation('anime', index)
-                }>
+              <button type="button" onClick={() => handleRemoveRelation('anime', index)}>
                   Remove
               </button>
             </div>
@@ -836,9 +808,7 @@ export default function AddAnime() {
                     id={`mangaRelationType-${index}`}
                     name={`mangaRelationType-${index}`}
                     value={relation.typeofRelation}
-                    onChange={
-                      (e) => handleRelationTypeChange(e, 'manga', index)
-                    }
+                    onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
                   >
                     <option value="" disabled>Select Relation</option>
                     {availableRelation.map((relationType) => (
@@ -849,9 +819,7 @@ export default function AddAnime() {
                   </select>
                 </div>
               </div>
-              <button type="button" onClick={
-                () => handleRemoveRelation('manga', index)
-                }>
+              <button type="button" onClick={() => handleRemoveRelation('manga', index)}>
                   Remove
               </button>
             </div>
@@ -860,7 +828,7 @@ export default function AddAnime() {
       </div>
     </>
   );
-//#endregion ----------------------------------------------------------------
+  // ------------------------------------
 
   return (
     <div className="add-anime-container">
@@ -868,26 +836,14 @@ export default function AddAnime() {
         <button className="add-anime-btn" form="submitAnime" type="submit" >
           Submit
         </button>
-        <button onClick={() => handleTabChange("general")}>
-          General
-        </button>
-        <button onClick={() => handleTabChange("images")}>
-          Images
-        </button>
-        <button onClick={() => handleTabChange("characters")}>
-          Characters
-        </button>
-        <button onClick={() => handleTabChange("relations")}>
-          Relations
-        </button>
+        <button onClick={() => handleTabChange("general")}>General</button>
+        <button onClick={() => handleTabChange("images")}>Images</button>
+        <button onClick={() => handleTabChange("characters")}>Characters</button>
+        <button onClick={() => handleTabChange("relations")}>Relations</button>
         {/* Add more buttons for additional tabs */}
       </div>
 
-      <form 
-        className="form-container" 
-        id="submitAnime"  
-        onSubmit={handleSubmit}
-      >
+      <form className="form-container" id="submitAnime"  onSubmit={handleSubmit}>
         {activeTab === "general" && renderGeneralSection()}
         {activeTab === "images" && renderImagesSection()}
         {activeTab === "characters" && renderCharactersSection()}
@@ -896,10 +852,7 @@ export default function AddAnime() {
 
       {activeModal && (
         <div className="character-modal-overlay" onClick={handleModalClose}>
-          <div 
-            className="character-modal" 
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="character-modal" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
             <div className="character-modal-header">
               <h1>{
@@ -913,16 +866,13 @@ export default function AddAnime() {
                 ? 'Search Manga'
                 : ''
               }</h1>
-              <button 
-                className="character-modal-close" 
-                onClick={handleModalClose}
-              >
+              <button className="character-modal-close" onClick={handleModalClose}>
                 &times;
               </button>
             </div>
             {/* Modal Body */}
             <div className="character-modal-body">
-              {/* Render the corresponding modal based on activeModal state */}
+              {/* Render the corresponding modal content based on activeModal state */}
               {activeModal === 'createCharacter' && (
                 <CreateCharacter
                   onCharacterCreated={handleAddingCharacter}

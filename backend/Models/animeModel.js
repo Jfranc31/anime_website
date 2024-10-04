@@ -13,7 +13,7 @@ const animeSchema = new mongoose.Schema({
         },
         english: {
             type: String,
-            requred: true,
+            required: true,
         },
         Native: {
             type: String,

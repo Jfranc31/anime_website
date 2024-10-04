@@ -9,7 +9,7 @@ import axios from 'axios';
 /**
  * Functional component for editing details of an anime.
  * @param {Object} props - Props passed to the component.
- * @param {Object} props.anime - Anime object containing details like name, etc
+ * @param {Object} props.anime - Anime object containing details like titles, images, etc.
  * @param {string} props.userId - User ID associated with the anime.
  * @param {function} props.closeModal - Function to close the modal.
  * @param {function} props.onAnimeDelete - Function to handle anime deletion.
@@ -32,21 +32,15 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
         console.log("isInUserList:", isInUserList);
       try {
         // Fetch anime details
-        const animeResponse = await axios.get(
-          `http://localhost:8080/animes/anime/${anime._id}`
-        );
+        const animeResponse = await axios.get(`http://localhost:8080/animes/anime/${anime._id}`);
 
         // Fetch user details
-        const userResponse = await axios.get(
-          `http://localhost:8080/users/${userId}/current`
-        );
+        const userResponse = await axios.get(`http://localhost:8080/users/${userId}/current`);
 
         const currentUser = userResponse.data;
 
         // Check if the anime is on the user's list
-        const existingAnimeIndex = currentUser?.animes?.findIndex(
-          (userAnime) => userAnime.animeId === anime._id
-        );
+        const existingAnimeIndex = currentUser?.animes?.findIndex((userAnime) => userAnime.animeId === anime._id);
 
         if(existingAnimeIndex !== -1) {
             setIsInUserList(true);
@@ -58,14 +52,8 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
         // Set initial userProgress when animeDetails is not null
         if (currentUser) {
           setUserProgress({
-            status: 
-              existingAnimeIndex !== -1 ? 
-              currentUser.animes[existingAnimeIndex].status : 
-              '',
-            currentEpisode: 
-              existingAnimeIndex !== -1 ? 
-              currentUser.animes[existingAnimeIndex].currentEpisode 
-              : 0,
+            status: existingAnimeIndex !== -1 ? currentUser.animes[existingAnimeIndex].status : '',
+            currentEpisode: existingAnimeIndex !== -1 ? currentUser.animes[existingAnimeIndex].currentEpisode : 0,
           });
         }
       } catch (error) {
@@ -94,23 +82,17 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
     try {
         var response;
       if(isInUserList){
-        response = await axios.post(
-          `http://localhost:8080/users/${userId}/updateAnime`, 
-          {
+        response = await axios.post(`http://localhost:8080/users/${userId}/updateAnime`, {
             animeId: anime._id,
             status: userProgress.status,
             currentEpisode: userProgress.currentEpisode,
-          }
-        );
+        });
       } else {
-        response = await axios.post(
-          `http://localhost:8080/users/${userId}/addAnime`, 
-          {
+        response = await axios.post(`http://localhost:8080/users/${userId}/addAnime`, {
             animeId: animeDetails._id,
             status: userProgress.status || "Planning",
             currentEpisode: userProgress.currentEpisode || 0,
-          }
-        );
+        });
       }
   
       // Check the response for success or handle accordingly
@@ -152,9 +134,7 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
             <button className="character-modal-close" onClick={closeModal}>
                 &times;
             </button>
-            <button type="submit" className='modal-save-btn' form="submit">
-              Save
-            </button>
+            <button type="submit" className='modal-save-btn' form="submit">Save</button>
         </div>
         <div className='modal-body'>
             {/* Modal Body */}
@@ -177,9 +157,7 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
                 </select>
                 </div>
                 <div className='grid'>
-                <label htmlFor="userProgress.currentEpisode">
-                  Current Episode:
-                </label>
+                <label htmlFor="userProgress.currentEpisode">Current Episode:</label>
                 <input
                     type="number"
                     id="userProgress.currentEpisode"
@@ -189,12 +167,7 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
                 />
                 </div>
                 {isInUserList && (
-                    <button 
-                      className='modal-delete-btn' 
-                      onClick={handleDelete}
-                    >
-                      Delete
-                    </button>
+                    <button className='modal-delete-btn' onClick={handleDelete}>Delete</button>
                 )}
                 
             </form>

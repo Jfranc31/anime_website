@@ -9,8 +9,8 @@ import { Link } from 'react-router-dom';
 /**
  * Functional component representing a manga card.
  * @param {Object} props - Props passed to the component.
- * @param {Object} props.manga - Manga object containing details name etc.
- * @param {Function} props.onTopRightButtonClick - top-right button click func.
+ * @param {Object} props.manga - Manga object containing details like titles, images, etc.
+ * @param {Function} props.onTopRightButtonClick - Callback function for top-right button click.
  * @returns {JSX.Element} - Rendered manga card component.
  */
 function MangaCard({ manga, onTopRightButtonClick }) {
@@ -36,10 +36,7 @@ function MangaCard({ manga, onTopRightButtonClick }) {
             </div>
             {/* Conditional rendering when hovered */}
             {isHovered && (
-                <button 
-                    className='top-right-button' 
-                    onClick={() => onTopRightButtonClick(manga)}
-                >
+                <button className='top-right-button' onClick={() => onTopRightButtonClick(manga)}>
                     Edit
                 </button>
             )}

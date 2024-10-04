@@ -9,8 +9,8 @@ import { Link } from 'react-router-dom';
 /**
  * Functional component representing an anime card.
  * @param {Object} props - Props passed to the component.
- * @param {Object} props.anime - Anime object containing details like name etc.
- * @param {Function} props.onTopRightButtonClick - top-right button click func.
+ * @param {Object} props.anime - Anime object containing details like titles, images, etc.
+ * @param {Function} props.onTopRightButtonClick - Callback function for top-right button click.
  * @returns {JSX.Element} - Rendered anime card component.
  */
 function AnimeCard({ anime, onTopRightButtonClick }) {
@@ -35,10 +35,7 @@ function AnimeCard({ anime, onTopRightButtonClick }) {
       </div>
       {/* Button for top-right action (Edit) */}
       {isHovered && (
-        <button 
-          className="top-right-button" 
-          onClick={() => onTopRightButtonClick(anime)}
-        >
+        <button className="top-right-button" onClick={() => onTopRightButtonClick(anime)}>
           Edit
         </button>
       )}

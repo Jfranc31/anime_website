@@ -35,8 +35,7 @@ const searchForCharacters = async (req, res) => {
     try {
         const searchTerm = req.query.query;
 
-        // Perform a case-insensitive search for characters with any name 
-        // field containing the searchTerm
+        // Perform a case-insensitive search for characters with any name field containing the searchTerm
         const foundCharacters = await CharacterModel.find({
             $or: [
                 {'names.givenName': { $regex: searchTerm, $options: 'i' }},
@@ -83,21 +82,11 @@ const getCharacterInfo = async (req, res) => {
  */
 const createCharacter = async (req, res) => {
     try {
-        const { 
-            names, 
-            about, 
-            gender, 
-            age, 
-            DOB, 
-            characterImage, 
-            animes, 
-            mangas 
-        } = req.body;
+        const { names, about, gender, age, DOB, characterImage, animes, mangas } = req.body;
 
         // Check if animes are provided
         if (animes && Array.isArray(animes) && animes.length > 0) {
-            // If animes array is provided, associate the character with 
-            // the animes
+            // If animes array is provided, associate the character with the animes
             const animeIds = animes.map((animeInfo) => ({
                 animeId: animeInfo.animeId,
                 role: animeInfo.role,
@@ -116,9 +105,7 @@ const createCharacter = async (req, res) => {
 
             // Update the anime documents with the character ID
             await AnimeModel.updateMany(
-                { _id: { 
-                    $in: animeIds.map((animeInfo) => animeInfo.animeId) 
-                } },
+                { _id: { $in: animeIds.map((animeInfo) => animeInfo.animeId) } },
                 { $push: { characters: character._id } }
             );
 
@@ -126,8 +113,7 @@ const createCharacter = async (req, res) => {
         }
         // CHeck if mangas are provided 
         else if (mangas && Array.isArray(mangas) && mangas.length > 0) {
-            // If mangas array is provided, associate the character with 
-            // the mangas
+            // If mangas array is provided, associate the character with the mangas
             const mangaIds = mangas.map((mangaInfo) => ({
                 mangaId: mangaInfo.mangaId,
                 role: mangaInfo.role,
@@ -146,16 +132,13 @@ const createCharacter = async (req, res) => {
 
             // Update the manga documents with the character ID
             await MangaModel.updateMany(
-                { _id: { 
-                    $in: mangaIds.map((mangaInfo) => mangaInfo.mangaId) 
-                } },
+                { _id: { $in: mangaIds.map((mangaInfo) => mangaInfo.mangaId) } },
                 { $push: { characters: character._id } }
             );
 
             res.status(201).json(character);
         } else {
-            // If animes are not provided, create the character without 
-            // association
+            // If animes are not provided, create the character without association
             const character = await CharacterModel.create({
                 names,
                 about,

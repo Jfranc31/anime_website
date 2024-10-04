@@ -42,67 +42,53 @@ const Animes = () => {
     };
 
     useEffect(() => {
-    axios.get('http://localhost:8080/animes/animes')
+      axios.get('http://localhost:8080/animes/animes')
         .then(response => setAnimeList(response.data))
         .catch(error => console.error(error));
     }, [setAnimeList]);
-
-    const filteredAnime = Array.isArray(animeList) 
-        ? animeList.filter(anime => {
-            const searchInputLow = searchInput.toLowerCase();
-
-            const matchesSearch = 
-                anime.titles.romaji.toLowerCase().includes(searchInputLow) ||
-                anime.titles.english.toLowerCase().includes(searchInputLow) ||
-                anime.titles.Native.toLowerCase().includes(searchInputLow);
-
-            const matchesGenres =
-                selectedGenres.length === 0 ||
-                (anime.genres &&
-                Array.isArray(anime.genres) &&
-                selectedGenres.every(genre =>
-                    anime.genres.some(animeGenre =>
-                    genre && animeGenre.toLowerCase().includes(genre.toLowerCase())
-                    )
-                )
-                );
-        
-            return matchesSearch && matchesGenres;
-            })
-        : [];
-
+  
+    const filteredAnime = Array.isArray(animeList) ? animeList.filter(anime => {
+        const matchesSearch =
+            anime.titles.romaji.toLowerCase().includes(searchInput.toLowerCase()) ||
+            anime.titles.english.toLowerCase().includes(searchInput.toLowerCase()) ||
+            anime.titles.Native.toLowerCase().includes(searchInput.toLowerCase());
+    
+        const matchesGenres =
+            selectedGenres.length === 0 ||
+            (anime.genres && Array.isArray(anime.genres) && selectedGenres.every(genre =>
+                anime.genres.some(animeGenre => genre && animeGenre.toLowerCase().includes(genre.toLowerCase()))
+        ));
+    
+        return matchesSearch && matchesGenres;
+    }) : [];
 
     const sortedAnime = [...filteredAnime].sort((a, b) => {
-        const titleA = (a.titles && a.titles.english) || ''; // handle undefine
-        const titleB = (b.titles && b.titles.english) || ''; // handle undefine
+        const titleA = (a.titles && a.titles.english) || ''; // handle undefined
+        const titleB = (b.titles && b.titles.english) || ''; // handle undefined
         return titleA.localeCompare(titleB);
     });
 
     const handleGenreChange = (selectedGenre) => {
         setSelectedGenres(prevGenres => {
-            if (!prevGenres.includes(selectedGenre)) {
-                return [...prevGenres, selectedGenre];
-            } else {
-                return prevGenres; // Add this else block
-            }
+          if (!prevGenres.includes(selectedGenre)) {
+            return [...prevGenres, selectedGenre];
+          } else {
+            return prevGenres; // Add this else block
+          }
         });
     };
 
     const handleRemoveGenre = (removedGenre) => {
-        setSelectedGenres(prevGenres => 
-            prevGenres.filter(genre => genre !== removedGenre)
-        );
+        setSelectedGenres(prevGenres => prevGenres.filter(genre => genre !== removedGenre));
     };
 
     const onAnimeDelete = (animeId) => {
         // Implement logic to update the user's anime list after deletion
         setUserData((prevUserData) => {
-            const updatedUser = { ...prevUserData };
-            const updatedAnimes = updatedUser.animes.filter(
-                (anime) => anime.animeId !== animeId
-            );
-            updatedUser.animes = updatedAnimes;
-            return updatedUser;
+          const updatedUser = { ...prevUserData };
+          const updatedAnimes = updatedUser.animes.filter((anime) => anime.animeId !== animeId);
+          updatedUser.animes = updatedAnimes;
+          return updatedUser;
         });
     };
 
@@ -144,11 +130,7 @@ const Animes = () => {
                         {selectedGenres.map(genre => (
                             <div key={genre} className="selected-genre">
                                 {genre}
-                                <button 
-                                    onClick={() => handleRemoveGenre(genre)}
-                                >
-                                    x
-                                </button>
+                                <button onClick={() => handleRemoveGenre(genre)}>x</button>
                             </div>
                         ))}
                     </div>
@@ -167,10 +149,7 @@ const Animes = () => {
             </ul>
             {/* Render AnimeEditor modal conditionally */}
             {isAnimeEditorOpen && (
-                <div 
-                    className="character-modal-overlay" 
-                    onClick={handleModalClose}
-                >
+                <div className="character-modal-overlay" onClick={handleModalClose}>
 
                     <AnimeEditor
                         anime={selectedAnimeForEdit}
@@ -182,6 +161,6 @@ const Animes = () => {
             )}
         </div>
     );
-};
-
-export default Animes;
+  };
+  
+  export default Animes;

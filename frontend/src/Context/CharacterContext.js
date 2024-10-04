@@ -11,11 +11,9 @@ export const CharacterProvider = ({ children }) => {
         const fetchData = async () => {
             try {
                 // fetch data from your API
-                const response = await fetch(
-                    'http://localhost:8080/characters/characters', {
-                        credentials: 'include',
-                    }
-                );
+                const response = await fetch('http://localhost:8080/characters/characters', {
+                    credentials: 'include',
+                });
 
                 const data = await response.json();
 
@@ -43,9 +41,7 @@ export const CharacterProvider = ({ children }) => {
 export const useCharacterContext = () => {
     const context = useContext(CharacterContext);
     if(!context) {
-        throw new Error(
-            'useCharacterContext must be used within a CharacterProvider'
-        );
+        throw new Error('useCharacterContext must be used within a CharacterProvider');
     }
     return context;
 }

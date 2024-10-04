@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 /**
  * Functional component representing a character card.
  * @param {Object} props - Props passed to the component.
- * @param {Object} props.character - Character object containing name etc.
+ * @param {Object} props.character - Character object containing details like names, images, etc.
  * @returns {JSX.Element} - Rendered character card component.
  */
 function CharacterCard({ character }) {
@@ -24,10 +24,7 @@ function CharacterCard({ character }) {
         >
             <div className='img-container'>
                 {/* Character image */}
-                <img 
-                    src={character.characterImage} 
-                    alt={character.names.givenName} 
-                />
+                <img src={character.characterImage} alt={character.names.givenName} />
                 <div className='title-and-progress'>
                     {/* Link to character details page */}
                     <Link to={`/characters/${character._id}`}>

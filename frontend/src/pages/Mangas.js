@@ -47,54 +47,45 @@ const Mangas =() => {
             .catch(error => console.error(error));
     }, [setMangaList]);
 
-    const filteredManga = Array.isArray(mangaList) 
-        ? mangaList.filter(manga => {
-            const searchInputLow = searchInput.toLowerCase();
-
+    const filteredManga = Array.isArray(mangaList) ? mangaList.filter(manga => {
         const matchesSearch =
-            manga.titles.romaji.toLowerCase().includes(searchInputLow) ||
-            manga.titles.english.toLowerCase().includes(searchInputLow) ||
-            manga.titles.Native.toLowerCase().includes(searchInputLow);
-
+            manga.titles.romaji.toLowerCase().includes(searchInput.toLowerCase()) ||
+            manga.titles.english.toLowerCase().includes(searchInput.toLowerCase()) ||
+            manga.titles.Native.toLowerCase().includes(searchInput.toLowerCase());
+    
         const matchesGenres =
             selectedGenres.length === 0 ||
-            (manga.genres && 
-            Array.isArray(manga.genres) && 
-            selectedGenres.every(genre =>
-                manga.genres.some(animeGenre => 
-                genre && animeGenre.toLowerCase().includes(genre.toLowerCase()))
+            (manga.genres && Array.isArray(manga.genres) && selectedGenres.every(genre =>
+                manga.genres.some(animeGenre => genre && animeGenre.toLowerCase().includes(genre.toLowerCase()))
         ));
     
         return matchesSearch && matchesGenres;
     }) : [];
 
     const sortedManga = [...filteredManga].sort((a, b) => {
-        const titleA = (a.titles && a.titles.english) || ''; // handle undefine
-        const titleB = (b.titles && b.titles.english) || ''; // handle undefine
+        const titleA = (a.titles && a.titles.english) || ''; // handle undefined
+        const titleB = (b.titles && b.titles.english) || ''; // handle undefined
         return titleA.localeCompare(titleB);
     });
 
     const handleGenreChange = (selectedGenre) => {
         setSelectedGenres(prevGenres => {
-            if (!prevGenres.includes(selectedGenre)) {
-                return [...prevGenres, selectedGenre];
-            } else {
-                return prevGenres; // Add this else block
-            }
+          if (!prevGenres.includes(selectedGenre)) {
+            return [...prevGenres, selectedGenre];
+          } else {
+            return prevGenres; // Add this else block
+          }
         });
     };
 
     const handleRemoveGenre = (removedGenre) => {
-        setSelectedGenres(prevGenres => 
-            prevGenres.filter(genre => genre !== removedGenre));
+        setSelectedGenres(prevGenres => prevGenres.filter(genre => genre !== removedGenre));
     };
 
     const onMangaDelete = (mangaId) => {
         setUserData((prevUserData) => {
             const updatedUser = { ...prevUserData };
-            const updatedMangas = updatedUser.mangas.filter(
-                (manga) => manga.mangaId !== mangaId
-            );
+            const updatedMangas = updatedUser.mangas.filter((manga) => manga.mangaId !== mangaId);
             updatedUser.mangas = updatedMangas;
             return updatedUser;
         });
@@ -114,7 +105,7 @@ const Mangas =() => {
                     <input
                         type='text'
                         id='searchInput'
-                        name='searchInput'
+                        name='seatchInput'
                         placeholder='Search...'
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
@@ -136,11 +127,7 @@ const Mangas =() => {
                         {selectedGenres.map(genre => (
                             <div key={genre} className="selected-genre">
                                 {genre}
-                                <button 
-                                    onClick={() => handleRemoveGenre(genre)}
-                                >
-                                    x
-                                </button>
+                                <button onClick={() => handleRemoveGenre(genre)}>x</button>
                             </div>
                         ))}
                     </div>
@@ -158,10 +145,7 @@ const Mangas =() => {
                 ))}
             </ul>
             {isMangaEditorOpen && (
-                <div 
-                    className='character-modal-overlay' 
-                    onClick={handleModalClose}
-                >
+                <div className='character-modal-overlay' onClick={handleModalClose}>
                     <MangaEditor
                         manga={selectedMangaForEdit}
                         userId={userData._id}
