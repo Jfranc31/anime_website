@@ -34,11 +34,11 @@ To run the Anime Project locally, follow these steps:
 
 - **Registration/Login**: Create a new account or log in with existing credentials.
 - **Adding Series**: Navigate to the "Add" section to add new anime or manga series to the database.
-- **Browsing**: Explore the "Anime" and "Manga" sections to browse through the available series.
+- **Browsing**: Explore the "Anime" and "Manga" sections to browse the available series.
 - **Searching**: Use the search functionality to find specific series or characters by name or genre.
 - **Viewing Details**: Click on a series or character to view detailed information on their respective pages.
-- **Updating Information**: Click on the update button to modify information about series or characters as needed.
-- **Adding to Watchlist**: Add series to your watchlist by clicking on the corresponding button.
+- **Updating Information**: Click the update button to modify information about series or characters as needed.
+- **Adding to Watchlist**: Add a series to your watchlist by clicking the corresponding button.
 
 ## Contributing
 
@@ -59,7 +59,7 @@ Contributions to the Anime Project are welcome! If you'd like to contribute, ple
 If you have any questions or feedback, feel free to contact the project maintainer:
 
 - Name: Juan David Franco
-- Email: Jfranc31@binghamton.edu
+- Email: Davidfranco923@gmail.com
 - LinkedIn: linkedin.com/in/juanfranco923/
 - GitHub: github.com/Jfranc31
 
