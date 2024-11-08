@@ -1,0 +1,80 @@
+/*=============================================
+              Login Page css
+==============================================*/
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Full viewport height for centering */
+  background-color: rgb(35, 38, 40); /* Adjust background color if needed */
+}
+.container {
+  width: 90%; /* Responsive width */
+  max-width: 400px; /* Max width for larger screens */
+  padding: 50px 20px;
+  box-shadow: 1px 1px 10px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  color: white;
+  overflow-y: auto;
+  margin: 0 auto; /* Centering horizontally */
+  background-color: #222; /* Background color for the container */
+}
+.container-home{
+  text-align: center;
+}
+form{
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  margin: 0 auto;
+}
+form input,form label{
+  font-size: 16px;
+  padding: 5px 5px;
+}
+form input{
+  margin-bottom: 20px;
+  background: rgb(35, 38, 40); 
+  color: rgb(247, 248, 248);
+  appearance: none;
+  border: none;
+  transition: border 0.15s ease;
+  padding: 5px 15px;
+}
+form input:focus{
+  outline: none;
+  box-shadow: none;
+  border-color: rgb(100, 153, 255);
+}
+form input:hover{
+  border-color: #001d3d;
+  border-radius: 2px;
+}
+.btn{
+  background-color: #001d3d;
+  padding: 10px 15px;
+  color:#fff;
+  font-size: 18px;
+  min-width: 150px;
+  margin: 5px auto;
+  border-radius: 100px;
+  transition: background-color 0.5s;
+  text-align: center;
+
+}
+.btn:hover{
+  background-color: #023047;
+  cursor: pointer;
+}
+.btn-container{
+  margin: 10px auto;
+}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    width: 90%;
+    padding: 40px 15px;
+    margin: 0 5%; /* Side margin for smaller screens */
+  }
+}
+/*============================================*/

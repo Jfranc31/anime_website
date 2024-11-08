@@ -6,6 +6,8 @@ import axios from 'axios';
 import CreateCharacter from "../Components/CreateCharacter";
 import CharacterSearch from "../Components/Searches/CharacterSearch";
 import RelationSearch from "../Components/Searches/RelationSearch";
+import styles from '../styles/components/Modal.module.css';
+import styles1 from '../styles/pages/add_page.module.css';
 
 export default function AddAnime() {
   // Initialize state for form data
@@ -224,7 +226,7 @@ const handleSelectRelation = (type, selectedRelations) => {
 };
 // ---------------------------------------------------------------
 
-// Create Charater ------------------------------
+// Create Character ------------------------------
   const handleAddCharacter = (newCharacter) => {
     setActiveModal('createCharacter');
   };
@@ -392,9 +394,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   // Data Fields ------------------------
   const renderGeneralSection = () => (
     <>
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Titles</h2>
-        <div className="grid">
+        <div className={styles1.grid}>
           <div>
             <label htmlFor="titles.romaji">Romaji</label>
             <div></div>
@@ -432,93 +434,104 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className='section'>
+      <div className={styles1.section}>
             <h2>Release Data</h2>
-            <div className='grid'>
+            <div className={styles1.grid}>
                 <div>
-                    <label htmlFor="releaseData.releaseStatus">Release Status:</label>
-                    <div></div>
+                    <label htmlFor="releaseData.releaseStatus">Release Status</label>
                     <select
-                    type="releaseData.releaseStatus"
-                    id="releaseData.releaseStatus"
-                    name="releaseData.releaseStatus"
-                    value={formData.releaseData.releaseStatus}
-                    onChange={(handleChange)}
+                        id="releaseData.releaseStatus"
+                        name="releaseData.releaseStatus"
+                        value={formData.releaseData.releaseStatus}
+                        onChange={handleChange}
                     >
-                    <option value="" disabled>Select Status</option>
-                    {availableStatus.map((status) => (
-                        <option key={status} value={status}>
-                            {status}
-                        </option>
-                    ))}
+                        <option value="" disabled>Select Status</option>
+                        {availableStatus.map((status) => (
+                            <option key={status} value={status}>
+                                {status}
+                            </option>
+                        ))}
                     </select>
                 </div>
+            </div>
+
+            <div className={styles1.grid} style={{ marginTop: '1rem' }}>
                 <div>
-                    <h2>Release Date</h2>
-                    <label htmlFor="releaseData.startDate.year">Year:</label>
-                    <div></div>
-                    <input
-                    type="text"
-                    id="releaseData.startDate.year"
-                    name="releaseData.startDate.year"
-                    value={formData.releaseData.startDate.year}
-                    onChange={handleChange}
-                    />
-                    <label htmlFor="releaseData.startDate.month">Month:</label>
-                    <div></div>
-                    <input
-                    type="text"
-                    id="releaseData.startDate.month"
-                    name="releaseData.startDate.month"
-                    value={formData.releaseData.startDate.month}
-                    onChange={handleChange}
-                    />
-                    <label htmlFor="releaseData.startDate.day">Day:</label>
-                    <div></div>
-                    <input
-                    type="text"
-                    id="releaseData.startDate.day"
-                    name="releaseData.startDate.day"
-                    value={formData.releaseData.startDate.day}
-                    onChange={handleChange}
-                    />
+                    <label>Start Date</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px' }}>
+                        <input
+                            type="number"
+                            id="releaseData.startDate.year"
+                            name="releaseData.startDate.year"
+                            placeholder="YYYY"
+                            value={formData.releaseData.startDate.year}
+                            onChange={handleChange}
+                            min="1900"
+                            max="2099"
+                        />
+                        <input
+                            type="number"
+                            id="releaseData.startDate.month"
+                            name="releaseData.startDate.month"
+                            placeholder="MM"
+                            value={formData.releaseData.startDate.month}
+                            onChange={handleChange}
+                            min="1"
+                            max="12"
+                        />
+                        <input
+                            type="number"
+                            id="releaseData.startDate.day"
+                            name="releaseData.startDate.day"
+                            placeholder="DD"
+                            value={formData.releaseData.startDate.day}
+                            onChange={handleChange}
+                            min="1"
+                            max="31"
+                        />
+                    </div>
                 </div>
                 <div>
-                    <h2>End Date</h2>
-                    <label htmlFor="releaseData.endDate.year">Year:</label>
-                    <div></div>
-                    <input
-                    type="text"
-                    id="releaseData.endDate.year"
-                    name="releaseData.endDate.year"
-                    value={formData.releaseData.endDate.year}
-                    onChange={handleChange}
-                    />
-                    <label htmlFor="releaseData.endDate.month">Month:</label>
-                    <div></div>
-                    <input
-                    type="text"
-                    id="releaseData.endDate.month"
-                    name="releaseData.endDate.month"
-                    value={formData.releaseData.endDate.month}
-                    onChange={handleChange}
-                    />
-                    <label htmlFor="releaseData.endDate.day">Day:</label>
-                    <div></div>
-                    <input
-                    type="text"
-                    id="releaseData.endDate.day"
-                    name="releaseData.endDate.day"
-                    value={formData.releaseData.endDate.day}
-                    onChange={handleChange}
-                    />
+                    <label>End Date</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px' }}>
+                        <input
+                            type="number"
+                            id="releaseData.endDate.year"
+                            name="releaseData.endDate.year"
+                            placeholder="YYYY"
+                            value={formData.releaseData.endDate.year}
+                            onChange={handleChange}
+                            min="1900"
+                            max="2099"
+                        />
+                        <input
+                            type="number"
+                            id="releaseData.endDate.month"
+                            name="releaseData.endDate.month"
+                            placeholder="MM"
+                            value={formData.releaseData.endDate.month}
+                            onChange={handleChange}
+                            min="1"
+                            max="12"
+                        />
+                        <input
+                            type="number"
+                            id="releaseData.endDate.day"
+                            name="releaseData.endDate.day"
+                            placeholder="DD"
+                            value={formData.releaseData.endDate.day}
+                            onChange={handleChange}
+                            min="1"
+                            max="31"
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
+      </div>
 
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Typing</h2>
-        <div className="grid">
+        <div className={styles1.grid}>
           <div>
             <label htmlFor="typings.Format">Format:</label>
             <div></div>
@@ -576,9 +589,9 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Lengths</h2>
-        <div className="grid">
+        <div className={styles1.grid}>
           <div>
             <label htmlFor="lengths.Episodes">Episodes:</label>
             <div></div>
@@ -604,9 +617,9 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Genres</h2>
-        <div className="grid">
+        <div className={styles1.grid}>
           <div>
             <label htmlFor="genres">Genres:</label>
             <div></div>
@@ -636,7 +649,7 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Description</h2>
           <textarea 
           type="text"
@@ -651,10 +664,12 @@ const handleSelectRelation = (type, selectedRelations) => {
   );
   const renderImagesSection = () => (
     <>
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Image</h2>
-        <div className="images">
+        <div className={styles1.images}>
+        <div>
           <label htmlFor="images.image">Image URL:</label>
+          <div></div>
           <input
             type="text"
             id="images.image"
@@ -662,16 +677,17 @@ const handleSelectRelation = (type, selectedRelations) => {
             value={formData.images.image}
             onChange={handleChange}
           />
+        </div>
           {formData.images.image && (
-            <div className="image-preview">
+            <div className={styles1.imagePreview}>
               <img src={formData.images.image} alt="Anime Preview" />
             </div>
           )}
         </div>
       </div>
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Border</h2>
-        <div className="border">
+        <div className={styles1.border}>
           <label htmlFor="images.border">Border URL: </label>
           <input
             type="text"
@@ -681,7 +697,7 @@ const handleSelectRelation = (type, selectedRelations) => {
             onChange={handleChange}
           />
           {formData.images.border && (
-            <div className="border-preview">
+            <div className={styles1.borderPreview}>
               <img src={formData.images.border} alt="Anime Preview" />
             </div>
           )}
@@ -691,9 +707,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   );
   const renderCharactersSection = () => (
     <>
-    <div className="section">
+    <div className={styles1.section}>
         <h2>Characters</h2>
-        <div className='character-button'>
+        <div className={styles1.characterButton}>
             <button type="button" onClick={() => handleAddExistingCharacter()}>
             Add Existing Character
             </button>
@@ -703,40 +719,33 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
         <div className="characters">
         {formData.characters.map((character, index) => (
-            <div key={index} className="character">
-            {/* Display character information here */}
-            <div className="character-info">
-                {/* Add a small circular image of the character here */}
+            <div key={index} className={styles1.selectedCharacter}>
                 <img
-                src={character.characterImage}
-                alt={`Character ${index + 1}`}
-                className="character-image"
+                    src={character.characterImage}
+                    alt={`Character ${index + 1}`}
+                    className={styles1.selectedCharacterImage}
                 />
-                <div className="character-details">
-                <p>
-                    {character.names &&
-                    `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
-                </p>
-                <label htmlFor={`characterType-${index}`}>Type:</label>
-                <select
-                    id={`characterType-${index}`}
-                    name={`characterType-${index}`}
-                    value={character.role}
-                    onChange={(e) => handleCharacterTypeChange(e, index)}
-                >
-                    <option value="" disabled>Select Role</option>
-                    {availableRole.map((role) => (
-                    <option key={role} value={role}>
-                        {role}
-                    </option>
-                    ))}
-                </select>
+                <div className={styles1.selectedCharacterInfo}>
+                    <p className={styles1.selectedCharacterName}>
+                        {character.names &&
+                        `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
+                    </p>
+                    <select
+                        className={styles1.selectedCharacterRole}
+                        value={character.role}
+                        onChange={(e) => handleCharacterTypeChange(e, index)}
+                    >
+                        <option value="" disabled>Select Role</option>
+                        {availableRole.map((role) => (
+                            <option key={role} value={role}>
+                                {role}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-            </div>
-            {/* Add a button to remove the character */}
-            <button type="button" onClick={() => handleRemoveCharacter(index)}>
-                Remove
-            </button>
+                <button type="button" onClick={() => handleRemoveCharacter(index)}>
+                    Remove
+                </button>
             </div>
         ))}
         </div>
@@ -745,9 +754,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   );
   const renderRelationsSection = () => (
     <>
-      <div className="section">
+      <div className={styles1.section}>
         <h2>Relations</h2>
-        <div className="character-button">
+        <div className={styles1.characterButton}>
           <button type="button" onClick={() => handleAddRelation('anime')}>
               Add Anime Relation
           </button>
@@ -755,75 +764,66 @@ const handleSelectRelation = (type, selectedRelations) => {
               Add Manga Relation
           </button>
         </div>
-        <div className="characters">
+        <div className={styles1.characters}>
           {formData.animeRelations.map((relation, index) => (
-            <div key={index} className="character">
-              <div className="character-info">
+            <div key={index} className={styles1.selectedCharacter}>
                 <img
-                  src={relation.images.image}
-                  alt={`Anime Relation ${index + 1}`}
-                  className="character-image"
+                    src={relation.images.image}
+                    alt={`Anime Relation ${index + 1}`}
+                    className={styles1.selectedCharacterImage}
                 />
-                <div className="character-details">
-                  <p>
-                    {relation.titles &&
-                      `${relation.titles.english || ''}`}
-                  </p>
-                  <label htmlFor={`animeRelationType-${index}`}>Type:</label>
-                  <select
-                    id={`animeRelationType-${index}`}
-                    name={`animeRelationType-${index}`}
-                    value={relation.typeofRelation}
-                    onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
-                  >
-                    <option value="" disabled>Select Relation</option>
-                    {availableRelation.map((relationType) => (
-                        <option key={relationType} value={relationType}>
-                            {relationType}
-                        </option>
-                    ))}
-                  </select>
+                <div className={styles1.selectedCharacterInfo}>
+                    <p className={styles1.selectedCharacterName}>
+                        {relation.titles.english || ''}
+                    </p>
+                    <select
+                        className={styles1.selectedCharacterRole}
+                        value={relation.typeofRelation}
+                        onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
+                    >
+                        <option value="" disabled>Select Relation</option>
+                        {availableRelation.map((relationType) => (
+                            <option key={relationType} value={relationType}>
+                                {relationType}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-              </div>
-              <button type="button" onClick={() => handleRemoveRelation('anime', index)}>
-                  Remove
-              </button>
+                <button type="button" onClick={() => handleRemoveRelation('anime', index)}>
+                    Remove
+                </button>
             </div>
           ))}
-          {formData.mangaRelations.map((relation, index) => (
-            <div key={index} className="character">
-              <div className="character-info">
-                <img
-                  src={relation.images.image}
-                  alt={`Manga Relation ${index + 1}`}
-                  className="character-image"
-                />
-                <div className="character-details">
-                  <p>
-                    {relation.titles &&
-                      `${relation.titles.english || ''}`}
-                  </p>
-                  <label htmlFor={`mangaRelationType-${index}`}>Type:</label>
-                  <select
-                    id={`mangaRelationType-${index}`}
-                    name={`mangaRelationType-${index}`}
-                    value={relation.typeofRelation}
-                    onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
-                  >
-                    <option value="" disabled>Select Relation</option>
-                    {availableRelation.map((relationType) => (
-                        <option key={relationType} value={relationType}>
-                            {relationType}
-                        </option>
+
+{formData.mangaRelations.map((relation, index) => (
+                        <div key={index} className={styles1.selectedCharacter}>
+                            <img
+                                src={relation.images.image}
+                                alt={`Manga Relation ${index + 1}`}
+                                className={styles1.selectedCharacterImage}
+                            />
+                            <div className={styles1.selectedCharacterInfo}>
+                                <p className={styles1.selectedCharacterName}>
+                                    {relation.titles.english || relation.titles.romaji || ''}
+                                </p>
+                                <select
+                                    className={styles1.selectedCharacterRole}
+                                    value={relation.typeofRelation}
+                                    onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
+                                >
+                                    <option value="" disabled>Select Relation</option>
+                                    {availableRelation.map((relationType) => (
+                                        <option key={relationType} value={relationType}>
+                                            {relationType}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button type="button" onClick={() => handleRemoveRelation('manga', index)}>
+                                Remove
+                            </button>
+                        </div>
                     ))}
-                  </select>
-                </div>
-              </div>
-              <button type="button" onClick={() => handleRemoveRelation('manga', index)}>
-                  Remove
-              </button>
-            </div>
-          ))}
         </div>
       </div>
     </>
@@ -831,9 +831,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   // ------------------------------------
 
   return (
-    <div className="add-anime-container">
-      <div className="add-anime-container-tabs">
-        <button className="add-anime-btn" form="submitAnime" type="submit" >
+    <div className={styles1.addAnimeContainer}>
+      <div className={styles1.addAnimeContainerTabs}>
+        <button className={styles1.addAnimeBtn} form="submitAnime" type="submit" >
           Submit
         </button>
         <button onClick={() => handleTabChange("general")}>General</button>
@@ -843,7 +843,7 @@ const handleSelectRelation = (type, selectedRelations) => {
         {/* Add more buttons for additional tabs */}
       </div>
 
-      <form className="form-container" id="submitAnime"  onSubmit={handleSubmit}>
+      <form className={styles1.formContainer} id="submitAnime"  onSubmit={handleSubmit}>
         {activeTab === "general" && renderGeneralSection()}
         {activeTab === "images" && renderImagesSection()}
         {activeTab === "characters" && renderCharactersSection()}
@@ -851,10 +851,10 @@ const handleSelectRelation = (type, selectedRelations) => {
       </form>
 
       {activeModal && (
-        <div className="character-modal-overlay" onClick={handleModalClose}>
-          <div className="character-modal" onClick={(e) => e.stopPropagation()}>
+        <div className={styles.characterModalOverlay} onClick={handleModalClose}>
+          <div className={styles.characterModal} onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="character-modal-header">
+            <div className={styles.characterModalHeader}>
               <h1>{
                 activeModal === 'createCharacter' 
                 ? 'Create Character' 
@@ -866,12 +866,12 @@ const handleSelectRelation = (type, selectedRelations) => {
                 ? 'Search Manga'
                 : ''
               }</h1>
-              <button className="character-modal-close" onClick={handleModalClose}>
+              <button className={styles.characterModalClose} onClick={handleModalClose}>
                 &times;
               </button>
             </div>
             {/* Modal Body */}
-            <div className="character-modal-body">
+            <div className={styles.characterModalBody}>
               {/* Render the corresponding modal content based on activeModal state */}
               {activeModal === 'createCharacter' && (
                 <CreateCharacter

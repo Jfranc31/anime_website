@@ -9,6 +9,8 @@ import axios from 'axios';
 import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
+import AnimeCard from '../../cards/AnimeCard';
+import CharacterCard from '../../cards/CharacterCard';
 
 /**
  * Functional component representing details of an anime.
@@ -28,6 +30,7 @@ const AnimeDetails = () => {
   });
 
   const [activeSection, setActiveSection] = useState('relations');
+  const [activeTab, setActiveTab] = useState('about');
 
   const showRelations = () => {
     setActiveSection('relations');
@@ -98,38 +101,44 @@ const AnimeDetails = () => {
 
   useEffect(() => {
     const fetchRelationDetails = async () => {
-      const relationsWithDetails = await Promise.all(
-        [
-          ...animeDetails?.mangaRelations.map(async (relation) => {
+      try {
+        const relationsWithDetails = await Promise.all([
+          ...(animeDetails?.mangaRelations?.map(async (relation) => {
             try {
               const response = await axios.get(`http://localhost:8080/mangas/manga/${relation.relationId}`);
               return {
                 ...relation,
                 relationDetails: response.data,
-                contentType: 'manga'
+                contentType: 'mangas'
               };
             } catch (error) {
-              console.error(`Error fetching details for manga relation ${relation.relationId}`, error);
-              return relation;
+              console.error(`Error fetching details for manga relation ${relation.relationId}:`, error);
+              return null;  // Return null instead of relation
             }
-          }) || [],
-          ...animeDetails?.animeRelations.map(async (relation) => {
+          }) || []),
+          ...(animeDetails?.animeRelations?.map(async (relation) => {
             try {
               const response = await axios.get(`http://localhost:8080/animes/anime/${relation.relationId}`);
               return {
                 ...relation,
                 relationDetails: response.data,
-                contentType: 'anime'
+                contentType: 'animes'
               };
             } catch (error) {
-              console.error(`Error fetching details for anime relation ${relation.relationId}`, error);
-              return relation;
+              console.error(`Error fetching details for anime relation ${relation.relationId}:`, error);
+              return null;  // Return null instead of relation
             }
-          }) || [],
-        ]
-      );
-      setRelationsDetails(relationsWithDetails);
+          }) || []),
+        ]);
+        
+        // Filter out null values before setting state
+        setRelationsDetails(relationsWithDetails.filter(relation => relation !== null));
+      } catch (error) {
+        console.error('Error fetching relation details:', error);
+        setRelationsDetails([]);  // Set empty array on error
+      }
     };
+
     if (animeDetails) {
       fetchRelationDetails();
     }
@@ -156,116 +165,147 @@ const AnimeDetails = () => {
   const openEditor = () => {
     setIsAnimeEditorOpen(true);
   };
-  
-console.log("CH: ", isAnimeAdded, userProgress);
+
+  console.log("CH: ", isAnimeAdded, userProgress);
+
+  // Add this helper function to format the date
+  const formatDate = (dateObj) => {
+    if (!dateObj) return 'TBA';
+    const { year, month, day } = dateObj;
+    if (!year && !month && !day) return 'TBA';
+    
+    const formattedMonth = month ? month.toString().padStart(2, '0') : '01';
+    const formattedDay = day ? day.toString().padStart(2, '0') : '01';
+    
+    return `${year || 'TBA'}-${formattedMonth}-${formattedDay}`;
+  };
+
+  const getFullName = (names) => {
+    const nameParts = [];
+    if (names.givenName) nameParts.push(names.givenName);
+    if (names.middleName) nameParts.push(names.middleName);
+    if (names.surName) nameParts.push(names.surName);
+    return nameParts.join(' ');
+  };
+
   return (
-    <div>
-      <div className='anime-page'>
-        <img src={animeDetails.images.border} alt={animeDetails.titles.english} />
-      </div>
-
-      <div className='anime-page-img'>
-        <img src={animeDetails.images.image} alt={animeDetails.titles.english} />
-      </div>
-
-      <div className='anime-page-info-bk'>
-        <div className='anime-page-info'>
-          <p>{animeDetails.titles.english}</p>
-          <div className='mydiv'></div>
-          <p>Description: {animeDetails.description}</p>
+    <div className="anime-details-page">
+      <div className="anime-header">
+        <div className="banner-wrapper">
+          <img 
+            src={animeDetails.images.border || animeDetails.images.image} 
+            alt={animeDetails.titles.english} 
+            className="banner-image"
+          />
+          <div className="banner-gradient" />
         </div>
-      </div>
-
-      {/* Add an Update button */}
-      <Link to={`/anime/${animeDetails._id}/update`}>
-        <button className='update-anime-button'>Edit Anime</button>
-      </Link>
-
-      <button className='open-editor-button' onClick={openEditor}>Open Editor</button>
-
-      {/* Render AnimeEditor modal conditionally */}
-      {isAnimeEditorOpen && (
-          <div className="character-modal-overlay" onClick={handleModalClose}>
-
-              <AnimeEditor
-                  anime={animeDetails}
-                  userId={userData._id}
-                  closeModal={handleModalClose}
-                  onAnimeDelete={onAnimeDelete}
-              />
+        
+        <div className="content-wrapper">
+          <div className="poster-container">
+            <img 
+              src={animeDetails.images.image} 
+              alt={animeDetails.titles.english} 
+              className="poster-image"
+            />
           </div>
-      )}
-
-      <AnimeNavbar showRelations={showRelations} showCharacters={showCharacters} />
-
-      {/* Series Data */}
-      <div className='series-data'>
-        <h3>Format</h3>
-        <div>{animeDetails.typings.Format}</div>
-        <h3>Source</h3>
-        <div>{animeDetails.typings.Source}</div>
-        <h3>Start Date</h3>
-        <div>{animeDetails.releaseData.startDate.month}/{animeDetails.releaseData.startDate.day}/{animeDetails.releaseData.startDate.year}</div>
-        {animeDetails.releaseData.endDate.year && (
-          <>
-            <h3>End Date</h3>
-            <div>{animeDetails.releaseData.endDate.month}/{animeDetails.releaseData.endDate.day}/{animeDetails.releaseData.endDate.year}</div>
-          </>
-        )}
-        {animeDetails.lengths.Episodes && (
-          <>
-            <h3>Episodes</h3>
-            <div>{animeDetails.lengths.Episodes}</div>
-          </>
-        )}
-        <h3>Episode Duration</h3>
-        <div>{animeDetails.lengths.EpisodeDuration}{" mins"}</div>
-        <h3>Genres</h3>
-        <div className='genres'>
-          {animeDetails.genres.map((genre, index) => (
-            <div key={index}>{genre}</div>
-          ))}
+          
+          <div className="title-section">
+            <h1>{animeDetails.titles.english}</h1>
+            {animeDetails.titles.native && (
+              <h2>{animeDetails.titles.native}</h2>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Overview Section */}
-      <div className={`anime-page-relations ${activeSection === 'relations' ? 'show' : 'hide'}`}>
-        <h2>Relations</h2>
-        <div className='anime-list'>
-          {relationsDetails.map((relation) => (
-            <div key={relation.relationDetails?._id} className='anime-card'>
-              <div className='img-container'>
-                <img src={relation.relationDetails?.images.image} alt={relation.relationDetails?.titles.english || 'Unknown'} />
-                <div className='title-progress'>
-                <Link to={`/${relation.contentType}/${relation.relationDetails?._id}`}>
-                    {/* <div className='anime-title'>{relation.relationDetails?.titles.english}</div> */}
-                    <div className='anime-title'>{relation.typeofRelation}</div>
+      <div className="content-container">
+        <div className="tabs-section">
+          <button 
+            className={`tab-button ${activeTab === 'about' ? 'active' : ''}`}
+            onClick={() => setActiveTab('about')}
+          >
+            About
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'characters' ? 'active' : ''}`}
+            onClick={() => setActiveTab('characters')}
+          >
+            Characters
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'relations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('relations')}
+          >
+            Relations
+          </button>
+        </div>
+
+        {activeTab === 'about' && (
+          <div className="about-container">
+            <div className="metadata-grid">
+              {/* Metadata items */}
+            </div>
+            <div className="description-section">
+              <p>{animeDetails.description}</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'characters' && (
+          <div className="characters-container">
+            <div className="characters-grid">
+              {charactersDetails.map((character) => (
+                <Link 
+                  to={`/characters/${character.characterDetails._id}`} 
+                  key={character.characterDetails._id}
+                  className="character-card"
+                >
+                  <div className="character-image-container">
+                    <img 
+                      src={character.characterDetails.characterImage} 
+                      alt={character.characterDetails.names.givenName}
+                    />
+                    <div className="character-role">
+                      {character.role}
+                    </div>
+                  </div>
+                  <div className="character-info">
+                    <h4>{getFullName(character.characterDetails.names)}</h4>
+                  </div>
                 </Link>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        )}
 
-      {/* Characters Section */}
-      <div className={`anime-page-characters ${activeSection === 'characters' ? 'show' : 'hide'}`}>
-        <h2>Characters</h2>
-        <div className='anime-list'>
-          {charactersDetails.map((character) => (
-            <div key={character.characterDetails?._id} className='anime-card'>
-              <div className='img-container'>
-                <img src={character.characterDetails?.characterImage} alt={character.characterDetails?.names.givenName || 'Unknown'} />
-                <div className='title-progress'>
-                  <Link to={`/characters/${character.characterDetails?._id}`}>
-                    <div className='anime-title'>{character.characterDetails?.names.givenName} {character.characterDetails?.names.middleName} {character.characterDetails?.names.surName}</div>
-                    <div className='anime-title'>{character.role}</div>
+        {activeTab === 'relations' && (
+          <div className="relations-container">
+            <div className="relations-grid">
+              {relationsDetails
+                .filter(relation => relation?.relationDetails) // Add this filter
+                .map((relation) => (
+                  <Link 
+                    to={`/${relation.contentType}/${relation.relationDetails?._id}`} 
+                    key={`${relation.contentType}-${relation.relationDetails?._id}`}
+                    className="relation-card"
+                  >
+                    <div className="relation-image-container">
+                      <img 
+                        src={relation.relationDetails?.images.image} 
+                        alt={relation.relationDetails?.titles.english || 'Unknown'} 
+                      />
+                      <div className="relation-type">
+                        {relation.typeofRelation}
+                      </div>
+                    </div>
+                    <div className="relation-info">
+                      <h4>{relation.relationDetails?.titles.english}</h4>
+                    </div>
                   </Link>
-                </div>
-              </div>
+                ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import styles from '../styles/components/cards.module.css';
 
 /**
  * Functional component representing a manga card.
@@ -19,24 +20,24 @@ function MangaCard({ manga, onTopRightButtonClick }) {
 
     return (
         <div
-            className={`anime-card ${isHovered ? 'hovered' : ''}`}
+            className={`${styles.mangaCard} ${isHovered ? styles.hovered : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div className='img-container'>
+            <div className={styles.imgContainer}>
                 {/* Manga image */}
                 <img src={manga.images.image} alt={manga.titles.english} />
-                <div className='title-and-progress'>
+                <div className={styles.titleAndProgress}>
                     {/* Link to manga details page */}
                     <Link to={`/manga/${manga._id}`}>
                         {/* Manga title */}
-                        <div className='anime-title'>{manga.titles.english}</div>
+                        <div className={styles.animeTitle}>{manga.titles.english}</div>
                     </Link>
                 </div>
             </div>
             {/* Conditional rendering when hovered */}
             {isHovered && (
-                <button className='top-right-button' onClick={() => onTopRightButtonClick(manga)}>
+                <button className={styles.topRightButton} onClick={() => onTopRightButtonClick(manga)}>
                     Edit
                 </button>
             )}

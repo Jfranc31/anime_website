@@ -1,7 +1,24 @@
-body{
+body {
+  margin: 0;
+  padding: 0;
   background-color: rgb(35, 38, 40);
-  display: flex;
-  justify-content: left;
-  align-items: center;
   min-height: 100vh;
 }
+
+.App {
+  padding-top: 0rem; /* Space for fixed navbar */
+  min-height: 100vh;
+  width: 100%;
+  max-width: auto;
+  margin: 0 auto;
+  padding-left: 0rem;
+  padding-right: 0rem;
+}
+
+@media (max-width: 768px) {
+  .App {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+

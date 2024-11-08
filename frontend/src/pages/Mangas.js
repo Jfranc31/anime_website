@@ -6,7 +6,7 @@ import { useMangaContext } from '../Context/MangaContext';
 import MangaCard from '../cards/MangaCard';
 import MangaEditor from '../Components/ListEditors/MangaEditor';
 import data from '../Context/ContextApi';
-
+import styles from '../styles/components/Modal.module.css';
 const Mangas =() => {
     const { mangaList, setMangaList } = useMangaContext();
     const {userData,setUserData} = useContext(data);
@@ -14,6 +14,7 @@ const Mangas =() => {
     const [isMangaEditorOpen, setIsMangaEditorOpen] = useState(false);
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [selectedMangaForEdit, setSelectedMangaForEdit] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const availableGenres = [
         "Action", 
@@ -42,9 +43,16 @@ const Mangas =() => {
     };
 
     useEffect(() => {
+        setIsLoading(true);
         axios.get('http://localhost:8080/mangas/mangas')
-            .then(response => setMangaList(response.data))
-            .catch(error => console.error(error));
+            .then(response => {
+                setMangaList(response.data);
+                setIsLoading(false);
+            })
+            .catch(error => {
+                console.error(error);
+                setIsLoading(false);
+            });
     }, [setMangaList]);
 
     const filteredManga = Array.isArray(mangaList) ? mangaList.filter(manga => {
@@ -99,24 +107,26 @@ const Mangas =() => {
     const onTopRightButtonClick = handleTopRightButtonClick;
 
     return (
-        <div className='browse-container'>
-            <div className='filter-container'>
-                <div className='search-container'>
+        <div className="browse-container">
+            <div className="filter-container">
+                <div className="search-container">
                     <input
-                        type='text'
-                        id='searchInput'
-                        name='searchInput'
-                        placeholder='Search...'
+                        type="text"
+                        id="searchInput" 
+                        name="searchInput"
+                        placeholder="Search manga..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
+                        className="search-input"
                     />
                 </div>
-                <div className='genre-filter-container'>
+                <div className="genre-filter-container">
                     <select
                         value=""
-                        id='genreSearchInput'
-                        name='genreSearchInput'
+                        id="genreSearchInput"
+                        name="genreSearchInput"
                         onChange={(e) => handleGenreChange(e.target.value)}
+                        className="genre-select"
                     >
                         <option value="" disabled>Select a genre</option>
                         {availableGenres.map(genre => (
@@ -127,31 +137,53 @@ const Mangas =() => {
                         {selectedGenres.map(genre => (
                             <div key={genre} className="selected-genre">
                                 {genre}
-                                <button onClick={() => handleRemoveGenre(genre)}>x</button>
+                                <button 
+                                    onClick={() => handleRemoveGenre(genre)}
+                                    className="remove-genre-btn"
+                                >
+                                    ×
+                                </button>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
-            <ul className="anime-list">
-                {sortedManga.map(manga => (
-                    <li key={manga._id}>
-                        <MangaCard
-                            manga={manga}
-                            onTopRightButtonClick={onTopRightButtonClick}
-                            setMangaList={setMangaList}
-                        />
-                    </li>
-                ))}
-            </ul>
+
+            {isLoading ? (
+                <div className="loading-container">
+                    <div className="loader"></div>
+                </div>
+            ) : (
+                <div className="manga-list-section">
+                    {sortedManga.length === 0 ? (
+                        <div className="no-results">
+                            No manga found matching your criteria
+                        </div>
+                    ) : (
+                        <ul className="manga-list">
+                            {sortedManga.map(manga => (
+                                <li key={manga._id} className="manga-list-item">
+                                    <MangaCard
+                                        manga={manga}
+                                        onTopRightButtonClick={onTopRightButtonClick}
+                                        setMangaList={setMangaList}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
             {isMangaEditorOpen && (
-                <div className='character-modal-overlay' onClick={handleModalClose}>
-                    <MangaEditor
-                        manga={selectedMangaForEdit}
+                <div className={styles.characterModalOverlay} onClick={handleModalClose}>
+                    <div className={styles.characterModal} onClick={e => e.stopPropagation()}>
+                        <MangaEditor
+                            manga={selectedMangaForEdit}
                         userId={userData._id}
                         closeModal={handleModalClose}
                         onMangaDelete={onMangaDelete}
-                    />
+                        />
+                    </div>
                 </div>
             )}
         </div>

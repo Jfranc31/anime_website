@@ -1,0 +1,198 @@
+/*=============================================
+                Browse css
+==============================================*/
+.browse-container {
+    position: relative;
+    display: grid;
+    grid-template:
+      'filter anime-list'
+      / 250px 1fr;
+    grid-gap: 30px;
+    margin-top: 20px;
+    width: 95%;
+    padding: 2%;
+    background-color: rgb(35, 38, 40);
+  }
+  .anime-list,
+  .manga-list,
+  .character-list {
+    grid-area: anime-list;
+    display: grid;
+    gap: 35px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    list-style: none;
+    justify-content: center;
+    padding: 0;
+    margin-right: 0;
+  }
+    .genre-filters {
+      margin-top: 10px;
+    }
+    .filter-container {
+      position: sticky;
+      top: 20px;
+      height: fit-content;
+      padding: 20px;
+      background-color: rgba(42, 45, 47, 0.7);
+      border-radius: 8px;
+      backdrop-filter: blur(5px);
+    }
+    .search-container {
+      margin-bottom: 10px; /* Adjust the margin as needed */
+    }
+    .genre-filters {
+      display: flex;
+      flex-direction: column;
+    }
+    .genre-filters label {
+      margin-bottom: 5px; /* Adjust the margin as needed */
+    }
+    .genre-filter-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .selected-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .selected-genre {
+      background: rgba(53, 56, 58, 0.8);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .selected-genre button {
+      margin-left: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: red;
+    }
+    .anime-list-container .anime-list {
+      margin-left: 20px; /* Adjust as needed */
+    }
+  /*============================================*/
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background-color: #2a2d2f;
+    color: white;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.genre-select {
+    width: 100%;
+    padding: 12px;
+    background-color: #2a2d2f;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.genre-select:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.loader {
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 3px solid #3498db;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.no-results {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+}
+
+.anime-list-section h2 {
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.remove-genre-btn {
+    font-size: 18px;
+    padding: 0 5px;
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.remove-genre-btn:hover {
+    color: #ff0000;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .browse-container {
+        grid-template:
+            'filter'
+            'anime-list'
+            / 1fr;
+        width: 96%;
+        padding: 15px;
+    }
+
+    .filter-container {
+        position: static;  /* Remove sticky positioning on mobile */
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .anime-list,
+    .manga-list,
+    .character-list {
+        gap: 25px;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .browse-container {
+        width: 98%;
+        padding: 10px;
+    }
+
+    .anime-list,
+    .manga-list,
+    .character-list {
+        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+}

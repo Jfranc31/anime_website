@@ -1,0 +1,364 @@
+/*=============================================
+            Add Anime Page css
+==============================================*/
+.addAnimeContainer {
+    width: 85%;
+    max-width: 1200px;
+    margin: 100px auto 0;
+    min-height: calc(100vh - 100px);
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    padding: 2rem;
+    background-color: rgb(35, 38, 40);
+    border-radius: 8px;
+}
+
+/* Tabs Section */
+.addAnimeContainerTabs {
+    position: sticky;
+    top: 120px;
+    height: fit-content;
+    padding: 1rem;
+    background: rgba(25, 30, 39, 0.9);
+    border-radius: 8px;
+}
+
+.addAnimeContainerTabs button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: transparent;
+    border: none;
+    color: #9fa1a3;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.addAnimeContainerTabs button:hover {
+    background: rgba(66, 28, 30, 0.5);
+    color: white;
+}
+
+.addAnimeContainerTabs button.active {
+    background: rgba(66, 28, 30, 0.98);
+    color: white;
+}
+
+/* Form Section */
+.formContainer {
+    padding: 1.5rem;
+    background: rgba(25, 30, 39, 0.9);
+    border-radius: 8px;
+}
+
+.section {
+    margin-bottom: 2rem;
+    color: white;
+}
+
+.section h2 {
+    margin-bottom: 1rem;
+    color: #04aa6d;
+    font-size: 1.5rem;
+}
+
+/* Grid Layout */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    background: rgba(26, 28, 30, 0.8);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+/* Form Inputs */
+.grid input,
+.grid select,
+.section textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: rgba(25, 30, 39, 0.8);
+    color: white;
+    font-size: 0.9rem;
+}
+
+.grid input:focus,
+.grid select:focus,
+.section textarea:focus {
+    outline: none;
+    border-color: #04aa6d;
+}
+
+.grid label {
+    color: #9fa1a3;
+    font-size: 0.9rem;
+}
+
+/* Images Section */
+.images,
+.border {
+    background: rgba(26, 28, 30, 0.8);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.images input, 
+.border input, 
+.images select, 
+.border select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: rgba(25, 30, 39, 0.8);
+    color: white;
+    font-size: 0.9rem;
+}
+
+.images input:focus,
+.border input:focus,
+.images select:focus,
+.border select:focus {
+    outline: none;
+    border-color: #04aa6d;
+}
+
+.images label,
+.border label {
+    color: #9fa1a3;
+    font-size: 0.9rem;
+}
+
+.imagePreview {
+    margin-top: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 200px;
+    max-height: 300px;
+}
+
+.imagePreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-height: 300px;
+}
+
+.borderPreview {
+    margin-top: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.borderPreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Character Section */
+.characterButton {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.characterButton button {
+    padding: 10px 20px;
+    background: #04aa6d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.characterButton button:hover {
+    background: #038857;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 992px) {
+    .addAnimeContainer {
+        grid-template-columns: 1fr;
+        width: 95%;
+        padding: 1rem;
+    }
+
+    .addAnimeContainerTabs {
+        position: relative;
+        top: 0;
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding: 1rem;
+    }
+
+    .addAnimeContainerTabs button {
+        width: auto;
+        white-space: nowrap;
+        margin: 0;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .characterButton {
+        flex-direction: column;
+    }
+}
+
+.characters {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Specific class for the selected character list */
+.character {
+    background: rgba(26, 28, 30, 0.8);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Specific class for the selected character image */
+.character > .characterImage {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.characterInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.characterHeader {
+    display: flex;
+    align-items: center;
+}
+
+.characterName {
+    color: #fff;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.characterRoleSelect {
+    width: 100%;
+    max-width: 200px;
+    padding: 8px;
+    background: rgba(25, 30, 39, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.character button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.character button:hover {
+    background: #c82333;
+}
+
+@media screen and (max-width: 768px) {
+    .character {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .characterHeader {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .characterRoleSelect {
+        max-width: 100%;
+    }
+}
+
+/* Selected Character Role Styles */
+.selectedCharacter {
+    background: rgba(26, 28, 30, 0.8);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.selectedCharacterImage {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.selectedCharacterInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.selectedCharacterName {
+    color: #fff;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.selectedCharacterRole {
+    width: 100%;
+    max-width: 200px;
+    padding: 8px;
+    background: rgba(25, 30, 39, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.selectedCharacter button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.selectedCharacter button:hover {
+    background: #c82333;
+}

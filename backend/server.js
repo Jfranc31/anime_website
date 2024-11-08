@@ -11,6 +11,7 @@ import userRoutes from "./routes/userRoutes.js";
 import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
+import cookieParser from 'cookie-parser';
 
 // Creating an Express application
 const app = express();
@@ -25,9 +26,14 @@ app.use(express.urlencoded({extended : false}))
 import cors from 'cors';
 app.use(cors({
     origin: 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
+    exposedHeaders: ['Set-Cookie'],
 }));
+
+// Add this before your routes
+app.use(cookieParser());
 
 // Using defined routes for different entities
 app.use('/animes', animeRoutes);

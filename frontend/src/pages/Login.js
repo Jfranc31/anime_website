@@ -24,38 +24,50 @@ export const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post("http://localhost:8080/users/login", user, { withCredentials: true })
-            .then((res) => {
-                alert(res.data.message);
-
-                // Set a cookie named 'userInfo' with user data
-                Cookies.set('userInfo', JSON.stringify(res.data.user), { expires: 29 });
-
-                setUserData(res.data.user);
-                navigate("/");
-            })
-            .catch((error) => {
-                console.error("Login error:", error);
-                // Handle login error if needed
+        axios.post("http://localhost:8080/users/login", user, {
+            withCredentials: true,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then((res) => {
+            alert(res.data.message);
+            setUserData(res.data.user);
+            
+            // Set cookie in frontend
+            Cookies.set('userInfo', JSON.stringify(res.data.user), {
+                expires: 29,
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax'
             });
+            
+            navigate("/");
+        })
+        .catch((error) => {
+            console.error("Login error:", error);
+            alert(error.response?.data?.message || "Login failed");
+        });
     };
 
     // console.log(user)
 
     return (
-        <div className='container'>
-            <form onSubmit={handleSubmit}>
-                <label htmlFor='email'>Email Id</label>
-                <input type="email" id="email" name='email' value={user.email} onChange={handleChange} autoComplete="email" />
+        <div className="login-wrapper">
+            <div className='container-home'>
+                <form onSubmit={handleSubmit}>
+                    <label htmlFor='email'>Email Id</label>
+                    <input type="email" id="email" name='email' value={user.email} onChange={handleChange} autoComplete="email" />
 
-                <label htmlFor="password">Password</label>
-                <input type="password" id="password" name='password' value={user.password} onChange={handleChange} autoComplete="current-password" />
+                    <label htmlFor="password">Password</label>
+                    <input type="password" id="password" name='password' value={user.password} onChange={handleChange} autoComplete="current-password" />
 
-                <div className='btn-container'>
-                    <button className="btn" type='submit'>Login</button>
-                    <button className="btn" onClick={()=>navigate("/register")}>Register</button>
-                </div>
-            </form>
+                    <div className='btn-container'>
+                        <button className="btn" type='submit'>Login</button>
+                        <button className="btn" onClick={()=>navigate("/register")}>Register</button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

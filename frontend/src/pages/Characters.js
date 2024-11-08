@@ -8,11 +8,19 @@ import CharacterCard from '../cards/CharacterCard';
 const Characters = () => {
     const { characterList, setCharacterList } = useCharacterContext();
     const [searchInput, setSearchInput] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        setIsLoading(true);
         axios.get('http://localhost:8080/characters/characters')
-            .then(response => setCharacterList(response.data))
-            .catch(error => console.error(error));
+            .then(response => {
+                setCharacterList(response.data);
+                setIsLoading(false);
+            })
+            .catch(error => {
+                console.error(error);
+                setIsLoading(false);
+            });
     }, [setCharacterList]);
 
     const filteredCharacter = Array.isArray(characterList)
@@ -40,29 +48,46 @@ const Characters = () => {
     });
 
     return (
-        <div className='browse-container'>
-            <div className='filter-container'>
-                <div className='search-container'>
+        <div className="browse-container">
+            <div className="filter-container">
+                <div className="search-container">
                     <input
                         type="text"
                         id="searchInput" 
                         name="searchInput"
-                        placeholder="Search..."
+                        placeholder="Search characters..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
+                        className="search-input"
                     />
                 </div>
             </div>
-            <ul className='anime-list'>
-                {sortedCharacter.map(character => (
-                    <li key={character._id}>
-                        <CharacterCard
-                            character={character}
-                            setCharacterList={setCharacterList}
-                        />
-                    </li>
-                ))}
-            </ul>
+
+            {isLoading ? (
+                <div className="loading-container">
+                    <div className="loader"></div>
+                </div>
+            ) : (
+                <div className="character-list-section">
+                    {sortedCharacter.length === 0 ? (
+                        <div className="no-results">
+                            No characters found matching your criteria
+                        </div>
+                    ) : (
+                        <ul className="character-list">
+                            {sortedCharacter.map(character => (
+                                <li key={character._id} className="character-list-item">
+                                    <CharacterCard
+                                        character={character}
+                                        setCharacterList={setCharacterList}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
+            {/* Modal component */}
         </div>
     );
 };

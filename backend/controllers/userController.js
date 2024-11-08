@@ -61,11 +61,28 @@ const loginUser = async (req, res) => {
             return res.status(404).json({ message: "This email id is not registered" });
         }
 
-        // Compare the provided password with the hashed password in the database
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (passwordMatch) {
-            return res.json({ message: "Login Successful", user });
+            // Create a minimal user object for the cookie
+            const userForCookie = {
+                _id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email
+            };
+
+            // Set cookie with minimal user data
+            res.cookie('userInfo', JSON.stringify(userForCookie), {
+                maxAge: 29 * 24 * 60 * 60 * 1000, // 29 days
+                httpOnly: false,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                domain: 'localhost'
+            });
+            
+            return res.status(200).json({ message: "Login Successful", user });
         } else {
             return res.status(401).json({ message: "Password didn't match" });
         }

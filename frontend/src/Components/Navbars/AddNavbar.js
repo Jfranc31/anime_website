@@ -1,16 +1,39 @@
 // /src/Components/Navbars/AddNavbar.js
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import styles from '../../styles/components/add_navbar.module.css';
 
 const AddNavbar = () => {
-  return (
-    <div className="add-navbar">
-        <div className='AddNavbar' id='AddNavbar'>
-            <NavLink to="/add/anime" activeClassName='active'>Add Anime</NavLink>
-            <NavLink to="/add/manga" activeClassName='active'>Add Manga</NavLink>
-        </div>
-    </div>
-  );
+    return (
+        <nav className={styles.addNavbar}>
+            <div className={styles.navLinks}>
+                <NavLink 
+                    to="/add/anime" 
+                    className={({ isActive }) => 
+                        `${styles.link} ${isActive ? styles.active : ''}`
+                    }
+                >
+                    Anime
+                </NavLink>
+                <NavLink 
+                    to="/add/manga" 
+                    className={({ isActive }) => 
+                        `${styles.link} ${isActive ? styles.active : ''}`
+                    }
+                >
+                    Manga
+                </NavLink>
+                <NavLink 
+                    to="/add/character" 
+                    className={({ isActive }) => 
+                        `${styles.link} ${isActive ? styles.active : ''}`
+                    }
+                >
+                    Character
+                </NavLink>
+            </div>
+        </nav>
+    );
 };
 
 export default AddNavbar;

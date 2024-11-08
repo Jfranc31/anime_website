@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import styles from '../styles/components/cards.module.css';
 
 /**
  * Functional component representing a character card.
@@ -18,18 +19,18 @@ function CharacterCard({ character }) {
 
     return (
         <div
-            className={`anime-card ${isHovered ? 'hovered' : ''}`}
+            className={`${styles.characterCard} ${isHovered ? styles.hovered : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div className='img-container'>
+            <div className={styles.imgContainer}>
                 {/* Character image */}
                 <img src={character.characterImage} alt={character.names.givenName} />
-                <div className='title-and-progress'>
+                <div className={styles.titleAndProgress}>
                     {/* Link to character details page */}
                     <Link to={`/characters/${character._id}`}>
                         {/* Character name */}
-                        <div className='anime-title'>
+                        <div className={styles.animeTitle}>
                             {character.names.givenName} {character.names.middleName} {character.names.surName}
                         </div>
                     </Link>

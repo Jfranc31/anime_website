@@ -2,13 +2,14 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAnimeContext } from '../Context/AnimeContext';
-import data from '../Context/ContextApi';
 import { useMangaContext } from '../Context/MangaContext';
+import data from '../Context/ContextApi';
+import '../styles/pages/Home.css';
 
 const Home = () => {
   const { animeList } = useAnimeContext();
   const { mangaList } = useMangaContext();
-  const { userData } = useContext(data)
+  const { userData } = useContext(data);
   const [latestActivities, setLatestActivities] = useState([]);
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
@@ -68,102 +69,144 @@ const Home = () => {
   
   console.log(userAnimeList, filterAnimeByWatching);
 
+  const animeActivities = latestActivities.filter(activity => activity.animeDetails);
+  const mangaActivities = latestActivities.filter(activity => activity.mangaDetails);
+  const watchingAnime = filterAnimeByWatching();
+  const readingManga = filterMangaByReading();
+
   return (
-      <div className='activity-page'>
-        <div className='header-container'>
-          <h1>Anime Activities</h1>
-        </div>
-        <div className='prog-header'>
-          <h3>Anime in Progress</h3>
-        </div>
-        <div>
-          {latestActivities.map((activity) => (
-            <div key={activity._id} className='activity-container'>
-              <div className='container-img'>
-                {activity.animeDetails && (
-                  <>
-                    <Link to={`/anime/${activity.animeDetails._id}`}>
-                      <img src={activity.animeDetails.images.image} alt={activity.animeDetails.titles.english}></img>
-                    </Link>
-                    <span>
+    <div className='activity-page'>
+      {animeActivities.length > 0 && (
+        <>
+          <div className='section-container anime-section'>
+            <div className='header-container'>
+              <h1>Anime Activities</h1>
+            </div>
+            <div className='activities-grid'>
+              {animeActivities.slice(0, 15).map((activity) => (
+                <div key={activity._id} className='activity-card'>
+                  <Link to={`/anime/${activity.animeDetails._id}`}>
+                    <div className='activity-image'>
+                      <img 
+                        src={activity.animeDetails.images.image} 
+                        alt={activity.animeDetails.titles.english}
+                      />
+                    </div>
+                  </Link>
+                  <div className='activity-info'>
+                    <h3>{activity.animeDetails.titles.english}</h3>
+                    <p className='activity-status'>
                       {activity.status === 'Completed'
-                        ? `Completed ${activity.animeDetails?.titles?.english}`
+                        ? 'Completed'
                         : activity.currentEpisode === 0 && activity.status === 'Watching'
-                        ? `Started watching ${activity.animeDetails?.titles?.english}`
-                        : activity.currentEpisode > 0 && activity.status === 'Watching'
-                        ? `Watched episode ${activity.currentEpisode} of ${activity.animeDetails?.titles?.english}`
-                        : `Planned to watch ${activity.animeDetails?.titles?.english}`}
-                      {/* - {activity.activityTimestamp} */}
+                        ? 'Started watching'
+                        : `Episode ${activity.currentEpisode}`}
+                    </p>
+                    <span className='activity-timestamp'>
+                      {new Date(activity.activityTimestamp).toLocaleDateString()}
                     </span>
-                  </>
-                )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {watchingAnime.length > 0 && (
+            <div className='progress-section'>
+              <h2>Currently Watching</h2>
+              <div className='progress-grid'>
+                {watchingAnime.map((activity) => (
+                  <Link 
+                    key={activity.animeId} 
+                    to={`/anime/${activity.animeId}`}
+                    className='progress-card'
+                  >
+                    <img 
+                      src={getAnimeById(activity.animeId)?.images.image} 
+                      alt={getAnimeById(activity.animeId)?.titles.english}
+                    />
+                    <div className='progress-info'>
+                      <span className='progress-title'>
+                        {getAnimeById(activity.animeId)?.titles.english}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
+      )}
 
-        <div className='activity-progress-container-bk'>
-          <ul className='activity-progress-container'>
-            {filterAnimeByWatching().map((activity) => (
-              <li key={activity.animeId}>
-                <div className='activity-progress-container-img'>
-                  <Link to={`/anime/${activity.animeId}`}>
-                    <img src={getAnimeById(activity.animeId)?.images.image} alt={getAnimeById(activity.animeId)?.titles.english}></img>
+      {mangaActivities.length > 0 && (
+        <>
+          <div className='section-container manga-section'>
+            <div className='header-container'>
+              <h1>Manga Activities</h1>
+            </div>
+            <div className='activities-grid'>
+              {mangaActivities.slice(0, 15).map((activity) => (
+                <div key={activity._id} className='activity-card'>
+                  <Link to={`/manga/${activity.mangaDetails._id}`}>
+                    <div className='activity-image'>
+                      <img 
+                        src={activity.mangaDetails.images.image} 
+                        alt={activity.mangaDetails.titles.english}
+                      />
+                    </div>
                   </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className='second-header'>
-          <h1>Manga Activities</h1>
-        </div>
-
-        <div className='manga-header'>
-          <h3>Manga in Progress</h3>
-        </div>
-
-        <div>
-          {latestActivities.map((activity) => (
-            <div key={activity._id} className='manga-activity-container'>
-              <div className='container-img'>
-                {activity.mangaDetails && (
-                  <>
-                    <Link to={`/manga/${activity.mangaDetails._id}`}>
-                      <img src={activity.mangaDetails.images.image} alt={activity.mangaDetails.titles.english}></img>
-                    </Link>
-                    <span>
+                  <div className='activity-info'>
+                    <h3>{activity.mangaDetails.titles.english}</h3>
+                    <p className='activity-status'>
                       {activity.status === 'Completed'
-                        ? `Completed ${activity.mangaDetails?.titles?.english}`
+                        ? 'Completed'
                         : activity.currentChapter === 0 && activity.status === 'Reading'
-                        ? `Started reading ${activity.mangaDetails?.titles?.english}`
-                        : activity.currentChapter > 0 && activity.status === 'Reading'
-                        ? `Read chapter ${activity.currentChapter} of ${activity.mangaDetails?.titles?.english}`
-                        : `Planned to read ${activity.mangaDetails?.titles?.english}`}
-                      {/* - {activity.activityTimestamp} */}
+                        ? 'Started reading'
+                        : `Chapter ${activity.currentChapter}`}
+                    </p>
+                    <span className='activity-timestamp'>
+                      {new Date(activity.activityTimestamp).toLocaleDateString()}
                     </span>
-                  </>
-                )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {readingManga.length > 0 && (
+            <div className='progress-section'>
+              <h2>Currently Reading</h2>
+              <div className='progress-grid'>
+                {readingManga.map((activity) => (
+                  <Link 
+                    key={activity.mangaId} 
+                    to={`/manga/${activity.mangaId}`}
+                    className='progress-card'
+                  >
+                    <img 
+                      src={getMangaById(activity.mangaId)?.images.image} 
+                      alt={getMangaById(activity.mangaId)?.titles.english}
+                    />
+                    <div className='progress-info'>
+                      <span className='progress-title'>
+                        {getMangaById(activity.mangaId)?.titles.english}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
+      )}
 
-        <div className='manga-activity-progress-container-bk'>
-          <ul className='activity-manga-progress-container'>
-            {filterMangaByReading().map((activity) => (
-              <li key={activity.mangaId}>
-                <div className='activity-progress-container-img'>
-                  <Link to={`/manga/${activity.mangaId}`}>
-                    <img src={getMangaById(activity.mangaId)?.images.image} alt={getMangaById(activity.mangaId)?.titles.english}></img>
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+      {animeActivities.length === 0 && mangaActivities.length === 0 && (
+        <div className='empty-state'>
+          <h2>No Recent Activities</h2>
+          <p>Start watching anime or reading manga to see your activities here!</p>
         </div>
-      </div>
+      )}
+    </div>
   );
 };
 

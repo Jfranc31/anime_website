@@ -6,6 +6,7 @@ import { useAnimeContext } from '../Context/AnimeContext';
 import AnimeCard from '../cards/AnimeCard';
 import AnimeEditor from '../Components/ListEditors/AnimeEditor';
 import data from '../Context/ContextApi';
+import styles from '../styles/components/Modal.module.css';
 
 const Animes = () => {
     const { animeList, setAnimeList } = useAnimeContext();
@@ -14,6 +15,7 @@ const Animes = () => {
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
     const [selectedAnimeForEdit, setSelectedAnimeForEdit] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const availableGenres = [
         "Action", 
@@ -42,9 +44,16 @@ const Animes = () => {
     };
 
     useEffect(() => {
-      axios.get('http://localhost:8080/animes/animes')
-        .then(response => setAnimeList(response.data))
-        .catch(error => console.error(error));
+        setIsLoading(true);
+        axios.get('http://localhost:8080/animes/animes')
+            .then(response => {
+                setAnimeList(response.data);
+                setIsLoading(false);
+            })
+            .catch(error => {
+                console.error(error);
+                setIsLoading(false);
+            });
     }, [setAnimeList]);
   
     const filteredAnime = Array.isArray(animeList) ? animeList.filter(anime => {
@@ -108,18 +117,19 @@ const Animes = () => {
                         type="text"
                         id="searchInput" 
                         name="searchInput"
-                        placeholder="Search..."
+                        placeholder="Search anime..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
+                        className="search-input"
                     />
                 </div>
                 <div className="genre-filter-container">
-                    
                     <select
-                        value="" // Use an empty string as the default value
+                        value=""
                         id="genreSearchInput"
                         name="genreSearchInput"
                         onChange={(e) => handleGenreChange(e.target.value)}
+                        className="genre-select"
                     >
                         <option value="" disabled>Select a genre</option>
                         {availableGenres.map(genre => (
@@ -130,33 +140,55 @@ const Animes = () => {
                         {selectedGenres.map(genre => (
                             <div key={genre} className="selected-genre">
                                 {genre}
-                                <button onClick={() => handleRemoveGenre(genre)}>x</button>
+                                <button 
+                                    onClick={() => handleRemoveGenre(genre)}
+                                    className="remove-genre-btn"
+                                    aria-label={`Remove ${genre} filter`}
+                                >
+                                    ×
+                                </button>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
-            <ul className="anime-list">
-                {sortedAnime.map(anime => (
-                    <li key={anime._id}>
-                        <AnimeCard
-                            anime={anime}
-                            onTopRightButtonClick={onTopRightButtonClick}
-                            setAnimeList={setAnimeList}
-                        />
-                    </li>
-                ))}
-            </ul>
-            {/* Render AnimeEditor modal conditionally */}
-            {isAnimeEditorOpen && (
-                <div className="character-modal-overlay" onClick={handleModalClose}>
 
-                    <AnimeEditor
-                        anime={selectedAnimeForEdit}
-                        userId={userData._id}
-                        closeModal={handleModalClose}
-                        onAnimeDelete={onAnimeDelete}
-                    />
+            {isLoading ? (
+                <div className="loading-container">
+                    <div className="loader"></div>
+                </div>
+            ) : (
+                <div className="anime-list-section">
+                    {sortedAnime.length === 0 ? (
+                        <div className="no-results">
+                            No anime found matching your criteria
+                        </div>
+                    ) : (
+                        <ul className="anime-list">
+                            {sortedAnime.map(anime => (
+                                <li key={anime._id} className="anime-list-item">
+                                    <AnimeCard
+                                        anime={anime}
+                                        onTopRightButtonClick={onTopRightButtonClick}
+                                        setAnimeList={setAnimeList}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
+
+            {isAnimeEditorOpen && (
+                <div className={styles.modalOverlay} onClick={handleModalClose}>
+                    <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+                        <AnimeEditor
+                            anime={selectedAnimeForEdit}
+                            userId={userData._id}
+                            closeModal={handleModalClose}
+                            onAnimeDelete={onAnimeDelete}
+                        />
+                    </div>
                 </div>
             )}
         </div>
