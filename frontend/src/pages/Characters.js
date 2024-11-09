@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useCharacterContext } from '../Context/CharacterContext';
 import CharacterCard from '../cards/CharacterCard';
+import styles1 from '../styles/pages/Browse.module.css';
 
 const Characters = () => {
     const { characterList, setCharacterList } = useCharacterContext();
@@ -48,9 +49,9 @@ const Characters = () => {
     });
 
     return (
-        <div className="browse-container">
-            <div className="filter-container">
-                <div className="search-container">
+        <div className={styles1.browseContainer}>
+            <div className={styles1.filterContainer}>
+                <div className={styles1.searchContainer}>
                     <input
                         type="text"
                         id="searchInput" 
@@ -58,25 +59,25 @@ const Characters = () => {
                         placeholder="Search characters..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        className="search-input"
+                        className={styles1.searchInput}
                     />
                 </div>
             </div>
 
             {isLoading ? (
-                <div className="loading-container">
-                    <div className="loader"></div>
+                <div className={styles1.loadingContainer}>
+                    <div className={styles1.loader}></div>
                 </div>
             ) : (
-                <div className="character-list-section">
+                <div className={styles1.characterListSection}>
                     {sortedCharacter.length === 0 ? (
-                        <div className="no-results">
+                        <div className={styles1.noResults}>
                             No characters found matching your criteria
                         </div>
                     ) : (
-                        <ul className="character-list">
+                        <ul className={styles1.characterList}>
                             {sortedCharacter.map(character => (
-                                <li key={character._id} className="character-list-item">
+                                <li key={character._id} className={styles1.characterListItem}>
                                     <CharacterCard
                                         character={character}
                                         setCharacterList={setCharacterList}

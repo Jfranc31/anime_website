@@ -1,0 +1,108 @@
+/*=============================================
+              Login Page css
+==============================================*/
+.loginWrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1a1a1a;
+  padding: 20px;
+}
+.container {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.containerHome{
+  text-align: center;
+}
+.title {
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+.inputGroup {
+  margin-bottom: 1.5rem;
+}
+.inputGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+  font-size: 0.875rem;
+}
+.inputGroup input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 1rem;
+}
+.inputGroup input:focus {
+  outline: none;
+  border-color: #646cff;
+}
+.inputGroup input::placeholder {
+  color: #888888;
+}
+.btnContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn:first-child {
+  background-color: #646cff;
+  color: #ffffff;
+}
+.btn:first-child:hover {
+  background-color: #565bdd;
+}
+.secondaryBtn {
+  background-color: transparent;
+  border: 1px solid #646cff;
+  color: #646cff;
+}
+.secondaryBtn:hover {
+  background-color: rgba(100, 108, 255, 0.1);
+}
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .container {
+    padding: 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .inputGroup input {
+    padding: 0.625rem;
+  }
+  
+  .btn {
+    padding: 0.625rem;
+  }
+}
+/*============================================*/

@@ -3,6 +3,9 @@
     flex-direction: column;
     height: 100%;
     gap: 15px;
+    width: 100%;
+    max-width: 950px;
+    margin: 0 auto;
 }
 
 .searchBox {
@@ -24,18 +27,20 @@
 
 .charactersGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, 160px); /* Fixed card width */
+    grid-template-columns: repeat(auto-fill, 160px);
     gap: 15px;
     justify-content: center;
     width: 100%;
     margin: 0;
-    padding: 0;
-    max-width: 100%;
-    overflow-x: hidden;
+    padding: 15px;
+    max-width: 1200px;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+    margin: 0 auto;
 }
 
 .characterCard {
-    width: 160px; /* Fixed width matching grid */
+    width: 160px;
     background: #2a2d2f;
     border-radius: 8px;
     overflow: hidden;
@@ -100,6 +105,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+    color: white;
 }
 
 .actionButtons {
@@ -149,17 +155,19 @@
     background: #555;
 }
 
-@media screen and (max-width: 768px) {
+/* @media screen and (max-width: 768px) {
     .characterSearchContainer {
         padding: 10px;
     }
 
     .charactersGrid {
-        grid-template-columns: repeat(auto-fit, 140px);
+        grid-template-columns: repeat(auto-fill, 140px);
         gap: 10px;
+        padding: 10px;
     }
 
     .characterCard {
+        width: 140px;
         font-size: 0.9rem;
     }
 
@@ -183,7 +191,12 @@
         height: 24px;
         font-size: 14px;
     }
-}
+
+    .characterModal {
+        width: 95%;
+        max-height: 95vh;
+    }
+} */
 
 .loading {
     text-align: center;
@@ -198,36 +211,10 @@
     grid-column: 1 / -1;
 }
 
-/* Even smaller screens */
-@media screen and (max-width: 480px) {
-    .charactersGrid {
-        grid-template-columns: repeat(auto-fit, 120px);
-        gap: 8px;
-    }
-
-    .characterName {
-        font-size: 0.75rem;
-    }
-}
-
-.characterModalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 20px;
-}
-
 .characterModal {
     background: #232628;
     border-radius: 8px;
-    width: min(90%, 950px);
+    width: min(95%, 1200px);
     padding: 0px;
     box-sizing: border-box;
     height: auto;
@@ -269,66 +256,70 @@
 }
 
 /* Responsive adjustments */
-@media screen and (max-width: 1024px) {
-    .charactersGrid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-}
-
-@media screen and (max-width: 768px) {
-    .characterModal {
-        width: 95%;
-        max-height: 95vh;
-    }
-
-    .characters-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
-    }
-
-    .character-modal-body {
-        padding: 10px;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .characters-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 8px;
-    }
-
-    .character-modal-header {
-        padding: 10px;
-    }
-
-    .character-modal-body {
-        padding: 8px;
-    }
-}
-
 @media screen and (max-width: 1200px) {
-    .characters-grid {
-        grid-template-columns: repeat(4, 160px);
+    .charactersGrid {
+        grid-template-columns: repeat(auto-fill, 160px);
+        max-width: 900px;
     }
-    .character-card {
+    .characterCard {
         width: 160px;
     }
 }
 
-@media screen and (max-width: 900px) {
-    .characters-grid {
-        grid-template-columns: repeat(3, 150px);
+@media screen and (max-width: 768px) {
+    .characterSearchContainer {
+        padding: 10px;
     }
-    .character-card {
-        width: 150px;
+
+    .charactersGrid {
+        grid-template-columns: repeat(auto-fill, 140px);
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .characterCard {
+        width: 140px;
+        font-size: 0.9rem;
+    }
+
+    .characterName {
+        font-size: 0.8rem;
+    }
+
+    .actionButtons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .selectButton, 
+    .cancelButton {
+        width: 100%;
+        padding: 8px;
+    }
+
+    .checkmark {
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+
+    .characterModal {
+        width: 95%;
+        max-height: 95vh;
     }
 }
 
-@media screen and (max-width: 600px) {
-    .characters-grid {
-        grid-template-columns: repeat(2, 140px);
+@media screen and (max-width: 480px) {
+    .charactersGrid {
+        grid-template-columns: repeat(auto-fill, 120px);
+        gap: 8px;
     }
-    .character-card {
-        width: 140px;
+
+    .characterCard {
+        width: 120px;
+    }
+
+    .characterName {
+        font-size: 0.75rem;
     }
 } 

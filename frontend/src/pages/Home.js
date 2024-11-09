@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
 import data from '../Context/ContextApi';
-import '../styles/pages/Home.css';
+import homeStyles from '../styles/pages/Home.module.css';
 
 const Home = () => {
   const { animeList } = useAnimeContext();
@@ -75,34 +75,34 @@ const Home = () => {
   const readingManga = filterMangaByReading();
 
   return (
-    <div className='activity-page'>
+    <div className={homeStyles.activityPage}>
       {animeActivities.length > 0 && (
         <>
-          <div className='section-container anime-section'>
-            <div className='header-container'>
+          <div className={homeStyles.sectionContainer}>
+            <div className={homeStyles.headerContainer}>
               <h1>Anime Activities</h1>
             </div>
-            <div className='activities-grid'>
+            <div className={homeStyles.activitiesGrid}>
               {animeActivities.slice(0, 15).map((activity) => (
-                <div key={activity._id} className='activity-card'>
+                <div key={activity._id} className={homeStyles.activityCard}>
                   <Link to={`/anime/${activity.animeDetails._id}`}>
-                    <div className='activity-image'>
+                    <div className={homeStyles.activityImage}>
                       <img 
                         src={activity.animeDetails.images.image} 
                         alt={activity.animeDetails.titles.english}
                       />
                     </div>
                   </Link>
-                  <div className='activity-info'>
+                  <div className={homeStyles.activityInfo}>
                     <h3>{activity.animeDetails.titles.english}</h3>
-                    <p className='activity-status'>
+                    <p className={homeStyles.activityStatus}>
                       {activity.status === 'Completed'
                         ? 'Completed'
                         : activity.currentEpisode === 0 && activity.status === 'Watching'
                         ? 'Started watching'
                         : `Episode ${activity.currentEpisode}`}
                     </p>
-                    <span className='activity-timestamp'>
+                    <span className={homeStyles.activityTimestamp}>
                       {new Date(activity.activityTimestamp).toLocaleDateString()}
                     </span>
                   </div>
@@ -112,21 +112,21 @@ const Home = () => {
           </div>
 
           {watchingAnime.length > 0 && (
-            <div className='progress-section'>
+            <div className={homeStyles.progressSection}>
               <h2>Currently Watching</h2>
-              <div className='progress-grid'>
+              <div className={homeStyles.progressGrid}>
                 {watchingAnime.map((activity) => (
                   <Link 
                     key={activity.animeId} 
                     to={`/anime/${activity.animeId}`}
-                    className='progress-card'
+                    className={homeStyles.progressCard}
                   >
                     <img 
                       src={getAnimeById(activity.animeId)?.images.image} 
                       alt={getAnimeById(activity.animeId)?.titles.english}
                     />
-                    <div className='progress-info'>
-                      <span className='progress-title'>
+                    <div className={homeStyles.progressInfo}>
+                      <span className={homeStyles.progressTitle}>
                         {getAnimeById(activity.animeId)?.titles.english}
                       </span>
                     </div>
@@ -140,31 +140,31 @@ const Home = () => {
 
       {mangaActivities.length > 0 && (
         <>
-          <div className='section-container manga-section'>
-            <div className='header-container'>
+          <div className={homeStyles.sectionContainer}>
+            <div className={homeStyles.headerContainer}>
               <h1>Manga Activities</h1>
             </div>
-            <div className='activities-grid'>
+            <div className={homeStyles.activitiesGrid}>
               {mangaActivities.slice(0, 15).map((activity) => (
-                <div key={activity._id} className='activity-card'>
+                <div key={activity._id} className={homeStyles.activityCard}>
                   <Link to={`/manga/${activity.mangaDetails._id}`}>
-                    <div className='activity-image'>
+                    <div className={homeStyles.activityImage}>
                       <img 
                         src={activity.mangaDetails.images.image} 
                         alt={activity.mangaDetails.titles.english}
                       />
                     </div>
                   </Link>
-                  <div className='activity-info'>
+                  <div className={homeStyles.activityInfo}>
                     <h3>{activity.mangaDetails.titles.english}</h3>
-                    <p className='activity-status'>
+                    <p className={homeStyles.activityStatus}>
                       {activity.status === 'Completed'
                         ? 'Completed'
                         : activity.currentChapter === 0 && activity.status === 'Reading'
                         ? 'Started reading'
                         : `Chapter ${activity.currentChapter}`}
                     </p>
-                    <span className='activity-timestamp'>
+                    <span className={homeStyles.activityTimestamp}>
                       {new Date(activity.activityTimestamp).toLocaleDateString()}
                     </span>
                   </div>
@@ -174,21 +174,21 @@ const Home = () => {
           </div>
 
           {readingManga.length > 0 && (
-            <div className='progress-section'>
+            <div className={homeStyles.progressSection}>
               <h2>Currently Reading</h2>
-              <div className='progress-grid'>
+              <div className={homeStyles.progressGrid}>
                 {readingManga.map((activity) => (
                   <Link 
                     key={activity.mangaId} 
                     to={`/manga/${activity.mangaId}`}
-                    className='progress-card'
+                    className={homeStyles.progressCard}
                   >
                     <img 
                       src={getMangaById(activity.mangaId)?.images.image} 
                       alt={getMangaById(activity.mangaId)?.titles.english}
                     />
-                    <div className='progress-info'>
-                      <span className='progress-title'>
+                    <div className={homeStyles.progressInfo}>
+                      <span className={homeStyles.progressTitle}>
                         {getMangaById(activity.mangaId)?.titles.english}
                       </span>
                     </div>
@@ -201,7 +201,7 @@ const Home = () => {
       )}
 
       {animeActivities.length === 0 && mangaActivities.length === 0 && (
-        <div className='empty-state'>
+        <div className={homeStyles.emptyState}>
           <h2>No Recent Activities</h2>
           <p>Start watching anime or reading manga to see your activities here!</p>
         </div>

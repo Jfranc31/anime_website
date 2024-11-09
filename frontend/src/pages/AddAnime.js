@@ -6,8 +6,7 @@ import axios from 'axios';
 import CreateCharacter from "../Components/CreateCharacter";
 import CharacterSearch from "../Components/Searches/CharacterSearch";
 import RelationSearch from "../Components/Searches/RelationSearch";
-import styles from '../styles/components/Modal.module.css';
-import styles1 from '../styles/pages/add_page.module.css';
+import addPageStyles from '../styles/pages/add_page.module.css';
 
 export default function AddAnime() {
   // Initialize state for form data
@@ -394,9 +393,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   // Data Fields ------------------------
   const renderGeneralSection = () => (
     <>
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Titles</h2>
-        <div className={styles1.grid}>
+        <div className={addPageStyles.grid}>
           <div>
             <label htmlFor="titles.romaji">Romaji</label>
             <div></div>
@@ -434,9 +433,9 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
             <h2>Release Data</h2>
-            <div className={styles1.grid}>
+            <div className={addPageStyles.grid}>
                 <div>
                     <label htmlFor="releaseData.releaseStatus">Release Status</label>
                     <select
@@ -455,7 +454,7 @@ const handleSelectRelation = (type, selectedRelations) => {
                 </div>
             </div>
 
-            <div className={styles1.grid} style={{ marginTop: '1rem' }}>
+            <div className={addPageStyles.grid} style={{ marginTop: '1rem' }}>
                 <div>
                     <label>Start Date</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px' }}>
@@ -529,9 +528,9 @@ const handleSelectRelation = (type, selectedRelations) => {
             </div>
       </div>
 
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Typing</h2>
-        <div className={styles1.grid}>
+        <div className={addPageStyles.grid}>
           <div>
             <label htmlFor="typings.Format">Format:</label>
             <div></div>
@@ -589,9 +588,9 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Lengths</h2>
-        <div className={styles1.grid}>
+        <div className={addPageStyles.grid}>
           <div>
             <label htmlFor="lengths.Episodes">Episodes:</label>
             <div></div>
@@ -617,9 +616,9 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Genres</h2>
-        <div className={styles1.grid}>
+        <div className={addPageStyles.grid}>
           <div>
             <label htmlFor="genres">Genres:</label>
             <div></div>
@@ -649,7 +648,7 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
       </div>
 
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Description</h2>
           <textarea 
           type="text"
@@ -664,9 +663,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   );
   const renderImagesSection = () => (
     <>
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Image</h2>
-        <div className={styles1.images}>
+        <div className={addPageStyles.images}>
         <div>
           <label htmlFor="images.image">Image URL:</label>
           <div></div>
@@ -679,15 +678,15 @@ const handleSelectRelation = (type, selectedRelations) => {
           />
         </div>
           {formData.images.image && (
-            <div className={styles1.imagePreview}>
+            <div className={addPageStyles.imagePreview}>
               <img src={formData.images.image} alt="Anime Preview" />
             </div>
           )}
         </div>
       </div>
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Border</h2>
-        <div className={styles1.border}>
+        <div className={addPageStyles.border}>
           <label htmlFor="images.border">Border URL: </label>
           <input
             type="text"
@@ -697,7 +696,7 @@ const handleSelectRelation = (type, selectedRelations) => {
             onChange={handleChange}
           />
           {formData.images.border && (
-            <div className={styles1.borderPreview}>
+            <div className={addPageStyles.borderPreview}>
               <img src={formData.images.border} alt="Anime Preview" />
             </div>
           )}
@@ -707,9 +706,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   );
   const renderCharactersSection = () => (
     <>
-    <div className={styles1.section}>
+    <div className={addPageStyles.section}>
         <h2>Characters</h2>
-        <div className={styles1.characterButton}>
+        <div className={addPageStyles.characterButton}>
             <button type="button" onClick={() => handleAddExistingCharacter()}>
             Add Existing Character
             </button>
@@ -719,19 +718,19 @@ const handleSelectRelation = (type, selectedRelations) => {
         </div>
         <div className="characters">
         {formData.characters.map((character, index) => (
-            <div key={index} className={styles1.selectedCharacter}>
+            <div key={index} className={addPageStyles.selectedCharacter}>
                 <img
                     src={character.characterImage}
                     alt={`Character ${index + 1}`}
-                    className={styles1.selectedCharacterImage}
+                    className={addPageStyles.selectedCharacterImage}
                 />
-                <div className={styles1.selectedCharacterInfo}>
-                    <p className={styles1.selectedCharacterName}>
+                <div className={addPageStyles.selectedCharacterInfo}>
+                    <p className={addPageStyles.selectedCharacterName}>
                         {character.names &&
                         `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
                     </p>
                     <select
-                        className={styles1.selectedCharacterRole}
+                        className={addPageStyles.selectedCharacterRole}
                         value={character.role}
                         onChange={(e) => handleCharacterTypeChange(e, index)}
                     >
@@ -754,9 +753,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   );
   const renderRelationsSection = () => (
     <>
-      <div className={styles1.section}>
+      <div className={addPageStyles.section}>
         <h2>Relations</h2>
-        <div className={styles1.characterButton}>
+        <div className={addPageStyles.characterButton}>
           <button type="button" onClick={() => handleAddRelation('anime')}>
               Add Anime Relation
           </button>
@@ -764,20 +763,20 @@ const handleSelectRelation = (type, selectedRelations) => {
               Add Manga Relation
           </button>
         </div>
-        <div className={styles1.characters}>
+        <div className={addPageStyles.characters}>
           {formData.animeRelations.map((relation, index) => (
-            <div key={index} className={styles1.selectedCharacter}>
+            <div key={index} className={addPageStyles.selectedCharacter}>
                 <img
                     src={relation.images.image}
                     alt={`Anime Relation ${index + 1}`}
-                    className={styles1.selectedCharacterImage}
+                    className={addPageStyles.selectedCharacterImage}
                 />
-                <div className={styles1.selectedCharacterInfo}>
-                    <p className={styles1.selectedCharacterName}>
+                <div className={addPageStyles.selectedCharacterInfo}>
+                    <p className={addPageStyles.selectedCharacterName}>
                         {relation.titles.english || ''}
                     </p>
                     <select
-                        className={styles1.selectedCharacterRole}
+                        className={addPageStyles.selectedCharacterRole}
                         value={relation.typeofRelation}
                         onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
                     >
@@ -796,18 +795,18 @@ const handleSelectRelation = (type, selectedRelations) => {
           ))}
 
 {formData.mangaRelations.map((relation, index) => (
-                        <div key={index} className={styles1.selectedCharacter}>
+                        <div key={index} className={addPageStyles.selectedCharacter}>
                             <img
                                 src={relation.images.image}
                                 alt={`Manga Relation ${index + 1}`}
-                                className={styles1.selectedCharacterImage}
+                                className={addPageStyles.selectedCharacterImage}
                             />
-                            <div className={styles1.selectedCharacterInfo}>
-                                <p className={styles1.selectedCharacterName}>
+                            <div className={addPageStyles.selectedCharacterInfo}>
+                                <p className={addPageStyles.selectedCharacterName}>
                                     {relation.titles.english || relation.titles.romaji || ''}
                                 </p>
                                 <select
-                                    className={styles1.selectedCharacterRole}
+                                    className={addPageStyles.selectedCharacterRole}
                                     value={relation.typeofRelation}
                                     onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
                                 >
@@ -831,9 +830,9 @@ const handleSelectRelation = (type, selectedRelations) => {
   // ------------------------------------
 
   return (
-    <div className={styles1.addAnimeContainer}>
-      <div className={styles1.addAnimeContainerTabs}>
-        <button className={styles1.addAnimeBtn} form="submitAnime" type="submit" >
+    <div className={addPageStyles.addAnimeContainer}>
+      <div className={addPageStyles.addAnimeContainerTabs}>
+        <button className={addPageStyles.addAnimeBtn} form="submitAnime" type="submit" >
           Submit
         </button>
         <button onClick={() => handleTabChange("general")}>General</button>
@@ -843,65 +842,38 @@ const handleSelectRelation = (type, selectedRelations) => {
         {/* Add more buttons for additional tabs */}
       </div>
 
-      <form className={styles1.formContainer} id="submitAnime"  onSubmit={handleSubmit}>
+      <form className={addPageStyles.formContainer} id="submitAnime"  onSubmit={handleSubmit}>
         {activeTab === "general" && renderGeneralSection()}
         {activeTab === "images" && renderImagesSection()}
         {activeTab === "characters" && renderCharactersSection()}
         {activeTab === "relations" && renderRelationsSection()}
       </form>
 
-      {activeModal && (
-        <div className={styles.characterModalOverlay} onClick={handleModalClose}>
-          <div className={styles.characterModal} onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className={styles.characterModalHeader}>
-              <h1>{
-                activeModal === 'createCharacter' 
-                ? 'Create Character' 
-                : activeModal === 'characterSearch'
-                ? 'Search Character'
-                : activeModal === 'animeRelationSearch'
-                ? 'Search Anime'
-                : activeModal === 'mangaRelationSearch'
-                ? 'Search Manga'
-                : ''
-              }</h1>
-              <button className={styles.characterModalClose} onClick={handleModalClose}>
-                &times;
-              </button>
-            </div>
-            {/* Modal Body */}
-            <div className={styles.characterModalBody}>
-              {/* Render the corresponding modal content based on activeModal state */}
-              {activeModal === 'createCharacter' && (
-                <CreateCharacter
-                  onCharacterCreated={handleAddingCharacter}
-                  onClose={handleModalClose}
-                />
-              )}
-              {activeModal === 'characterSearch' && (
-                <CharacterSearch
-                  onCharacterSelected={handleSelectExistingCharacter}
-                  onClose={() => setActiveModal(null)}
-                />
-              )}
-              {activeModal === 'animeRelationSearch' && (
-                <RelationSearch
-                  onRelationSelected={handleSelectRelation}
-                  searchType={'anime'}
-                  onClose={() => setActiveModal(null)}
-                />
-              )}
-              {activeModal === 'mangaRelationSearch' && (
-                <RelationSearch
-                  onRelationSelected={handleSelectRelation}
-                  searchType={'manga'}
-                  onClose={() => setActiveModal(null)}
-                />
-              )}
-            </div>
-          </div>
-        </div>
+      {activeModal === 'createCharacter' && (
+        <CreateCharacter
+          onCharacterCreated={handleAddingCharacter}
+          onClose={handleModalClose}
+        />
+      )}
+      {activeModal === 'characterSearch' && (
+        <CharacterSearch
+          onCharacterSelected={handleSelectExistingCharacter}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+      {activeModal === 'animeRelationSearch' && (
+        <RelationSearch
+          onRelationSelected={handleSelectRelation}
+          searchType={'anime'}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+      {activeModal === 'mangaRelationSearch' && (
+        <RelationSearch
+          onRelationSelected={handleSelectRelation}
+          searchType={'manga'}
+          onClose={() => setActiveModal(null)}
+        />
       )}
     </div>
   );

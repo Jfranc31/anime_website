@@ -6,7 +6,9 @@ import { useMangaContext } from '../Context/MangaContext';
 import MangaCard from '../cards/MangaCard';
 import MangaEditor from '../Components/ListEditors/MangaEditor';
 import data from '../Context/ContextApi';
-import styles from '../styles/components/Modal.module.css';
+import modalStyles from '../styles/components/Modal.module.css';
+import browseStyles from '../styles/pages/Browse.module.css';
+
 const Mangas =() => {
     const { mangaList, setMangaList } = useMangaContext();
     const {userData,setUserData} = useContext(data);
@@ -107,9 +109,9 @@ const Mangas =() => {
     const onTopRightButtonClick = handleTopRightButtonClick;
 
     return (
-        <div className="browse-container">
-            <div className="filter-container">
-                <div className="search-container">
+        <div className={browseStyles.browseContainer}>
+            <div className={browseStyles.filterContainer}>
+                <div className={browseStyles.searchContainer}>
                     <input
                         type="text"
                         id="searchInput" 
@@ -117,29 +119,29 @@ const Mangas =() => {
                         placeholder="Search manga..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        className="search-input"
+                        className={browseStyles.searchInput}
                     />
                 </div>
-                <div className="genre-filter-container">
+                <div className={browseStyles.genreFilterContainer}>
                     <select
                         value=""
                         id="genreSearchInput"
                         name="genreSearchInput"
                         onChange={(e) => handleGenreChange(e.target.value)}
-                        className="genre-select"
+                        className={browseStyles.genreSelect}
                     >
                         <option value="" disabled>Select a genre</option>
                         {availableGenres.map(genre => (
                             <option key={genre} value={genre}>{genre}</option>
                         ))}
                     </select>
-                    <div className="selected-genres">
+                    <div className={browseStyles.selectedGenres}>
                         {selectedGenres.map(genre => (
-                            <div key={genre} className="selected-genre">
+                            <div key={genre} className={browseStyles.selectedGenre}>
                                 {genre}
                                 <button 
                                     onClick={() => handleRemoveGenre(genre)}
-                                    className="remove-genre-btn"
+                                    className={browseStyles.removeGenreBtn}
                                 >
                                     ×
                                 </button>
@@ -150,19 +152,19 @@ const Mangas =() => {
             </div>
 
             {isLoading ? (
-                <div className="loading-container">
-                    <div className="loader"></div>
+                <div className={browseStyles.loadingContainer}>
+                    <div className={browseStyles.loader}></div>
                 </div>
             ) : (
-                <div className="manga-list-section">
+                <div className={browseStyles.mangaListSection}>
                     {sortedManga.length === 0 ? (
-                        <div className="no-results">
+                        <div className={browseStyles.noResults}>
                             No manga found matching your criteria
                         </div>
                     ) : (
-                        <ul className="manga-list">
+                        <ul className={browseStyles.mangaList}>
                             {sortedManga.map(manga => (
-                                <li key={manga._id} className="manga-list-item">
+                                <li key={manga._id} className={browseStyles.mangaListItem}>
                                     <MangaCard
                                         manga={manga}
                                         onTopRightButtonClick={onTopRightButtonClick}
@@ -175,13 +177,13 @@ const Mangas =() => {
                 </div>
             )}
             {isMangaEditorOpen && (
-                <div className={styles.characterModalOverlay} onClick={handleModalClose}>
-                    <div className={styles.characterModal} onClick={e => e.stopPropagation()}>
+                <div className={modalStyles.characterModalOverlay} onClick={handleModalClose}>
+                    <div className={modalStyles.characterModal} onClick={e => e.stopPropagation()}>
                         <MangaEditor
                             manga={selectedMangaForEdit}
-                        userId={userData._id}
-                        closeModal={handleModalClose}
-                        onMangaDelete={onMangaDelete}
+                            userId={userData._id}
+                            closeModal={handleModalClose}
+                            onMangaDelete={onMangaDelete}
                         />
                     </div>
                 </div>

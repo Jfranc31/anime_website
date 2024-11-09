@@ -1,8 +1,8 @@
-// src/Components/Searches/CharacterSearch.js
+// src/Components/Searches/RelationSearch.js
 
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import styles from '../../styles/components/RelationSearch.module.css';
+import searchStyles from '../../styles/components/search.module.css';
 /**
  * Functional component for relation search.
  * @param {Object} props - Props passed to the component.
@@ -68,69 +68,71 @@ export default function RelationSearch({ onRelationSelected, searchType, onClose
     };
 
     return (
-        <div className={styles.relationSearchContainer}>
-            <div className={styles.searchBox}>
-                <input
-                    type="text"
-                    placeholder={`Search ${searchType}...`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={styles.searchInput}
-                />
-            </div>
-
-            {loading ? (
-                <div className={styles.loading}>Searching...</div>
-            ) : (
-                <div className={styles.relationsGrid}>
-                    {relations.length === 0 ? (
-                        <div className={styles.noResults}>
-                            {searchQuery ? 'No relations found' : 'Start typing to search relations'}
+        <div className={searchStyles.searchModalOverlay}>
+            <div className={searchStyles.searchModal}>
+                <div className={searchStyles.modalBody}>
+                    <div className={searchStyles.searchContainer}>
+                        <div className={searchStyles.searchBox}>
+                            <input
+                                type="text"
+                                placeholder={`Search ${searchType}...`}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={searchStyles.searchInput}
+                            />
                         </div>
-                    ) : (
-                        relations.map((relation) => (
-                            <div 
-                                key={relation._id} 
-                                className={`${styles.relationCard} ${selectedRelations.includes(relation) ? styles.selected : ''}`}
-                                onClick={() => handleRelationClick(relation)}
-                            >
-                                <div className={styles.relationImageContainer}>
-                                    <img 
-                                        src={relation.images.image} 
-                                        alt={relation.titles.english}
-                                        className={styles.relationImage} 
-                                    />
-                                    {selectedRelations.includes(relation) && (
-                                        <div className={styles.selectedOverlay}>
-                                            <span className={styles.checkmark}>✓</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={styles.relationInfo}>
-                                    <p className={styles.relationName}>
-                                        {relation.titles.english}
-                                    </p>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
 
-            <div className={styles.actionButtons}>
-                <button 
-                    className={styles.selectButton}
-                    onClick={handleConfirmSelection}
-                    disabled={selectedRelations.length === 0}
-                >
-                    Add Selected ({selectedRelations.length})
-                </button>
-                <button 
-                    className={styles.cancelButton}
-                    onClick={onClose}
-                >
-                    Cancel
-                </button>
+                        {loading ? (
+                            <div className={searchStyles.loading}>Searching...</div>
+                        ) : (
+                            <div className={searchStyles.itemsGrid}>
+                                {relations.length === 0 ? (
+                                    <div className={searchStyles.noResults}>
+                                        {searchQuery ? 'No relations found' : 'Start typing to search relations'}
+                                    </div>
+                                ) : (
+                                    relations.map((relation) => (
+                                        <div
+                                            key={relation._id}
+                                            className={`${searchStyles.itemCard} ${selectedRelations.includes(relation) ? searchStyles.selected : ''}`}
+                                            onClick={() => handleRelationClick(relation)}
+                                        >
+                                            <div className={searchStyles.itemImageContainer}>
+                                                <img
+                                                    src={relation.images.image}
+                                                    alt={relation.titles.english}
+                                                    className={searchStyles.itemImage}
+                                                />
+                                                {selectedRelations.includes(relation) && (
+                                                    <div className={searchStyles.selectedOverlay}>
+                                                        <span className={searchStyles.checkmark}>✓</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className={searchStyles.itemInfo}>
+                                                <p className={searchStyles.itemName}>
+                                                    {relation.titles.english}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                        <div className={searchStyles.actionButtons}>
+                            <button
+                                className={searchStyles.selectButton}
+                                onClick={handleConfirmSelection}
+                                disabled={selectedRelations.length === 0}
+                            >
+                                Select {searchType}
+                            </button>
+                            <button className={searchStyles.cancelButton} onClick={onClose}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

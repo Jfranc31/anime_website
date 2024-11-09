@@ -6,7 +6,8 @@ import { useAnimeContext } from '../Context/AnimeContext';
 import AnimeCard from '../cards/AnimeCard';
 import AnimeEditor from '../Components/ListEditors/AnimeEditor';
 import data from '../Context/ContextApi';
-import styles from '../styles/components/Modal.module.css';
+import modalStyles from '../styles/components/Modal.module.css';
+import browseStyles from '../styles/pages/Browse.module.css';
 
 const Animes = () => {
     const { animeList, setAnimeList } = useAnimeContext();
@@ -55,7 +56,7 @@ const Animes = () => {
                 setIsLoading(false);
             });
     }, [setAnimeList]);
-  
+
     const filteredAnime = Array.isArray(animeList) ? animeList.filter(anime => {
         const matchesSearch =
             anime.titles.romaji.toLowerCase().includes(searchInput.toLowerCase()) ||
@@ -79,11 +80,11 @@ const Animes = () => {
 
     const handleGenreChange = (selectedGenre) => {
         setSelectedGenres(prevGenres => {
-          if (!prevGenres.includes(selectedGenre)) {
-            return [...prevGenres, selectedGenre];
-          } else {
-            return prevGenres; // Add this else block
-          }
+            if (!prevGenres.includes(selectedGenre)) {
+                return [...prevGenres, selectedGenre];
+            } else {
+                return prevGenres;
+            }
         });
     };
 
@@ -94,10 +95,10 @@ const Animes = () => {
     const onAnimeDelete = (animeId) => {
         // Implement logic to update the user's anime list after deletion
         setUserData((prevUserData) => {
-          const updatedUser = { ...prevUserData };
-          const updatedAnimes = updatedUser.animes.filter((anime) => anime.animeId !== animeId);
-          updatedUser.animes = updatedAnimes;
-          return updatedUser;
+            const updatedUser = { ...prevUserData };
+            const updatedAnimes = updatedUser.animes.filter((anime) => anime.animeId !== animeId);
+            updatedUser.animes = updatedAnimes;
+            return updatedUser;
         });
     };
 
@@ -110,9 +111,9 @@ const Animes = () => {
     const onTopRightButtonClick = handleTopRightButtonClick;
 
     return (
-        <div className="browse-container">
-            <div className="filter-container">
-                <div className="search-container">
+        <div className={browseStyles.browseContainer}>
+            <div className={browseStyles.filterContainer}>
+                <div className={browseStyles.searchContainer}>
                     <input
                         type="text"
                         id="searchInput" 
@@ -120,29 +121,29 @@ const Animes = () => {
                         placeholder="Search anime..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        className="search-input"
+                        className={browseStyles.searchInput}
                     />
                 </div>
-                <div className="genre-filter-container">
+                <div className={browseStyles.genreFilterContainer}>
                     <select
                         value=""
                         id="genreSearchInput"
                         name="genreSearchInput"
                         onChange={(e) => handleGenreChange(e.target.value)}
-                        className="genre-select"
+                        className={browseStyles.genreSelect}
                     >
                         <option value="" disabled>Select a genre</option>
                         {availableGenres.map(genre => (
                             <option key={genre} value={genre}>{genre}</option>
                         ))}
                     </select>
-                    <div className="selected-genres">
+                    <div className={browseStyles.selectedGenres}>
                         {selectedGenres.map(genre => (
-                            <div key={genre} className="selected-genre">
+                            <div key={genre} className={browseStyles.selectedGenre}>
                                 {genre}
                                 <button 
                                     onClick={() => handleRemoveGenre(genre)}
-                                    className="remove-genre-btn"
+                                    className={browseStyles.removeGenreBtn}
                                     aria-label={`Remove ${genre} filter`}
                                 >
                                     ×
@@ -154,19 +155,19 @@ const Animes = () => {
             </div>
 
             {isLoading ? (
-                <div className="loading-container">
-                    <div className="loader"></div>
+                <div className={browseStyles.loadingContainer}>
+                    <div className={browseStyles.loader}></div>
                 </div>
             ) : (
-                <div className="anime-list-section">
+                <div className={browseStyles.animeListSection}>
                     {sortedAnime.length === 0 ? (
-                        <div className="no-results">
+                        <div className={browseStyles.noResults}>
                             No anime found matching your criteria
                         </div>
                     ) : (
-                        <ul className="anime-list">
+                        <ul className={browseStyles.animeList}>
                             {sortedAnime.map(anime => (
-                                <li key={anime._id} className="anime-list-item">
+                                <li key={anime._id} className={browseStyles.animeListItem}>
                                     <AnimeCard
                                         anime={anime}
                                         onTopRightButtonClick={onTopRightButtonClick}
@@ -180,8 +181,8 @@ const Animes = () => {
             )}
 
             {isAnimeEditorOpen && (
-                <div className={styles.modalOverlay} onClick={handleModalClose}>
-                    <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+                <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
+                    <div className={modalStyles.characterModal} onClick={e => e.stopPropagation()}>
                         <AnimeEditor
                             anime={selectedAnimeForEdit}
                             userId={userData._id}
@@ -193,6 +194,6 @@ const Animes = () => {
             )}
         </div>
     );
-  };
-  
-  export default Animes;
+};
+ 
+export default Animes;

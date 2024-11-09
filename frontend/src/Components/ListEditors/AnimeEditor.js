@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import editModalStyles from '../../styles/components/EditModal.module.css';
 
 /**
  * Functional component for editing details of an anime.
@@ -126,52 +127,60 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
   };
 
   return (
-    <div className='character-modal' onClick={(e) => e.stopPropagation()}>
-        {/* Modal Header */}
-        <div className="modal-header">
+    <div className={editModalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
+        <div className={editModalStyles.modalHeader}>
             <h2>{animeDetails?.titles?.english || ''}</h2>
             <img src={anime?.images?.border} alt={anime?.titles?.english} />
-            <button className="character-modal-close" onClick={closeModal}>
+            <button className={editModalStyles.characterModalClose} onClick={closeModal}>
                 &times;
             </button>
-            <button type="submit" className='modal-save-btn' form="submit">Save</button>
         </div>
-        <div className='modal-body'>
-            {/* Modal Body */}
-
-            <form onSubmit={handleSave} id="submit">
-                <div className='grid'>
-                <label htmlFor="userProgress.status">Status:</label>
-                <select
-                    id="userProgress.status"
-                    name="userProgress.status"
-                    value={userProgress.status}
-                    onChange={handleStatusChange}
-                >
-                    <option value="" disabled>Select Status</option>
-                    {availableStatus.map((status) => (
-                    <option key={status} value={status}>
-                        {status}
-                    </option>
-                    ))}
-                </select>
+        <div className={editModalStyles.modalBody}>
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                handleSave();
+            }}>
+                <div className={editModalStyles.grid}>
+                    <label htmlFor="status">Status:</label>
+                    <select
+                        id="status"
+                        name="status"
+                        value={userProgress.status}
+                        onChange={handleStatusChange}
+                    >
+                        <option value="" disabled>Select Status</option>
+                        {availableStatus.map((status) => (
+                            <option key={status} value={status}>
+                                {status}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <div className='grid'>
-                <label htmlFor="userProgress.currentEpisode">Current Episode:</label>
-                <input
-                    type="number"
-                    id="userProgress.currentEpisode"
-                    name="userProgress.currentEpisode"
-                    value={userProgress.currentEpisode}
-                    onChange={handleEpisodeChange}
-                />
+                <div className={editModalStyles.grid}>
+                    <label htmlFor="currentEpisode">Current Episode:</label>
+                    <input
+                        type="number"
+                        id="currentEpisode"
+                        name="currentEpisode"
+                        value={userProgress.currentEpisode}
+                        onChange={handleEpisodeChange}
+                    />
                 </div>
-                {isInUserList && (
-                    <button className='modal-delete-btn' onClick={handleDelete}>Delete</button>
-                )}
-                
+                <div className={editModalStyles.buttonContainer}>
+                    <button type="submit" className={editModalStyles.modalSaveBtn}>
+                        Save
+                    </button>
+                    {isInUserList && (
+                        <button 
+                            type="button" 
+                            className={editModalStyles.modalDeleteBtn} 
+                            onClick={handleDelete}
+                        >
+                            Delete
+                        </button>
+                    )}
+                </div>
             </form>
-
         </div>
     </div>
   );

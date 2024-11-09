@@ -11,7 +11,7 @@ import data from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
 import AnimeCard from '../../cards/AnimeCard';
 import CharacterCard from '../../cards/CharacterCard';
-
+import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
 /**
  * Functional component representing details of an anime.
  * @returns {JSX.Element} - Rendered anime details component.
@@ -166,7 +166,7 @@ const AnimeDetails = () => {
     setIsAnimeEditorOpen(true);
   };
 
-  console.log("CH: ", isAnimeAdded, userProgress);
+  console.log("CH: ", isAnimeAdded, userProgress, animeDetails);
 
   // Add this helper function to format the date
   const formatDate = (dateObj) => {
@@ -174,10 +174,19 @@ const AnimeDetails = () => {
     const { year, month, day } = dateObj;
     if (!year && !month && !day) return 'TBA';
     
-    const formattedMonth = month ? month.toString().padStart(2, '0') : '01';
-    const formattedDay = day ? day.toString().padStart(2, '0') : '01';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     
-    return `${year || 'TBA'}-${formattedMonth}-${formattedDay}`;
+    // If we have a month, subtract 1 as array is 0-based
+    const monthName = month ? months[month - 1] : '';
+    const formattedDay = day ? day : '';
+    
+    if (!monthName && !formattedDay) return year || 'TBA';
+    if (!formattedDay) return `${monthName} ${year || 'TBA'}`;
+    
+    return `${monthName} ${formattedDay}, ${year || 'TBA'}`;
   };
 
   const getFullName = (names) => {
@@ -188,88 +197,139 @@ const AnimeDetails = () => {
     return nameParts.join(' ');
   };
 
+  const determineSeason = (startDate) => {
+    if (!startDate || !startDate.month) return { season: 'TBA', year: startDate?.year || 'TBA' };
+
+    const month = startDate.month;
+    let season;
+
+    if (month >= 3 && month <= 5) season = 'Spring';
+    else if (month >= 6 && month <= 8) season = 'Summer';
+    else if (month >= 9 && month <= 11) season = 'Fall';
+    else season = 'Winter';
+
+    return { 
+      season, 
+      year: startDate.year || 'TBA' 
+    };
+  };
+
+  const { season, year } = determineSeason(animeDetails.releaseData.startDate);
+
   return (
-    <div className="anime-details-page">
-      <div className="anime-header">
-        <div className="banner-wrapper">
+    <div className={animeDetailsStyles.animeDetailsPage}>
+      <div className={animeDetailsStyles.animeHeader}>
+        <div className={animeDetailsStyles.bannerSection}>
           <img 
             src={animeDetails.images.border || animeDetails.images.image} 
             alt={animeDetails.titles.english} 
-            className="banner-image"
+            className={animeDetailsStyles.bannerImage}
           />
-          <div className="banner-gradient" />
+          <div className={animeDetailsStyles.bannerOverlay} />
         </div>
         
-        <div className="content-wrapper">
-          <div className="poster-container">
+        <div className={animeDetailsStyles.animeMainContent}>
+          <div className={animeDetailsStyles.animePoster}>
             <img 
               src={animeDetails.images.image} 
               alt={animeDetails.titles.english} 
-              className="poster-image"
             />
+            {userData.role === "admin" && (
+              <Link to={`/anime/${animeDetails._id}/update`} className={animeDetailsStyles.editAnimeLink}>
+                <button className={animeDetailsStyles.editAnimeButton}>
+                  Edit Anime
+                </button>
+              </Link>
+            )}
           </div>
           
-          <div className="title-section">
-            <h1>{animeDetails.titles.english}</h1>
+          <div className={animeDetailsStyles.animeInfo}>
+            <h1 className={animeDetailsStyles.animeTitle}>{animeDetails.titles.english}</h1>
             {animeDetails.titles.native && (
-              <h2>{animeDetails.titles.native}</h2>
+              <div className={animeDetailsStyles.nativeTitle}>
+                {animeDetails.titles.native}
+              </div>
             )}
+            
+            <div className={animeDetailsStyles.quickInfo}>
+              <div className={animeDetailsStyles.quickInfoItem}>
+                <span>Status:</span> {animeDetails.releaseData.releaseStatus}
+              </div>
+              <div className={animeDetailsStyles.quickInfoItem}>
+                <span>Format:</span> {animeDetails.format}
+              </div>
+              <div className={animeDetailsStyles.quickInfoItem}>
+                <span>Episodes:</span> {animeDetails.lengths.Episodes}
+              </div>
+              <div className={animeDetailsStyles.quickInfoItem}>
+                <span>Duration:</span> {animeDetails.lengths.EpisodeDuration}
+              </div>
+              <div className={animeDetailsStyles.quickInfoItem}>
+                <span>Season:</span> {season} {year}
+              </div>
+              <div className={animeDetailsStyles.quickInfoItem}>
+                <span>Start Date:</span> {formatDate(animeDetails.releaseData.startDate)}
+              </div>
+              <div className={animeDetailsStyles.quickInfoItem}>
+                <span>End Date:</span> {formatDate(animeDetails.releaseData.endDate)}
+              </div>
+            </div>
+
+            <div className={animeDetailsStyles.animeTabs}>
+              <button 
+                className={`${animeDetailsStyles.tabButton} ${activeTab === 'about' ? animeDetailsStyles.active : ''}`}
+                onClick={() => setActiveTab('about')}
+              >
+                About
+              </button>
+              <button 
+                className={`${animeDetailsStyles.tabButton} ${activeTab === 'characters' ? animeDetailsStyles.active : ''}`}
+                onClick={() => setActiveTab('characters')}
+              >
+                Characters
+              </button>
+              <button 
+                className={`${animeDetailsStyles.tabButton} ${activeTab === 'relations' ? animeDetailsStyles.active : ''}`}
+                onClick={() => setActiveTab('relations')}
+              >
+                Relations
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
-      <div className="content-container">
-        <div className="tabs-section">
-          <button 
-            className={`tab-button ${activeTab === 'about' ? 'active' : ''}`}
-            onClick={() => setActiveTab('about')}
-          >
-            About
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'characters' ? 'active' : ''}`}
-            onClick={() => setActiveTab('characters')}
-          >
-            Characters
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'relations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('relations')}
-          >
-            Relations
-          </button>
-        </div>
-
+      
+      <div className={animeDetailsStyles.animeContent}>
         {activeTab === 'about' && (
-          <div className="about-container">
-            <div className="metadata-grid">
+          <div className={animeDetailsStyles.aboutContainer}>
+            <div className={animeDetailsStyles.metadataGrid}>
               {/* Metadata items */}
             </div>
-            <div className="description-section">
+            <div className={animeDetailsStyles.descriptionSection}>
               <p>{animeDetails.description}</p>
             </div>
           </div>
         )}
 
         {activeTab === 'characters' && (
-          <div className="characters-container">
-            <div className="characters-grid">
+          <div className={animeDetailsStyles.charactersContainer}>
+            <div className={animeDetailsStyles.charactersGrid}>
               {charactersDetails.map((character) => (
                 <Link 
                   to={`/characters/${character.characterDetails._id}`} 
                   key={character.characterDetails._id}
-                  className="character-card"
+                  className={animeDetailsStyles.characterCard}
                 >
-                  <div className="character-image-container">
+                  <div className={animeDetailsStyles.characterImageContainer}>
                     <img 
                       src={character.characterDetails.characterImage} 
                       alt={character.characterDetails.names.givenName}
                     />
-                    <div className="character-role">
+                    <div className={animeDetailsStyles.characterRole}>
                       {character.role}
                     </div>
                   </div>
-                  <div className="character-info">
+                  <div className={animeDetailsStyles.characterInfo}>
                     <h4>{getFullName(character.characterDetails.names)}</h4>
                   </div>
                 </Link>
@@ -279,30 +339,28 @@ const AnimeDetails = () => {
         )}
 
         {activeTab === 'relations' && (
-          <div className="relations-container">
-            <div className="relations-grid">
-              {relationsDetails
-                .filter(relation => relation?.relationDetails) // Add this filter
-                .map((relation) => (
-                  <Link 
-                    to={`/${relation.contentType}/${relation.relationDetails?._id}`} 
-                    key={`${relation.contentType}-${relation.relationDetails?._id}`}
-                    className="relation-card"
-                  >
-                    <div className="relation-image-container">
-                      <img 
-                        src={relation.relationDetails?.images.image} 
-                        alt={relation.relationDetails?.titles.english || 'Unknown'} 
-                      />
-                      <div className="relation-type">
-                        {relation.typeofRelation}
-                      </div>
+          <div className={animeDetailsStyles.relationsContainer}>
+            <div className={animeDetailsStyles.relationsGrid}>
+              {relationsDetails.map((relation) => (
+                <Link 
+                  key={relation.relationDetails._id} 
+                  to={`/${relation.contentType}/${relation.relationDetails._id}`}
+                  className={animeDetailsStyles.relationCard}
+                >
+                  <div className={animeDetailsStyles.relationImageContainer}>
+                    <img 
+                      src={relation.relationDetails.images.image} 
+                      alt={relation.relationDetails.titles.english}
+                    />
+                    <div className={animeDetailsStyles.relationType}>
+                      {relation.typeofRelation}
                     </div>
-                    <div className="relation-info">
-                      <h4>{relation.relationDetails?.titles.english}</h4>
-                    </div>
-                  </Link>
-                ))}
+                  </div>
+                  <div className={animeDetailsStyles.relationInfo}>
+                    <h4>{relation.relationDetails.titles.english}</h4>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         )}

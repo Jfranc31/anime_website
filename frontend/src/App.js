@@ -23,6 +23,8 @@ import Navbar from './Components/Navbars/Navbar';
 import { AnimeProvider } from './Context/AnimeContext';
 import { MangaProvider } from './Context/MangaContext';
 import { CharacterProvider } from './Context/CharacterContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [userData, setUserData] = useState({});
@@ -75,6 +77,17 @@ function App() {
           </MangaProvider>
         </AnimeProvider>
       </data.Provider>
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }

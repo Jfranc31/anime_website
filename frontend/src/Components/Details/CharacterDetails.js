@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-
+import characterDetailsStyles from '../../styles/pages/character_details.module.css';
 /**
  * Functional component representing details of a character.
  * @returns {JSX.Element} - Rendered character details component.
@@ -152,7 +152,7 @@ const CharacterDetails = () => {
         return (
           <span 
             key={i}
-            className={`spoiler-text ${revealedSpoilers[`${index}-${i}`] ? 'revealed' : ''}`}
+            className={`${characterDetailsStyles.spoilerText} ${revealedSpoilers[`${index}-${i}`] ? characterDetailsStyles.revealed : ''}`}
             onClick={() => toggleSpoiler(`${index}-${i}`)}
           >
             {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
@@ -174,31 +174,31 @@ const CharacterDetails = () => {
     const { metadata, paragraphs } = parseDescription(characterDetails.about || '');
 
     return (
-      <div className="character-about">
-        <div className="character-metadata">
+      <div className={"character-about"}>
+        <div className={characterDetailsStyles.characterMetadata}>
           {characterDetails.age && (
-            <div className="metadata-item">
-              <span className="metadata-label">Age</span>
-              <span className="metadata-value">: {characterDetails.age}</span>
+            <div className={characterDetailsStyles.metadataItem}>
+              <span className={characterDetailsStyles.metadataLabel}>Age</span>
+              <span className={characterDetailsStyles.metadataValue}>: {characterDetails.age}</span>
             </div>
           )}
           {characterDetails.gender && (
-            <div className="metadata-item">
-              <span className="metadata-label">Gender</span>
-              <span className="metadata-value">: {characterDetails.gender}</span>
+            <div className={characterDetailsStyles.metadataItem}>
+              <span className={characterDetailsStyles.metadataLabel}>Gender</span>
+              <span className={characterDetailsStyles.metadataValue}>: {characterDetails.gender}</span>
             </div>
           )}
           {characterDetails.DOB && formatDOB(characterDetails.DOB) && (
-            <div className="metadata-item">
-              <span className="metadata-label">Date of Birth</span>
-              <span className="metadata-value">: {formatDOB(characterDetails.DOB)}</span>
+            <div className={characterDetailsStyles.metadataItem}>
+              <span className={characterDetailsStyles.metadataLabel}>Date of Birth</span>
+              <span className={characterDetailsStyles.metadataValue}>: {formatDOB(characterDetails.DOB)}</span>
             </div>
           )}
           
           {metadata.map((item, index) => (
-            <div key={index} className="metadata-item">
-              <span className="metadata-label">{item.label}</span>
-              <span className="metadata-value">: {renderMetadataValue(item.value, index)}</span>
+            <div key={index} className={characterDetailsStyles.metadataItem}>
+              <span className={characterDetailsStyles.metadataLabel}>{item.label}</span>
+              <span className={characterDetailsStyles.metadataValue}>: {renderMetadataValue(item.value, index)}</span>
             </div>
           ))}
         </div>
@@ -215,39 +215,41 @@ const CharacterDetails = () => {
   };
 
   const renderAppearancesSection = () => (
-    <div className="character-appearances">
-      <div className="appearance-tabs">
+    <div className={characterDetailsStyles.characterAppearances}>
+      <div className={characterDetailsStyles.appearanceTabs}>
         <button 
-          className={`appearance-tab ${activeAppearanceType === 'anime' ? 'active' : ''}`}
+          className={`${characterDetailsStyles.appearanceTab} ${activeAppearanceType === 'anime' ? characterDetailsStyles.active : ''}`}
           onClick={() => setActiveAppearanceType('anime')}
         >
           Anime
         </button>
         <button 
-          className={`appearance-tab ${activeAppearanceType === 'manga' ? 'active' : ''}`}
+          className={`${characterDetailsStyles.appearanceTab} ${activeAppearanceType === 'manga' ? characterDetailsStyles.active : ''}`}
           onClick={() => setActiveAppearanceType('manga')}
         >
           Manga
         </button>
       </div>
 
-      <div className="references-grid">
+      <div className={characterDetailsStyles.referencesGrid}>
         {referencesDetails
           .filter(ref => ref.contentType === activeAppearanceType)
           .map((reference) => (
             <Link 
               key={reference.referenceDetails?._id} 
               to={`/${activeAppearanceType}/${reference.referenceDetails?._id}`}
-              className="reference-card"
+              className={characterDetailsStyles.referenceCard}
             >
-              <div className="reference-image-container">
+              <div className={characterDetailsStyles.referenceImageContainer}>
                 <img 
                   src={reference.referenceDetails?.images.image} 
                   alt={reference.referenceDetails?.titles.english}
                 />
-                <div className="reference-role">{reference.role}</div>
+                <div className={characterDetailsStyles.referenceRole}>
+                  {reference.role}
+                </div>
               </div>
-              <div className="reference-info">
+              <div className={characterDetailsStyles.referenceInfo}>
                 <h4>{reference.referenceDetails?.titles.english}</h4>
               </div>
             </Link>
@@ -257,41 +259,41 @@ const CharacterDetails = () => {
   );
 
   return (
-    <div className="character-details-page">
-      <div className="character-header">
-        <div className="character-image-section">
+    <div className={characterDetailsStyles.characterDetailsPage}>
+      <div className={characterDetailsStyles.characterHeader}>
+        <div className={characterDetailsStyles.characterImageSection}>
           <img 
             src={characterDetails.characterImage} 
             alt={characterDetails.names.givenName} 
-            className="character-main-image"
+            className={characterDetailsStyles.characterMainImage}
           />
           <Link 
             to={`/characters/${characterDetails._id}/update`} 
-            className="edit-character-link"
+            className={characterDetailsStyles.editCharacterLink}
           >
-            <button className="edit-character-button">
+            <button className={characterDetailsStyles.editCharacterButton}>
               Edit Character
             </button>
           </Link>
         </div>
-        <div className="character-info-section">
-          <h1 className="character-name">
+        <div className={characterDetailsStyles.characterInfoSection}>
+          <h1 className={characterDetailsStyles.characterName}>
             {characterDetails.names.givenName} {characterDetails.names.middleName} {characterDetails.names.surName}
           </h1>
           {characterDetails.names.alterNames && (
-            <div className="character-alt-names">
+            <div className={characterDetailsStyles.characterAltNames}>
               <span>Alternative Names:</span> {characterDetails.names.alterNames}
             </div>
           )}
-          <div className="character-tabs">
+          <div className={characterDetailsStyles.characterTabs}>
             <button 
-              className={`tab-button ${activeTab === 'about' ? 'active' : ''}`}
+              className={`${characterDetailsStyles.tabButton} ${activeTab === 'about' ? characterDetailsStyles.active : ''}`}
               onClick={() => setActiveTab('about')}
             >
               About
             </button>
             <button 
-              className={`tab-button ${activeTab === 'appearances' ? 'active' : ''}`}
+              className={`${characterDetailsStyles.tabButton} ${activeTab === 'appearances' ? characterDetailsStyles.active : ''}`}
               onClick={() => setActiveTab('appearances')}
             >
               Appearances
@@ -300,7 +302,7 @@ const CharacterDetails = () => {
         </div>
       </div>
 
-      <div className="character-content">
+      <div className={characterDetailsStyles.characterContent}>
         {activeTab === 'about' ? renderAboutSection() : renderAppearancesSection()}
       </div>
     </div>

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import editModalStyles from '../../styles/components/EditModal.module.css';
 
 /**
  * Functional component for editing details of a manga.
@@ -118,20 +119,20 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
     };
 
     return (
-        <div className='character-modal' onClick={(e) => e.stopPropagation()}>
+        <div className={editModalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className='modal-header'>
+            <div className={editModalStyles.modalHeader}>
                 <h2>{mangaDetails?.titles?.english || ''}</h2>
                 <img src={manga?.images?.border} alt={manga?.titles?.english} />
-                <button className='character-modal-close' onClick={closeModal}>
+                <button className={editModalStyles.characterModalClose} onClick={closeModal}>
                     &times;
                 </button>
-                <button type='submit' className='modal-save-btn' form='submit'>Save</button>
+                <button type='submit' className={editModalStyles.modalSaveBtn} form='submit'>Save</button>
             </div>
-            <div className='modal-body'>
+            <div className={editModalStyles.modalBody}>
                 {/* Modal Body */}
                 <form onSubmit={handleSave} id='submit'>
-                    <div className='grid'>
+                    <div className={editModalStyles.grid}>
                         <label htmlFor='userProgress.status'>Status:</label>
                         <select
                             id='userProgress.status'
@@ -147,7 +148,7 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
                             ))}
                         </select>
                     </div>
-                    <div className='grid'>
+                    <div className={editModalStyles.grid}>
                         <label htmlFor='userProgress.currentChapter'>Current Chapter:</label>
                         <input
                             type='number'
@@ -157,7 +158,7 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
                             onChange={handleChapterChange}
                         />
                     </div>
-                    <div className='grid'>
+                    <div className={editModalStyles.grid}>
                         <label htmlFor='userProgress.currentVolume'>Current Volume:</label>
                         <input
                             type='number'
@@ -168,7 +169,7 @@ const MangaEditor = ({ manga, userId, closeModal, onMangaDelete }) => {
                         />
                     </div>
                     {isInUserList && (
-                        <button className='modal-delete-btn' onClick={handleDelete}>Delete</button>
+                        <button className={editModalStyles.modalDeleteBtn} onClick={handleDelete}>Delete</button>
                     )}
                 </form>
             </div>

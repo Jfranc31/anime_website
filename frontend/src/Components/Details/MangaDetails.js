@@ -8,6 +8,7 @@ import axios from 'axios';
 import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
 import MangaEditor from '../ListEditors/MangaEditor';
+import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
 
 /**
  * Functional component representing details of a manga.
@@ -28,6 +29,7 @@ const MangaDetails = () => {
   });
 
   const [activeSection, setActiveSection] = useState('relations');
+  const [activeTab, setActiveTab] = useState('about');
 
   const showRelations = () => {
       setActiveSection('relations');
@@ -57,7 +59,7 @@ const MangaDetails = () => {
               setIsMangaAdded(isMangaAdded);
 
               // Set initial userResponse when mangaDetails is not null
-              if(currentUser) {
+              if(currentUser && existingMangaIndex !== -1) {
                 setUserProgress({
                   status: currentUser.mangas[existingMangaIndex].status,
                   currentChapter: currentUser.mangas[existingMangaIndex].currentChapter,
@@ -146,7 +148,7 @@ useEffect(() => {
     setUserData((prevUserData) => {
       const updatedUser = { ...prevUserData };
       const updatedMangas = updatedUser.mangas.filter((manga) => manga.mangaId !== mangaId);
-      updatedUser.animes = updatedMangas;
+      updatedUser.mangas = updatedMangas;
       return updatedUser;
     });
   };
@@ -159,108 +161,212 @@ useEffect(() => {
     setIsMangaEditorOpen(true);
   };
 
+  const getFullName = (names) => {
+    const nameParts = [];
+    if (names.givenName) nameParts.push(names.givenName);
+    if (names.middleName) nameParts.push(names.middleName);
+    if (names.surName) nameParts.push(names.surName);
+    return nameParts.join(' ');
+  };
+
   console.log("CH: ", userProgress, isMangaAdded, mangaDetails);
+
+  const formatDate = (dateObj) => {
+    if (!dateObj) return 'TBA';
+    const { year, month, day } = dateObj;
+    if (!year && !month && !day) return 'TBA';
+    
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    
+    const monthName = month ? months[month - 1] : '';
+    const formattedDay = day ? day : '';
+    
+    if (!monthName && !formattedDay) return year || 'TBA';
+    if (!formattedDay) return `${monthName} ${year || 'TBA'}`;
+    
+    return `${monthName} ${formattedDay}, ${year || 'TBA'}`;
+  };
+
+  const determineSeason = (startDate) => {
+    if (!startDate || !startDate.month) return { season: 'TBA', year: startDate?.year || 'TBA' };
+
+    const month = startDate.month;
+    let season;
+
+    if (month >= 3 && month <= 5) season = 'Spring';
+    else if (month >= 6 && month <= 8) season = 'Summer';
+    else if (month >= 9 && month <= 11) season = 'Fall';
+    else season = 'Winter';
+
+    return { 
+      season, 
+      year: startDate.year || 'TBA' 
+    };
+  };
+
+  const { season, year } = determineSeason(mangaDetails.releaseData.startDate);
+
   return (
-    <div>
-      <div className='anime-page'>
-          <img src={mangaDetails.images.border} alt={mangaDetails.titles.english} />
-      </div>
+    <div className={mangaDetailsStyles.mangaDetailsPage}>
+      <div className={mangaDetailsStyles.mangaHeader}>
+        <div className={mangaDetailsStyles.bannerSection}>
+          <img 
+            src={mangaDetails.images.border || mangaDetails.images.image} 
+            alt={mangaDetails.titles.english} 
+            className={mangaDetailsStyles.bannerImage}
+          />
+          <div className={mangaDetailsStyles.bannerOverlay} />
+        </div>
 
-      <div className='anime-page-img'>
-          <img src={mangaDetails.images.image} alt={mangaDetails.titles.english} />
-      </div>
-
-      <div className='anime-page-info-bk'>
-          <div className='anime-page-info'>
-          <p>{mangaDetails.titles.english}</p>
-          <div className='mydiv'></div>
-          <p>Description: {mangaDetails.description}</p>
+        <div className={mangaDetailsStyles.contentWrapper}>
+          <div className={mangaDetailsStyles.posterContainer}>
+            <img 
+              src={mangaDetails.images.image} 
+              alt={mangaDetails.titles.english} 
+            />
+            {userData.role === "admin" && (
+              <Link to={`/manga/${mangaDetails._id}/update`} className={mangaDetailsStyles.editMangaLink}>
+                <button className={mangaDetailsStyles.editMangaButton}>
+                  Edit Manga
+                </button>
+              </Link>
+            )}
           </div>
-      </div>
 
-      {/* Add an Update button */}
-      <Link to={`/manga/${mangaDetails._id}/update`}>
-          <button className='update-anime-button'>Edit Manga</button>
-      </Link>
+          <div className={mangaDetailsStyles.mangaInfo}>
+            <h1 className={mangaDetailsStyles.mangaTitle}>{mangaDetails.titles.english}</h1>
+            {mangaDetails.titles.native && (
+              <div className={mangaDetailsStyles.mangaNativeTitle}>
+                {mangaDetails.titles.native}
+              </div>
+            )}
 
-      <button className='open-editor-button' onClick={openEditor}>Open Editor</button>
+            <div className={mangaDetailsStyles.quickInfo}>
+              <div className={mangaDetailsStyles.quickInfoItem}>
+                <span>Status:</span> {mangaDetails.releaseData.releaseStatus}
+              </div>
+              <div className={mangaDetailsStyles.quickInfoItem}>
+                <span>Format:</span> {mangaDetails.typings.Format}
+              </div>
+              <div className={mangaDetailsStyles.quickInfoItem}>
+                <span>Chapters:</span> {mangaDetails.lengths.chapters}
+              </div>
+              <div className={mangaDetailsStyles.quickInfoItem}>
+                <span>Volumes:</span> {mangaDetails.lengths.volumes}
+              </div>
+              <div className={mangaDetailsStyles.quickInfoItem}>
+                <span>Season:</span> {season} {year}
+              </div>
+              <div className={mangaDetailsStyles.quickInfoItem}>
+                <span>Start Date:</span> {formatDate(mangaDetails.releaseData.startDate)}
+              </div>
+              <div className={mangaDetailsStyles.quickInfoItem}>
+                <span>End Date:</span> {formatDate(mangaDetails.releaseData.endDate)}
+              </div>
+            </div>
 
-      {/* Render AnimeEditor modal conditionally */}
-      {isMangaEditorOpen && (
-          <div className="character-modal-overlay" onClick={handleModalClose}>
-
-              <MangaEditor
-                  manga={mangaDetails}
-                  userId={userData._id}
-                  closeModal={handleModalClose}
-                  onAnimeDelete={onMangaDelete}
-              />
+            <div className={mangaDetailsStyles.mangaTabs}>
+              <button 
+                className={`${mangaDetailsStyles.tabButton} ${activeTab === 'about' ? mangaDetailsStyles.active : ''}`}
+                onClick={() => setActiveTab('about')}
+              >
+                About
+              </button>
+              <button 
+                className={`${mangaDetailsStyles.tabButton} ${activeTab === 'characters' ? mangaDetailsStyles.active : ''}`}
+                onClick={() => setActiveTab('characters')}
+              >
+                Characters
+              </button>
+              <button 
+                className={`${mangaDetailsStyles.tabButton} ${activeTab === 'relations' ? mangaDetailsStyles.active : ''}`}
+                onClick={() => setActiveTab('relations')}
+              >
+                Relations
+              </button>
+            </div>
           </div>
-      )}
-
-      <AnimeNavbar showRelations={showRelations} showCharacters={showCharacters} />
-
-      {/* Series Data */}
-      <div className='series-data'>
-        <h3>Format</h3>
-        <div>{mangaDetails.typings.Format}</div>
-        <h3>Source</h3>
-        <div>{mangaDetails.typings.Source}</div>
-        <h3>Start Date</h3>
-        <div>{mangaDetails.releaseData.startDate.month}/{mangaDetails.releaseData.startDate.day}/{mangaDetails.releaseData.startDate.year}</div>
-        {mangaDetails.releaseData.endDate.year && (
-          <>
-            <h3>End Date</h3>
-            <div>{mangaDetails.releaseData.endDate.month}/{mangaDetails.releaseData.endDate.day}/{mangaDetails.releaseData.endDate.year}</div>
-          </>
-        )}
-        <h3>Genres</h3>
-        <div className='genres'>
-          {mangaDetails.genres.map((genre, index) => (
-            <div key={index}>{genre}</div>
-          ))}
         </div>
       </div>
 
-      {/* Overview Section */}
-      <div className={`anime-page-relations ${activeSection === 'relations' ? 'show' : 'hide'}`}>
-          <h2>Relations</h2>
-          <div className='anime-list'>
-              {relationsDetails.map((relation) => (
-                  <div key={relation.relationDetails?._id} className='anime-card'>
-                      <div className='img-container'>
-                          <img src={relation.relationDetails?.images.image} alt={relation.relationDetails?.titles.english || 'Unknown'} />
-                          <div className='title-progress'>
-                          <Link to={`/${relation.contentType}/${relation.relationDetails?._id}`}>
-                              {/* <div className='anime-title'>{relation.relationDetails?.titles.english}</div> */}
-                              <div className='anime-title'>{relation.typeofRelation}</div>
-                          </Link>
-                          </div>
-                      </div>
-                  </div>
-              ))}
+      <div className={mangaDetailsStyles.mangaContent}>
+        {activeTab === 'about' && (
+          <div className={mangaDetailsStyles.aboutContainer}>
+            <div className={mangaDetailsStyles.metadataGrid}>
+              {/* Metadata items */}
+            </div>
+            <div className={mangaDetailsStyles.descriptionSection}>
+              <p>{mangaDetails.description}</p>
+            </div>
           </div>
-      </div>
+        )}
 
-      {/* Characters Section */}
-      <div className={`anime-page-characters ${activeSection === 'characters' ? 'show' : 'hide'}`}>
-          <h2>Characters</h2>
-          <div className='anime-list'>
+        {activeTab === 'characters' && (
+          <div className={mangaDetailsStyles.charactersContainer}>
+            <div className={mangaDetailsStyles.charactersGrid}>
               {charactersDetails.map((character) => (
-                  <div key={character.characterDetails?._id} className='anime-card'>
-                      <div className='img-container'>
-                          <img src={character.characterDetails?.characterImage} alt={character.characterDetails?.names.givenName || 'Unknown'} />
-                          <div className='title-progress'>
-                              <Link to={`/characters/${character.characterDetails?._id}`}>
-                                  <div className='anime-title'>{character.characterDetails?.names.givenName} {character.characterDetails?.names.middleName} {character.characterDetails?.names.surName}</div>
-                                  <div className='anime-title'>{character.role}</div>
-                              </Link>
-                          </div>
-                      </div>
+                <Link 
+                  to={`/characters/${character.characterDetails._id}`} 
+                  key={character.characterDetails._id}
+                  className={mangaDetailsStyles.characterCard}
+                >
+                  <div className={mangaDetailsStyles.characterImageContainer}>
+                    <img 
+                      src={character.characterDetails.characterImage} 
+                      alt={character.characterDetails.names.givenName}
+                    />
+                    <div className={mangaDetailsStyles.characterRole}>
+                      {character.role}
+                    </div>
                   </div>
+                  <div className={mangaDetailsStyles.characterInfo}>
+                    <h4>{getFullName(character.characterDetails.names)}</h4>
+                  </div>
+                </Link>
               ))}
+            </div>
           </div>
+        )}
+
+        {activeTab === 'relations' && (
+          <div className={mangaDetailsStyles.relationsContainer}>
+            <div className={mangaDetailsStyles.relationsGrid}>
+              {relationsDetails.map((relation) => (
+                <Link 
+                  key={relation.relationDetails._id} 
+                  to={`/${relation.contentType}/${relation.relationDetails._id}`}
+                  className={mangaDetailsStyles.relationCard}
+                >
+                  <div className={mangaDetailsStyles.relationImageContainer}>
+                    <img 
+                      src={relation.relationDetails.images.image} 
+                      alt={relation.relationDetails.titles.english}
+                    />
+                    <div className={mangaDetailsStyles.relationType}>
+                      {relation.typeofRelation}
+                    </div>
+                  </div>
+                  <div className={mangaDetailsStyles.relationInfo}>
+                    <h4>{relation.relationDetails.titles.english}</h4>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+      {isMangaEditorOpen && (
+        <MangaEditor
+          manga={mangaDetails}
+          isOpen={isMangaEditorOpen}
+          onClose={handleModalClose}
+          userProgress={userProgress}
+          setUserProgress={setUserProgress}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,179 @@
+/*=============================================
+                Edit Modal css
+==============================================*/  
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(3px);
+}
+
+.modal {
+    position: relative;
+    background: #1a1d20;
+    width: min(90%, 500px);
+    height: auto;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.modalHeader {
+    position: relative;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalHeader h2 {
+    color: white;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modalClose {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modalClose:hover {
+    background: rgba(0, 0, 0, 0.5);
+    transform: scale(1.1);
+}
+
+.modalBody {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.grid label {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.grid input,
+.grid select,
+.grid textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-size: 0.9rem;
+}
+
+.grid input:focus,
+.grid select:focus,
+.grid textarea:focus {
+    outline: none;
+    border-color: #4a9eff;
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modalSaveBtn {
+    padding: 8px 20px;
+    background-color: #4a9eff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modalSaveBtn:hover {
+    background-color: #3d8be6;
+}
+
+.modalDeleteBtn {
+    padding: 8px 20px;
+    background-color: transparent;
+    color: #ff4d4d;
+    border: 1px solid #ff4d4d;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modalDeleteBtn:hover {
+    background-color: #ff4d4d;
+    color: white;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .modal {
+        width: 95%;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .modal {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .modalBody {
+        padding: 16px;
+    }
+
+    .modalHeader h2 {
+        font-size: 1.2rem;
+    }
+}

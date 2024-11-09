@@ -3,68 +3,108 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import data from '../Context/ContextApi'
 import { useNavigate } from 'react-router-dom'
+import loginStyles from '../styles/pages/Login.module.css'
 
 export const Login = () => {
     const [user, setUser] = useState({
         email: "",
         password: ""
     })
+    const [isLoading, setIsLoading] = useState(false)
     const {setUserData} = useContext(data)
     const navigate = useNavigate()
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setUser((preve) => {
-            return {
-                ...preve,
-                [name]: value
-            }
-        })
+        setUser(prev => ({
+            ...prev,
+            [name]: value
+        }))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        axios.post("http://localhost:8080/users/login", user, {
-            withCredentials: true,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-        .then((res) => {
-            alert(res.data.message);
+        
+        if (!user.email || !user.password) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const res = await axios.post("http://localhost:8080/users/login", user, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
             setUserData(res.data.user);
             
-            // Set cookie in frontend
             Cookies.set('userInfo', JSON.stringify(res.data.user), {
-                expires: 29,
+                expires: 1,
                 path: '/',
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax'
             });
             
             navigate("/");
-        })
-        .catch((error) => {
-            console.error("Login error:", error);
+        } catch (error) {
             alert(error.response?.data?.message || "Login failed");
-        });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // console.log(user)
-
     return (
-        <div className="login-wrapper">
-            <div className='container-home'>
+        <div className={loginStyles.loginWrapper}>
+            <div className={loginStyles.container}>
+                <h1 className={loginStyles.title}>Login</h1>
                 <form onSubmit={handleSubmit}>
-                    <label htmlFor='email'>Email Id</label>
-                    <input type="email" id="email" name='email' value={user.email} onChange={handleChange} autoComplete="email" />
+                    <div className={loginStyles.inputGroup}>
+                        <label htmlFor='email'>Email</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name='email' 
+                            value={user.email} 
+                            onChange={handleChange} 
+                            autoComplete="email"
+                            disabled={isLoading}
+                            placeholder="Enter your email"
+                        />
+                    </div>
 
-                    <label htmlFor="password">Password</label>
-                    <input type="password" id="password" name='password' value={user.password} onChange={handleChange} autoComplete="current-password" />
+                    <div className={loginStyles.inputGroup}>
+                        <label htmlFor="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name='password' 
+                            value={user.password} 
+                            onChange={handleChange} 
+                            autoComplete="current-password"
+                            disabled={isLoading}
+                            placeholder="Enter your password"
+                        />
+                    </div>
 
-                    <div className='btn-container'>
-                        <button className="btn" type='submit'>Login</button>
-                        <button className="btn" onClick={()=>navigate("/register")}>Register</button>
+                    <div className={loginStyles.btnContainer}>
+                        <button 
+                            className={loginStyles.btn} 
+                            type='submit'
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Logging in...' : 'Login'}
+                        </button>
+                        <button 
+                            className={`${loginStyles.btn} ${loginStyles.secondaryBtn}`} 
+                            onClick={() => navigate("/register")}
+                            type="button"
+                            disabled={isLoading}
+                        >
+                            Register
+                        </button>
                     </div>
                 </form>
             </div>
