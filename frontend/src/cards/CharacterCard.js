@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import styles from '../styles/components/cards.module.css';
+import cardsStyles from '../styles/components/cards.module.css';
 
 /**
  * Functional component representing a character card.
@@ -14,34 +14,32 @@ import styles from '../styles/components/cards.module.css';
  * @returns {JSX.Element} - Rendered character card component.
  */
 function CharacterCard({ character }) {
-    // State to track hover state
-    const [isHovered, setIsHovered] = useState(false);
+  // State to track hover state
+  const [isHovered, setIsHovered] = useState(false);
 
-    return (
-        <div
-            className={`${styles.characterCard} ${isHovered ? styles.hovered : ''}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <div className={styles.imgContainer}>
-                {/* Character image */}
-                <img src={character.characterImage} alt={character.names.givenName} />
-                <div className={styles.titleAndProgress}>
-                    {/* Link to character details page */}
-                    <Link to={`/characters/${character._id}`}>
-                        {/* Character name */}
-                        <div className={styles.animeTitle}>
-                            {character.names.givenName} {character.names.middleName} {character.names.surName}
-                        </div>
-                    </Link>
-                </div>
+  return (
+    <div
+      className={`${cardsStyles.characterCard} ${isHovered ? cardsStyles.hovered : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className={cardsStyles.imgContainer}>
+        {/* Character image */}
+        <img src={character.characterImage} alt={character.names.givenName} />
+        <div className={cardsStyles.titleAndProgress}>
+          {/* Link to character details page */}
+          <Link to={`/characters/${character._id}`}>
+            <div className={cardsStyles.animeTitle}>
+              {character.names.givenName} {character.names.middleName}{' '}
+              {character.names.surName}
             </div>
-            {/* Conditional rendering when hovered */}
-            {isHovered && (
-                <>Hello</>
-            )}
+          </Link>
         </div>
-    );
+      </div>
+      {/* Conditional rendering when hovered */}
+      {isHovered}
+    </div>
+  );
 }
 
 // Exporting the CharacterCard component as the default export

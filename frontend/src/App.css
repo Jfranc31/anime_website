@@ -1,7 +1,7 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: rgb(35, 38, 40);
+  background-color: var(--page-bg);
   min-height: 100vh;
 }
 
@@ -21,4 +21,3 @@ body {
     padding-right: 0.5rem;
   }
 }
-

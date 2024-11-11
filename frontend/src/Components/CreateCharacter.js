@@ -1,44 +1,44 @@
 // src/components/CreateCharacter.js
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import axios from 'axios';
 import createCharacterStyles from './CreateCharacter.module.css';
 
 export default function CreateCharacter({ onCharacterCreated, onClose }) {
-  const genders = ["Female", "Male", "Non-binary"];
+  const genders = ['Female', 'Male', 'Non-binary'];
   const [characterData, setCharacterData] = useState({
     names: {
-      givenName: "",
-      middleName: "",
-      surName: "",
-      alterNames: ""
+      givenName: '',
+      middleName: '',
+      surName: '',
+      alterNames: '',
     },
-    about: "",
-    gender: "",
-    age: "",
+    about: '',
+    gender: '',
+    age: '',
     DOB: {
-      year: "",
-      month: "",
-      day: ""
+      year: '',
+      month: '',
+      day: '',
     },
-    characterImage: "",
+    characterImage: '',
     animes: [],
-    mangas: []
+    mangas: [],
   });
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
 
     // Check if the changed field is part of the nested structure
-    if (name.startsWith("names.") || name.startsWith("DOB.")) {
-      const [mainField, subField] = name.split(".");
+    if (name.startsWith('names.') || name.startsWith('DOB.')) {
+      const [mainField, subField] = name.split('.');
 
       setCharacterData((prev) => ({
         ...prev,
         [mainField]: {
           ...prev[mainField],
-          [subField]: type === 'number' ? parseInt(value, 10) : value
-        }
+          [subField]: type === 'number' ? parseInt(value, 10) : value,
+        },
       }));
     } else {
       setCharacterData((prev) => ({
@@ -53,7 +53,10 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
 
     try {
       // Make API call to create character
-      const res = await axios.post('http://localhost:8080/characters/addcharacter', characterData);
+      const res = await axios.post(
+        'http://localhost:8080/characters/addcharacter',
+        characterData
+      );
 
       if (res.status === 201) {
         // Call the callback function passed from the parent component
@@ -61,22 +64,22 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
         // Clear the form after successful submission
         setCharacterData({
           names: {
-            givenName: "",
-            middleName: "",
-            surName: "",
-            alterNames: ""
+            givenName: '',
+            middleName: '',
+            surName: '',
+            alterNames: '',
           },
-          about: "",
-          gender: "",
-          age: "",
+          about: '',
+          gender: '',
+          age: '',
           DOB: {
-            year: "",
-            month: "",
-            day: ""
+            year: '',
+            month: '',
+            day: '',
           },
-          characterImage: "",
+          characterImage: '',
           animes: [],
-          mangas: []
+          mangas: [],
         });
         onClose();
       } else {
@@ -92,19 +95,27 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
   return (
     <div className={createCharacterStyles.modalOverlay}>
       <div className={createCharacterStyles.createCharacterContainer}>
-        <button 
-          className={createCharacterStyles.closeButton} 
+        <button
+          className={createCharacterStyles.closeButton}
           onClick={onClose}
           aria-label="Close"
         >
           ×
         </button>
-        <form className={createCharacterStyles.formContainer} onSubmit={handleSubmit}>
+        <form
+          className={createCharacterStyles.formContainer}
+          onSubmit={handleSubmit}
+        >
           <div className={createCharacterStyles.section}>
             <h3>Names</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="names.givenName">Given Name:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="names.givenName"
+                >
+                  Given Name:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -116,7 +127,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="names.middleName">Middle Name:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="names.middleName"
+                >
+                  Middle Name:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -127,7 +143,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="names.surName">Sur Name:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="names.surName"
+                >
+                  Sur Name:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -138,7 +159,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="names.alterNames">Alternative Name:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="names.alterNames"
+                >
+                  Alternative Name:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -153,25 +179,29 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
 
           <div className={createCharacterStyles.section}>
             <h3>About</h3>
-              <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="about">About:</label>
-                <textarea
-                  className={createCharacterStyles.textarea}
-                  id="about"
-                  name="about"
-                  value={characterData.about}
-                  onChange={handleChange}
-                  rows={4}
-                  cols={80}
-                />
-              </div>
+            <div className={createCharacterStyles.gridItem}>
+              <label className={createCharacterStyles.label} htmlFor="about">
+                About:
+              </label>
+              <textarea
+                className={createCharacterStyles.textarea}
+                id="about"
+                name="about"
+                value={characterData.about}
+                onChange={handleChange}
+                rows={4}
+                cols={80}
+              />
+            </div>
           </div>
 
           <div className={createCharacterStyles.section}>
             <h3>Gender and Age</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="gender">Gender:</label>
+                <label className={createCharacterStyles.label} htmlFor="gender">
+                  Gender:
+                </label>
                 <select
                   className={createCharacterStyles.select}
                   type="gender"
@@ -180,7 +210,9 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                   value={characterData.gender}
                   onChange={handleChange}
                 >
-                  <option value="" disabled>Select Gender</option>
+                  <option value="" disabled>
+                    Select Gender
+                  </option>
                   {genders.map((gender) => (
                     <option key={gender} value={gender}>
                       {gender}
@@ -189,7 +221,9 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 </select>
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="age">Age:</label>
+                <label className={createCharacterStyles.label} htmlFor="age">
+                  Age:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -206,7 +240,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
             <h3>Date of Birth</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="DOB.year">Year:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="DOB.year"
+                >
+                  Year:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -217,7 +256,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="DOB.month">Month:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="DOB.month"
+                >
+                  Month:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -228,7 +272,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="DOB.day">Day:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="DOB.day"
+                >
+                  Day:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -245,7 +294,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
             <h3>Image</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="characterImage">Character Image URL:</label>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="characterImage"
+                >
+                  Character Image URL:
+                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
@@ -256,7 +310,10 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 />
                 {characterData.characterImage && (
                   <div className={createCharacterStyles.imagePreview}>
-                    <img src={characterData.characterImage} alt="Character Preview" />
+                    <img
+                      src={characterData.characterImage}
+                      alt="Character Preview"
+                    />
                   </div>
                 )}
               </div>
@@ -264,11 +321,12 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
           </div>
 
           <div className={createCharacterStyles.buttonContainer}>
-            <button className={createCharacterStyles.button} type="submit">Create Character</button>
+            <button className={createCharacterStyles.button} type="submit">
+              Create Character
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
 }
-

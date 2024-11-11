@@ -6,7 +6,7 @@
   max-width: 1200px;
   margin: 0 auto;
   width: 85%;
-  background-color: rgb(35, 38, 40);
+  background-color: var(--page-bg);
 }
 
 .profileHeader {
@@ -14,378 +14,59 @@
   text-align: center;
 }
 
-.contentSelector {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 30px;
+.themeSelector {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--border-radius-md);
 }
 
-.tabBtn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.tabBtn.active {
-  background-color: #007bff;
-  color: white;
-}
-
-.listContainer {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 20px;
-  padding: 20px;
-  margin-left: 0;
-}
-
-.filterSidebar {
-  background: rgba(26, 28, 30, 0.8);
-  padding: 20px;
-  border-radius: 8px;
-  color: white;
-}
-
-.searchSection {
-  margin-bottom: 20px;
-}
-
-.searchInput {
-  width: 100%;
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-}
-
-.listSection,
-.filtersSection {
-  margin-bottom: 20px;
-}
-
-.filterGroup {
-  margin-bottom: 15px;
-}
-
-.filterGroup label {
+.themeSelector label {
   display: block;
-  margin-bottom: 5px;
-  color: #999;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
 }
 
-.filterGroup select {
-  width: 100%;
-  padding: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.themeButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin-right: var(--spacing-xs);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.themeButton.active {
+  background: var(--accent-color);
   color: white;
+  border-color: var(--accent-color);
 }
 
-.selectedGenres {
+.themeButtons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 10px;
+  gap: var(--spacing-xs);
 }
 
-.selectedGenre {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 4px 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.selectedGenre button {
-  background: none;
-  border: none;
-  color: #ff4444;
+.themeButton {
+  flex: 1;
+  padding: var(--spacing-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  padding: 0 2px;
+  transition: all var(--transition-speed);
 }
 
-.filterOptions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filterOptions button {
-  text-align: left;
-  padding: 8px;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+.themeButton.active {
+  background: var(--accent-color);
   color: white;
-  cursor: pointer;
+  border-color: var(--accent-color);
 }
 
-.filterOptions button.active {
-  background: #2196f3;
-  border-color: #2196f3;
-}
-
-.mainContent {
-  flex-grow: 1;
-  margin-left: 0;
-}
-
-/* Grid Layout - similar to Browse page */
-.gridLayout {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 20px;
-}
-
-.gridItem {
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
-}
-
-.gridItem .itemImage {
-  position: relative;
-  padding-top: 140%;
-  overflow: hidden;
-  border-radius: 8px;
-}
-
-.gridItem .itemImage img {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.gridItem .itemInfo {
-  padding: 8px 0;
-}
-
-/* List Layout - full width rows with image */
-.listLayout {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.listItem {
-  display: flex;
-  gap: 15px;
-  padding: 10px;
-  background: white;
-  border-radius: 8px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.listItem .itemImage {
-  width: 100px;
-  height: 140px;
-  flex-shrink: 0;
-}
-
-.listItem .itemImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-/* Compact Layout - text-only rows */
-.compactLayout {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.compactItem {
-  display: grid;
-  grid-template-columns: 2fr 100px 100px;
-  align-items: center;
-  padding: 8px 16px;
-  background: white;
-  border-radius: 4px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.itemInfo h3 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
-}
-
-.itemDetails {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.statusBadge {
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: #e3f2fd;
-  color: #1976d2;
-  font-size: 0.875rem;
-}
-
-.progress {
-  color: #666;
-  font-size: 0.875rem;
-}
-
-.layoutSelector {
-  display: flex;
-  gap: 8px;
-  margin: 20px;
-  justify-content: flex-end;
-}
-
-.layoutBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.2s ease;
-}
-
-.layoutBtn:hover {
-  background: #f5f5f5;
-}
-
-.layoutBtn.active {
-  background: #e3f2fd;
-  border-color: #2196f3;
-}
-
-.layoutIcon {
-  width: 20px;
-  height: 20px;
-  position: relative;
-}
-
-/* Grid Icon */
-.gridIcon {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-}
-
-.gridIcon div {
-  background: currentColor;
-  width: 8px;
-  height: 8px;
-}
-
-/* List Icon */
-.listIcon {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.listIcon .listSquare {
-  width: 8px;
-  height: 8px;
-  background: currentColor;
-}
-
-.listIcon .listLine {
-  width: 12px;
-  height: 2px;
-  background: currentColor;
-}
-
-/* Compact Icon */
-.compactIcon {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.compactIcon div {
-  width: 20px;
-  height: 2px;
-  background: currentColor;
-}
-.gridLayout {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 20px;
-}
-
-.listLayout {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px;
-}
-
-.compactLayout {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 20px;
-}
-
-.gridItem {
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.2s;
-}
-
-.listItem {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 10px;
-  background: white;
-  border-radius: 8px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.compactItem {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  align-items: center;
-  padding: 8px;
-  background: white;
-  border-radius: 4px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.statusGroup {
-  margin-bottom: 40px;
-}
-
-.statusHeader {
-  color: #fff;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.statusGroup:last-child {
-  margin-bottom: 0;
+.themeButton:hover:not(.active) {
+  background: var(--bg-tertiary);
 }
 /*============================================*/

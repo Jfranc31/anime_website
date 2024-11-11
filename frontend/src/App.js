@@ -8,7 +8,7 @@ import Animes from './pages/Animes';
 import Mangas from './pages/Mangas';
 import Characters from './pages/Characters';
 import AddSection from './pages/Add';
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import data from './Context/ContextApi';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -25,70 +25,119 @@ import { MangaProvider } from './Context/MangaContext';
 import { CharacterProvider } from './Context/CharacterContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ThemeProvider } from './Context/ThemeContext';
+import ThemeSwitcher from './Components/ThemeSwitcher';
+import './themes.module.css';
+import UserManagement from './Components/Admin/UserManagement';
 
 function App() {
   const [userData, setUserData] = useState({});
 
-    useEffect(() => {
-        // Configure axios defaults
-        axios.defaults.baseURL = 'http://localhost:8080';
-        axios.defaults.withCredentials = true;
-        axios.defaults.headers.common['Content-Type'] = 'application/json';
+  useEffect(() => {
+    // Configure axios defaults
+    axios.defaults.baseURL = 'http://localhost:8080';
+    axios.defaults.withCredentials = true;
+    axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-        // Check for existing cookie
-        const storedUserData = Cookies.get('userInfo');
-        if (storedUserData) {
-            try {
-                const parsedUserData = JSON.parse(storedUserData);
-                setUserData(parsedUserData);
-            } catch (error) {
-                console.error('Error parsing stored user data:', error);
-                Cookies.remove('userInfo');
-            }
-        }
-    }, []); // Remove userData from dependencies to prevent infinite loop
-  
+    // Check for existing cookie
+    const storedUserData = Cookies.get('userInfo');
+    if (storedUserData) {
+      try {
+        const parsedUserData = JSON.parse(storedUserData);
+        setUserData(parsedUserData);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        Cookies.remove('userInfo');
+      }
+    }
+  }, []); // Remove userData from dependencies to prevent infinite loop
+
   return (
-    <div className="App">
-      <Navbar />
-      <data.Provider value={{userData,setUserData}}>
-        <AnimeProvider>
-          <MangaProvider>
-            <CharacterProvider>
-              <Routes>
-                <Route path="/"
-                  element={userData && userData._id ? <Home /> : <Login/>}
-                />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path='/profile' element={userData && userData._id ? <Profile /> : <Login/>}/>
-                <Route path="/animes" element={<Animes />} />
-                <Route path="/mangas" element={<Mangas />} />
-                <Route path='/characters' element={<Characters />} />
-                <Route path="/add/*" element={userData && userData._id ? <AddSection /> : <Login />} />
-                <Route path='/anime/:id' element={userData && userData._id ? <AnimeDetails /> : <Animes/>}/>
-                <Route path='/anime/:id/update' element={<UpdateAnime />}/>
-                <Route path='/manga/:id' element={userData && userData._id ? <MangaDetails /> : <Mangas/>}/>
-                <Route path='/manga/:id/update' element={<UpdateManga />}/>
-                <Route path='/characters/:id' element={<CharacterDetails />}/>
-                <Route path='/characters/:id/update' element={<UpdateCharacter />}/>
-              </Routes>
-            </CharacterProvider>
-          </MangaProvider>
-        </AnimeProvider>
+    <Router>
+      <data.Provider value={{ userData, setUserData }}>
+        <ThemeProvider>
+          <div className="App">
+            <Navbar />
+            <AnimeProvider>
+              <MangaProvider>
+                <CharacterProvider>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/animes" element={<Animes />} />
+                    <Route path="/mangas" element={<Mangas />} />
+                    <Route path="/characters" element={<Characters />} />
+                    <Route path="/anime/:id" element={<AnimeDetails />} />
+                    <Route path="/manga/:id" element={<MangaDetails />} />
+                    <Route path="/characters/:id" element={<CharacterDetails />} />
+                    <Route
+                      path="/"
+                      element={userData && userData._id ? <Home /> : <Login />}
+                    />
+                    <Route
+                      path="/profile"
+                      element={userData && userData._id ? <Profile /> : <Login />}
+                    />
+                    <Route
+                      path="/add/*"
+                      element={userData && userData._id ? <AddSection /> : <Login />}
+                    />
+                    <Route
+                      path="/anime/:id"
+                      element={userData && userData._id ? <AnimeDetails /> : <Animes />}
+                    />
+                    <Route
+                      path="/manga/:id"
+                      element={userData && userData._id ? <MangaDetails /> : <Mangas />}
+                    />
+                    <Route
+                      path="/anime/:id/update"
+                      element={
+                        userData && userData._id && userData.role === 'admin' ? (
+                          <UpdateAnime />
+                        ) : (
+                          <Navigate to="/animes" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/manga/:id/update"
+                      element={
+                        userData && userData._id && userData.role === 'admin' ? (
+                          <UpdateManga />
+                        ) : (
+                          <Navigate to="/mangas" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/characters/:id/update"
+                      element={
+                        userData && userData._id && userData.role === 'admin' ? (
+                          <UpdateCharacter />
+                        ) : (
+                          <Navigate to="/characters" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/admin/users"
+                      element={
+                        userData && userData.role === 'admin' ? (
+                          <UserManagement />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                  </Routes>
+                </CharacterProvider>
+              </MangaProvider>
+            </AnimeProvider>
+          </div>
+        </ThemeProvider>
       </data.Provider>
-      <ToastContainer 
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-    </div>
+    </Router>
   );
 }
 

@@ -1,7 +1,7 @@
-/**  
+/**
  * src/Components/Details/CharacterDetails.js
  * Description: React component for rendering details of a character.
-*/
+ */
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -9,7 +9,7 @@ import characterDetailsStyles from '../../styles/pages/character_details.module.
 /**
  * Functional component representing details of a character.
  * @returns {JSX.Element} - Rendered character details component.
-*/
+ */
 const CharacterDetails = () => {
   const { id } = useParams();
   const [characterDetails, setCharacterDetails] = useState(null);
@@ -21,7 +21,9 @@ const CharacterDetails = () => {
   useEffect(() => {
     const fetchCharacterDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/characters/character/${id}`);
+        const response = await axios.get(
+          `http://localhost:8080/characters/character/${id}`
+        );
         setCharacterDetails(response.data);
       } catch (error) {
         console.error('Error fetching character details:', error);
@@ -37,41 +39,51 @@ const CharacterDetails = () => {
         const animeReferences = await Promise.all(
           (characterDetails?.animes || []).map(async (reference) => {
             try {
-              const response = await axios.get(`http://localhost:8080/animes/anime/${reference.animeId}`);
+              const response = await axios.get(
+                `http://localhost:8080/animes/anime/${reference.animeId}`
+              );
               return {
                 ...reference,
                 referenceDetails: response.data,
-                contentType: 'anime'
+                contentType: 'anime',
               };
             } catch (error) {
-              console.error(`Error fetching details for anime reference ${reference.animeId}:`, error);
+              console.error(
+                `Error fetching details for anime reference ${reference.animeId}:`,
+                error
+              );
               return reference;
             }
           })
         );
-  
+
         const mangaReferences = await Promise.all(
           (characterDetails?.mangas || []).map(async (reference) => {
             try {
-              const response = await axios.get(`http://localhost:8080/mangas/manga/${reference.mangaId}`);
+              const response = await axios.get(
+                `http://localhost:8080/mangas/manga/${reference.mangaId}`
+              );
               return {
                 ...reference,
                 referenceDetails: response.data,
-                contentType: 'manga'
+                contentType: 'manga',
               };
             } catch (error) {
-              console.error(`Error fetching details for manga reference ${reference.mangaId}:`, error);
+              console.error(
+                `Error fetching details for manga reference ${reference.mangaId}:`,
+                error
+              );
               return reference;
             }
           })
         );
-  
+
         setReferencesDetails([...animeReferences, ...mangaReferences]);
       } catch (error) {
         console.error('Error fetching references details:', error);
       }
     };
-  
+
     if (characterDetails) {
       fetchReferenceDetails();
     }
@@ -88,14 +100,24 @@ const CharacterDetails = () => {
 
   const formatDOB = (dob) => {
     if (!dob) return null;
-    
+
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
 
     let dateString = '';
-    
+
     if (dob.month && dob.day) {
       const monthName = months[parseInt(dob.month) - 1];
       dateString = `${monthName} ${dob.day}`;
@@ -103,7 +125,7 @@ const CharacterDetails = () => {
         dateString += `, ${dob.year}`;
       }
     }
-    
+
     return dateString || null;
   };
 
@@ -113,13 +135,13 @@ const CharacterDetails = () => {
     let currentParagraph = '';
 
     const lines = description.split('\n');
-    
-    lines.forEach(line => {
+
+    lines.forEach((line) => {
       const metadataMatch = line.match(/^__(.+?):__ (.+)$/);
       if (metadataMatch) {
         metadata.push({
           label: metadataMatch[1],
-          value: metadataMatch[2]
+          value: metadataMatch[2],
         });
       } else if (line.trim()) {
         currentParagraph += line + ' ';
@@ -136,21 +158,20 @@ const CharacterDetails = () => {
     return { metadata, paragraphs };
   };
 
-  
-
   const toggleSpoiler = (index) => {
-    setRevealedSpoilers(prev => ({
+    setRevealedSpoilers((prev) => ({
       ...prev,
-      [index]: !prev[index]
+      [index]: !prev[index],
     }));
   };
 
   const renderSpoilerText = (text, index) => {
     const parts = text.split(/~!(.+?)!~/g);
     return parts.map((part, i) => {
-      if (i % 2 === 1) { // This is spoiler content
+      if (i % 2 === 1) {
+        // This is spoiler content
         return (
-          <span 
+          <span
             key={i}
             className={`${characterDetailsStyles.spoilerText} ${revealedSpoilers[`${index}-${i}`] ? characterDetailsStyles.revealed : ''}`}
             onClick={() => toggleSpoiler(`${index}-${i}`)}
@@ -171,43 +192,57 @@ const CharacterDetails = () => {
   };
 
   const renderAboutSection = () => {
-    const { metadata, paragraphs } = parseDescription(characterDetails.about || '');
+    const { metadata, paragraphs } = parseDescription(
+      characterDetails.about || ''
+    );
 
     return (
-      <div className={"character-about"}>
+      <div className={'character-about'}>
         <div className={characterDetailsStyles.characterMetadata}>
           {characterDetails.age && (
             <div className={characterDetailsStyles.metadataItem}>
               <span className={characterDetailsStyles.metadataLabel}>Age</span>
-              <span className={characterDetailsStyles.metadataValue}>: {characterDetails.age}</span>
+              <span className={characterDetailsStyles.metadataValue}>
+                : {characterDetails.age}
+              </span>
             </div>
           )}
           {characterDetails.gender && (
             <div className={characterDetailsStyles.metadataItem}>
-              <span className={characterDetailsStyles.metadataLabel}>Gender</span>
-              <span className={characterDetailsStyles.metadataValue}>: {characterDetails.gender}</span>
+              <span className={characterDetailsStyles.metadataLabel}>
+                Gender
+              </span>
+              <span className={characterDetailsStyles.metadataValue}>
+                : {characterDetails.gender}
+              </span>
             </div>
           )}
           {characterDetails.DOB && formatDOB(characterDetails.DOB) && (
             <div className={characterDetailsStyles.metadataItem}>
-              <span className={characterDetailsStyles.metadataLabel}>Date of Birth</span>
-              <span className={characterDetailsStyles.metadataValue}>: {formatDOB(characterDetails.DOB)}</span>
+              <span className={characterDetailsStyles.metadataLabel}>
+                Date of Birth
+              </span>
+              <span className={characterDetailsStyles.metadataValue}>
+                : {formatDOB(characterDetails.DOB)}
+              </span>
             </div>
           )}
-          
+
           {metadata.map((item, index) => (
             <div key={index} className={characterDetailsStyles.metadataItem}>
-              <span className={characterDetailsStyles.metadataLabel}>{item.label}</span>
-              <span className={characterDetailsStyles.metadataValue}>: {renderMetadataValue(item.value, index)}</span>
+              <span className={characterDetailsStyles.metadataLabel}>
+                {item.label}
+              </span>
+              <span className={characterDetailsStyles.metadataValue}>
+                : {renderMetadataValue(item.value, index)}
+              </span>
             </div>
           ))}
         </div>
 
         <div className="character-description">
           {paragraphs.map((paragraph, index) => (
-            <p key={index}>
-              {renderSpoilerText(paragraph, `p-${index}`)}
-            </p>
+            <p key={index}>{renderSpoilerText(paragraph, `p-${index}`)}</p>
           ))}
         </div>
       </div>
@@ -217,13 +252,13 @@ const CharacterDetails = () => {
   const renderAppearancesSection = () => (
     <div className={characterDetailsStyles.characterAppearances}>
       <div className={characterDetailsStyles.appearanceTabs}>
-        <button 
+        <button
           className={`${characterDetailsStyles.appearanceTab} ${activeAppearanceType === 'anime' ? characterDetailsStyles.active : ''}`}
           onClick={() => setActiveAppearanceType('anime')}
         >
           Anime
         </button>
-        <button 
+        <button
           className={`${characterDetailsStyles.appearanceTab} ${activeAppearanceType === 'manga' ? characterDetailsStyles.active : ''}`}
           onClick={() => setActiveAppearanceType('manga')}
         >
@@ -233,16 +268,16 @@ const CharacterDetails = () => {
 
       <div className={characterDetailsStyles.referencesGrid}>
         {referencesDetails
-          .filter(ref => ref.contentType === activeAppearanceType)
+          .filter((ref) => ref.contentType === activeAppearanceType)
           .map((reference) => (
-            <Link 
-              key={reference.referenceDetails?._id} 
+            <Link
+              key={reference.referenceDetails?._id}
               to={`/${activeAppearanceType}/${reference.referenceDetails?._id}`}
               className={characterDetailsStyles.referenceCard}
             >
               <div className={characterDetailsStyles.referenceImageContainer}>
-                <img 
-                  src={reference.referenceDetails?.images.image} 
+                <img
+                  src={reference.referenceDetails?.images.image}
                   alt={reference.referenceDetails?.titles.english}
                 />
                 <div className={characterDetailsStyles.referenceRole}>
@@ -262,13 +297,13 @@ const CharacterDetails = () => {
     <div className={characterDetailsStyles.characterDetailsPage}>
       <div className={characterDetailsStyles.characterHeader}>
         <div className={characterDetailsStyles.characterImageSection}>
-          <img 
-            src={characterDetails.characterImage} 
-            alt={characterDetails.names.givenName} 
+          <img
+            src={characterDetails.characterImage}
+            alt={characterDetails.names.givenName}
             className={characterDetailsStyles.characterMainImage}
           />
-          <Link 
-            to={`/characters/${characterDetails._id}/update`} 
+          <Link
+            to={`/characters/${characterDetails._id}/update`}
             className={characterDetailsStyles.editCharacterLink}
           >
             <button className={characterDetailsStyles.editCharacterButton}>
@@ -278,21 +313,23 @@ const CharacterDetails = () => {
         </div>
         <div className={characterDetailsStyles.characterInfoSection}>
           <h1 className={characterDetailsStyles.characterName}>
-            {characterDetails.names.givenName} {characterDetails.names.middleName} {characterDetails.names.surName}
+            {characterDetails.names.givenName}{' '}
+            {characterDetails.names.middleName} {characterDetails.names.surName}
           </h1>
           {characterDetails.names.alterNames && (
             <div className={characterDetailsStyles.characterAltNames}>
-              <span>Alternative Names:</span> {characterDetails.names.alterNames}
+              <span>Alternative Names:</span>{' '}
+              {characterDetails.names.alterNames}
             </div>
           )}
           <div className={characterDetailsStyles.characterTabs}>
-            <button 
+            <button
               className={`${characterDetailsStyles.tabButton} ${activeTab === 'about' ? characterDetailsStyles.active : ''}`}
               onClick={() => setActiveTab('about')}
             >
               About
             </button>
-            <button 
+            <button
               className={`${characterDetailsStyles.tabButton} ${activeTab === 'appearances' ? characterDetailsStyles.active : ''}`}
               onClick={() => setActiveTab('appearances')}
             >
@@ -303,7 +340,9 @@ const CharacterDetails = () => {
       </div>
 
       <div className={characterDetailsStyles.characterContent}>
-        {activeTab === 'about' ? renderAboutSection() : renderAppearancesSection()}
+        {activeTab === 'about'
+          ? renderAboutSection()
+          : renderAppearancesSection()}
       </div>
     </div>
   );

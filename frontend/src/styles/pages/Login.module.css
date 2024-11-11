@@ -6,22 +6,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #1a1a1a;
+  background-color: var(--page-bg);
   padding: 20px;
 }
 .container {
   width: 100%;
   max-width: 400px;
   padding: 2rem;
-  background-color: #2a2a2a;
+  background-color: var(--container-bg);
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-.containerHome{
+.containerHome {
   text-align: center;
 }
 .title {
-  color: #ffffff;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 2rem;
   font-size: 1.75rem;
@@ -33,24 +33,24 @@
 .inputGroup label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 0.875rem;
 }
 .inputGroup input {
   width: 100%;
   padding: 0.75rem;
-  background-color: #3a3a3a;
-  border: 1px solid #4a4a4a;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1rem;
 }
 .inputGroup input:focus {
   outline: none;
-  border-color: #646cff;
+  border-color: var(--accent-color);
 }
 .inputGroup input::placeholder {
-  color: #888888;
+  color: var(--text-secondary);
 }
 .btnContainer {
   display: flex;
@@ -69,19 +69,19 @@
   transition: background-color 0.2s;
 }
 .btn:first-child {
-  background-color: #646cff;
-  color: #ffffff;
+  background-color: var(--accent-color);
+  color: var(--text-primary);
 }
 .btn:first-child:hover {
-  background-color: #565bdd;
+  background-color: var(--accent-hover);
 }
 .secondaryBtn {
   background-color: transparent;
-  border: 1px solid #646cff;
-  color: #646cff;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
 }
 .secondaryBtn:hover {
-  background-color: rgba(100, 108, 255, 0.1);
+  background-color: var(--accent-hover);
 }
 .btn:disabled {
   opacity: 0.7;
@@ -92,15 +92,15 @@
   .container {
     padding: 1.5rem;
   }
-  
+
   .title {
     font-size: 1.5rem;
   }
-  
+
   .inputGroup input {
     padding: 0.625rem;
   }
-  
+
   .btn {
     padding: 0.625rem;
   }

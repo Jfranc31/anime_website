@@ -22,5 +22,14 @@
         "searchcharacters",
         "searchrelations",
         "Shoujo"
-    ]
+    ],
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "css.validate": true,
+    "css.lint.validProperties": [],
+    "editor.rulers": [],
+    "workbench.colorCustomizations": {
+        "editorRuler.foreground": "#ff000000"
+    }
 }

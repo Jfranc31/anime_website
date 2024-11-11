@@ -3,10 +3,13 @@
  * Description: Defines the routes related to user in the Express application.
  */
 
-import express from 'express';
-import userController from '../controllers/userController.js';
+import express from "express";
+import userController from "../controllers/userController.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+router.get('/', authMiddleware, userController.getAllUsers);
 
 router.post("/register", userController.registerUser);
 
@@ -25,5 +28,9 @@ router.get("/:userId/current", userController.getUserInfo);
 router.post("/:userId/removeAnime", userController.removeAnime);
 
 router.post("/:userId/removeManga", userController.removeManga);
+
+router.put("/:userId/make-admin", authMiddleware, userController.makeAdmin);
+
+router.put("/:userId/theme", authMiddleware, userController.updateTheme);
 
 export default router;

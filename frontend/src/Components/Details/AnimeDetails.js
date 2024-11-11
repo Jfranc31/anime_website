@@ -1,7 +1,7 @@
 /**
  * src/Components/Details/AnimeDetails.js
  * Description: React component for rendering details of an anime.
-*/
+ */
 
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -12,13 +12,14 @@ import AnimeEditor from '../ListEditors/AnimeEditor';
 import AnimeCard from '../../cards/AnimeCard';
 import CharacterCard from '../../cards/CharacterCard';
 import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
+import modalStyles from '../../styles/components/Modal.module.css';
 /**
  * Functional component representing details of an anime.
  * @returns {JSX.Element} - Rendered anime details component.
-*/
+ */
 const AnimeDetails = () => {
   const { id } = useParams();
-  const {userData,setUserData} = useContext(data)
+  const { userData, setUserData } = useContext(data);
   const [animeDetails, setAnimeDetails] = useState(null);
   const [isAnimeAdded, setIsAnimeAdded] = useState(null);
   const [charactersDetails, setCharactersDetails] = useState([]);
@@ -44,27 +45,34 @@ const AnimeDetails = () => {
     const fetchAnimeDetails = async () => {
       try {
         // Fetch anime details
-        const animeResponse = await axios.get(`http://localhost:8080/animes/anime/${id}`);
-
-        // Fetch user details (assuming authentication token is stored in context)
-        const userResponse = await axios.get(`http://localhost:8080/users/${userData._id}/current`);
-
-        const currentUser = userResponse.data;
-
-        // Check if the anime is on the user's list
-        const isAnimeAdded = currentUser?.animes?.some((anime) => anime.animeId === id);
-        const existingAnimeIndex = currentUser?.animes?.findIndex(anime => anime.animeId.toString() === id.toString());
-
-        // Update component state or context based on fetched data
+        const animeResponse = await axios.get(
+          `http://localhost:8080/animes/anime/${id}`
+        );
         setAnimeDetails(animeResponse.data);
-        setIsAnimeAdded(isAnimeAdded);
 
-        // Set initial userProgress when animeDetails is not null
-        if (currentUser) {
-          setUserProgress({
-            status: currentUser.animes[existingAnimeIndex].status,
-            currentEpisode: currentUser.animes[existingAnimeIndex].currentEpisode,
-          });
+        // Only fetch user details if user is logged in
+        if (userData?._id) {
+          const userResponse = await axios.get(
+            `http://localhost:8080/users/${userData._id}/current`
+          );
+          const currentUser = userResponse.data;
+
+          const isAnimeAdded = currentUser?.animes?.some(
+            (anime) => anime.animeId === id
+          );
+          const existingAnimeIndex = currentUser?.animes?.findIndex(
+            (anime) => anime.animeId.toString() === id.toString()
+          );
+
+          setIsAnimeAdded(isAnimeAdded);
+
+          if (currentUser && existingAnimeIndex !== -1) {
+            setUserProgress({
+              status: currentUser.animes[existingAnimeIndex].status,
+              currentEpisode:
+                currentUser.animes[existingAnimeIndex].currentEpisode,
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching anime details:', error);
@@ -72,20 +80,25 @@ const AnimeDetails = () => {
     };
 
     fetchAnimeDetails();
-  }, [id, setUserData, userData._id, setIsAnimeAdded]); // Add other dependencies as needed
+  }, [id, userData?._id]);
 
   useEffect(() => {
     const fetchCharacterDetails = async () => {
       const charactersWithDetails = await Promise.all(
         animeDetails?.characters.map(async (character) => {
           try {
-            const response = await axios.get(`http://localhost:8080/characters/character/${character.characterId}`);
+            const response = await axios.get(
+              `http://localhost:8080/characters/character/${character.characterId}`
+            );
             return {
               ...character,
-              characterDetails: response.data
+              characterDetails: response.data,
             };
           } catch (error) {
-            console.error(`Error fetching details for character ${character.character}:`, error);
+            console.error(
+              `Error fetching details for character ${character.character}:`,
+              error
+            );
             return character; // Return the character without details in case of an error
           }
         }) || []
@@ -105,37 +118,49 @@ const AnimeDetails = () => {
         const relationsWithDetails = await Promise.all([
           ...(animeDetails?.mangaRelations?.map(async (relation) => {
             try {
-              const response = await axios.get(`http://localhost:8080/mangas/manga/${relation.relationId}`);
+              const response = await axios.get(
+                `http://localhost:8080/mangas/manga/${relation.relationId}`
+              );
               return {
                 ...relation,
                 relationDetails: response.data,
-                contentType: 'mangas'
+                contentType: 'manga',
               };
             } catch (error) {
-              console.error(`Error fetching details for manga relation ${relation.relationId}:`, error);
-              return null;  // Return null instead of relation
+              console.error(
+                `Error fetching details for manga relation ${relation.relationId}:`,
+                error
+              );
+              return null; // Return null instead of relation
             }
           }) || []),
           ...(animeDetails?.animeRelations?.map(async (relation) => {
             try {
-              const response = await axios.get(`http://localhost:8080/animes/anime/${relation.relationId}`);
+              const response = await axios.get(
+                `http://localhost:8080/animes/anime/${relation.relationId}`
+              );
               return {
                 ...relation,
                 relationDetails: response.data,
-                contentType: 'animes'
+                contentType: 'anime',
               };
             } catch (error) {
-              console.error(`Error fetching details for anime relation ${relation.relationId}:`, error);
-              return null;  // Return null instead of relation
+              console.error(
+                `Error fetching details for anime relation ${relation.relationId}:`,
+                error
+              );
+              return null; // Return null instead of relation
             }
           }) || []),
         ]);
-        
+
         // Filter out null values before setting state
-        setRelationsDetails(relationsWithDetails.filter(relation => relation !== null));
+        setRelationsDetails(
+          relationsWithDetails.filter((relation) => relation !== null)
+        );
       } catch (error) {
         console.error('Error fetching relation details:', error);
-        setRelationsDetails([]);  // Set empty array on error
+        setRelationsDetails([]); // Set empty array on error
       }
     };
 
@@ -143,6 +168,15 @@ const AnimeDetails = () => {
       fetchRelationDetails();
     }
   }, [animeDetails]);
+
+  useEffect(() => {
+    if (userData?._id && animeDetails?._id) {
+      const isAdded = userData.animes?.some(
+        (anime) => anime.animeId === animeDetails._id
+      );
+      setIsAnimeAdded(isAdded);
+    }
+  }, [userData, animeDetails]);
 
   if (!animeDetails) {
     return <div>Loading...</div>;
@@ -152,7 +186,9 @@ const AnimeDetails = () => {
     // Implement logic to update the user's anime list after deletion
     setUserData((prevUserData) => {
       const updatedUser = { ...prevUserData };
-      const updatedAnimes = updatedUser.animes.filter((anime) => anime.animeId !== animeId);
+      const updatedAnimes = updatedUser.animes.filter(
+        (anime) => anime.animeId !== animeId
+      );
       updatedUser.animes = updatedAnimes;
       return updatedUser;
     });
@@ -166,26 +202,42 @@ const AnimeDetails = () => {
     setIsAnimeEditorOpen(true);
   };
 
-  console.log("CH: ", isAnimeAdded, userProgress, animeDetails);
+  console.log(
+    'CH: ',
+    isAnimeAdded,
+    userProgress,
+    animeDetails,
+    relationsDetails
+  );
 
   // Add this helper function to format the date
   const formatDate = (dateObj) => {
     if (!dateObj) return 'TBA';
     const { year, month, day } = dateObj;
     if (!year && !month && !day) return 'TBA';
-    
+
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
-    
+
     // If we have a month, subtract 1 as array is 0-based
     const monthName = month ? months[month - 1] : '';
     const formattedDay = day ? day : '';
-    
+
     if (!monthName && !formattedDay) return year || 'TBA';
     if (!formattedDay) return `${monthName} ${year || 'TBA'}`;
-    
+
     return `${monthName} ${formattedDay}, ${year || 'TBA'}`;
   };
 
@@ -198,7 +250,8 @@ const AnimeDetails = () => {
   };
 
   const determineSeason = (startDate) => {
-    if (!startDate || !startDate.month) return { season: 'TBA', year: startDate?.year || 'TBA' };
+    if (!startDate || !startDate.month)
+      return { season: 'TBA', year: startDate?.year || 'TBA' };
 
     const month = startDate.month;
     let season;
@@ -208,55 +261,102 @@ const AnimeDetails = () => {
     else if (month >= 9 && month <= 11) season = 'Fall';
     else season = 'Winter';
 
-    return { 
-      season, 
-      year: startDate.year || 'TBA' 
+    return {
+      season,
+      year: startDate.year || 'TBA',
     };
   };
 
   const { season, year } = determineSeason(animeDetails.releaseData.startDate);
 
+  // Add this function to handle updates
+  const handleAnimeUpdate = async (updatedProgress) => {
+    try {
+      await axios.put(`http://localhost:8080/users/${userData._id}/animes/${id}`, {
+        status: updatedProgress.status,
+        currentEpisode: updatedProgress.currentEpisode,
+      });
+
+      setUserProgress(updatedProgress);
+      setUserData((prevUserData) => {
+        const updatedUser = { ...prevUserData };
+        const animeIndex = updatedUser.animes.findIndex(
+          (anime) => anime.animeId === id
+        );
+        
+        if (animeIndex !== -1) {
+          updatedUser.animes[animeIndex] = {
+            ...updatedUser.animes[animeIndex],
+            ...updatedProgress,
+          };
+        }
+        
+        return updatedUser;
+      });
+
+      setIsAnimeEditorOpen(false);
+    } catch (error) {
+      console.error('Error updating anime:', error);
+    }
+  };
+
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
       <div className={animeDetailsStyles.animeHeader}>
         <div className={animeDetailsStyles.bannerSection}>
-          <img 
-            src={animeDetails.images.border || animeDetails.images.image} 
-            alt={animeDetails.titles.english} 
+          <img
+            src={animeDetails.images.border || animeDetails.images.image}
+            alt={animeDetails.titles.english}
             className={animeDetailsStyles.bannerImage}
           />
           <div className={animeDetailsStyles.bannerOverlay} />
         </div>
-        
-        <div className={animeDetailsStyles.animeMainContent}>
-          <div className={animeDetailsStyles.animePoster}>
-            <img 
-              src={animeDetails.images.image} 
-              alt={animeDetails.titles.english} 
+
+        <div className={animeDetailsStyles.contentWrapper}>
+          <div className={animeDetailsStyles.posterContainer}>
+            <img
+              src={animeDetails.images.image}
+              alt={animeDetails.titles.english}
             />
-            {userData.role === "admin" && (
-              <Link to={`/anime/${animeDetails._id}/update`} className={animeDetailsStyles.editAnimeLink}>
+            <div className={animeDetailsStyles.actionButtons}>
+              {isAnimeAdded ? (
+                  <button onClick={openEditor} className={animeDetailsStyles.editButton}>
+                    Edit Progress
+                  </button>
+              ) : (
+                <button onClick={openEditor} className={animeDetailsStyles.addButton}>
+                  Add to List
+                </button>
+              )}
+            </div>
+            {userData.role === 'admin' && (
+              <Link
+                to={`/anime/${animeDetails._id}/update`}
+                className={animeDetailsStyles.editAnimeLink}
+              >
                 <button className={animeDetailsStyles.editAnimeButton}>
                   Edit Anime
                 </button>
               </Link>
             )}
           </div>
-          
+
           <div className={animeDetailsStyles.animeInfo}>
-            <h1 className={animeDetailsStyles.animeTitle}>{animeDetails.titles.english}</h1>
+            <h1 className={animeDetailsStyles.animeTitle}>
+              {animeDetails.titles.english}
+            </h1>
             {animeDetails.titles.native && (
               <div className={animeDetailsStyles.nativeTitle}>
                 {animeDetails.titles.native}
               </div>
             )}
-            
+
             <div className={animeDetailsStyles.quickInfo}>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>Status:</span> {animeDetails.releaseData.releaseStatus}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Format:</span> {animeDetails.format}
+                <span>Format:</span> {animeDetails.typings.Format}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>Episodes:</span> {animeDetails.lengths.Episodes}
@@ -268,27 +368,29 @@ const AnimeDetails = () => {
                 <span>Season:</span> {season} {year}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Start Date:</span> {formatDate(animeDetails.releaseData.startDate)}
+                <span>Start Date:</span>{' '}
+                {formatDate(animeDetails.releaseData.startDate)}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>End Date:</span> {formatDate(animeDetails.releaseData.endDate)}
+                <span>End Date:</span>{' '}
+                {formatDate(animeDetails.releaseData.endDate)}
               </div>
             </div>
 
             <div className={animeDetailsStyles.animeTabs}>
-              <button 
+              <button
                 className={`${animeDetailsStyles.tabButton} ${activeTab === 'about' ? animeDetailsStyles.active : ''}`}
                 onClick={() => setActiveTab('about')}
               >
                 About
               </button>
-              <button 
+              <button
                 className={`${animeDetailsStyles.tabButton} ${activeTab === 'characters' ? animeDetailsStyles.active : ''}`}
                 onClick={() => setActiveTab('characters')}
               >
                 Characters
               </button>
-              <button 
+              <button
                 className={`${animeDetailsStyles.tabButton} ${activeTab === 'relations' ? animeDetailsStyles.active : ''}`}
                 onClick={() => setActiveTab('relations')}
               >
@@ -298,7 +400,7 @@ const AnimeDetails = () => {
           </div>
         </div>
       </div>
-      
+
       <div className={animeDetailsStyles.animeContent}>
         {activeTab === 'about' && (
           <div className={animeDetailsStyles.aboutContainer}>
@@ -315,14 +417,14 @@ const AnimeDetails = () => {
           <div className={animeDetailsStyles.charactersContainer}>
             <div className={animeDetailsStyles.charactersGrid}>
               {charactersDetails.map((character) => (
-                <Link 
-                  to={`/characters/${character.characterDetails._id}`} 
+                <Link
+                  to={`/characters/${character.characterDetails._id}`}
                   key={character.characterDetails._id}
                   className={animeDetailsStyles.characterCard}
                 >
                   <div className={animeDetailsStyles.characterImageContainer}>
-                    <img 
-                      src={character.characterDetails.characterImage} 
+                    <img
+                      src={character.characterDetails.characterImage}
                       alt={character.characterDetails.names.givenName}
                     />
                     <div className={animeDetailsStyles.characterRole}>
@@ -342,14 +444,14 @@ const AnimeDetails = () => {
           <div className={animeDetailsStyles.relationsContainer}>
             <div className={animeDetailsStyles.relationsGrid}>
               {relationsDetails.map((relation) => (
-                <Link 
-                  key={relation.relationDetails._id} 
+                <Link
+                  key={relation.relationDetails._id}
                   to={`/${relation.contentType}/${relation.relationDetails._id}`}
                   className={animeDetailsStyles.relationCard}
                 >
                   <div className={animeDetailsStyles.relationImageContainer}>
-                    <img 
-                      src={relation.relationDetails.images.image} 
+                    <img
+                      src={relation.relationDetails.images.image}
                       alt={relation.relationDetails.titles.english}
                     />
                     <div className={animeDetailsStyles.relationType}>
@@ -365,6 +467,23 @@ const AnimeDetails = () => {
           </div>
         )}
       </div>
+
+      {isAnimeEditorOpen && userProgress && (
+        <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
+          <div
+            className={modalStyles.characterModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AnimeEditor
+              anime={animeDetails}
+              userId={userData._id}
+              closeModal={handleModalClose}
+              onAnimeDelete={onAnimeDelete}
+              setUserData={setUserData}
+            />
+          </div>
+        </div>
+)}
     </div>
   );
 };

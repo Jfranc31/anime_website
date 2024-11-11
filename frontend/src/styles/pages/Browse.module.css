@@ -2,202 +2,203 @@
                 Browse css
 ==============================================*/
 .browseContainer {
-    position: relative;
-    display: grid;
-    grid-template:
-      'filter anime-list'
-      / 250px 1fr;
-    grid-gap: 30px;
-    margin-top: 20px;
-    width: 95%;
-    padding: 2%;
-    background-color: rgb(35, 38, 40);
-  }
-  .animeList,
-  .mangaList,
-  .characterList {
-    grid-area: anime-list;
-    display: grid;
-    gap: 35px;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    list-style: none;
-    justify-content: center;
-    padding: 0;
-    margin-right: 0;
-  }
-    .genreFilters {
-      margin-top: 10px;
-    }
-    .filterContainer {
-      position: sticky;
-      top: 20px;
-      height: fit-content;
-      padding: 20px;
-      background-color: rgba(42, 45, 47, 0.7);
-      border-radius: 8px;
-      backdrop-filter: blur(5px);
-    }
-    .searchContainer {
-      margin-bottom: 10px; /* Adjust the margin as needed */
-    }
-    .genreFilters {
-      display: flex;
-      flex-direction: column;
-    }
-    .genreFilters label {
-      margin-bottom: 5px; /* Adjust the margin as needed */
-    }
-    .genreFilterContainer {
-      display: flex;
-      flex-direction: column;
-    }
-    .selectedGenres {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 15px;
-    }
-    .selectedGenre {
-      background: rgba(53, 56, 58, 0.8);
-      color: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .selectedGenre button {
-      margin-left: 5px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: red;
-    }
-    .animeListContainer .animeList {
-      margin-left: 20px; /* Adjust as needed */
-    }
-  /*============================================*/
+  position: relative;
+  display: grid;
+  grid-template:
+    'filter anime-list'
+    / 250px 1fr;
+  grid-gap: 30px;
+  margin-top: 20px;
+  width: 95%;
+  padding: 2%;
+  background-color: var(--page-bg);
+}
+.animeList,
+.mangaList,
+.characterList {
+  grid-area: anime-list;
+  display: grid;
+  gap: 35px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  list-style: none;
+  justify-content: center;
+  padding: 0;
+  margin-right: 0;
+}
+.filterContainer {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+  padding: 20px;
+  background-color: var(--filter-bg);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+}
+.searchContainer {
+  margin-bottom: 10px; /* Adjust the margin as needed */
+}
+.genreFilters {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.genreFilters label {
+  margin-bottom: 5px; /* Adjust the margin as needed */
+}
+.genreFilterContainer {
+  display: flex;
+  flex-direction: column;
+}
+.genreFilterContainer select {
+  color: var(--filter-text);
+  background-color: var(--filter-background);
+}
+.selectedGenres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+}
+.selectedGenre {
+  background: var(--filter-background);
+  color: var(--filter-text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.selectedGenre button {
+  margin-left: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--danger-color);
+}
+.animeListContainer .animeList {
+  margin-left: 20px; /* Adjust as needed */
+}
+/*============================================*/
 
 .searchInput {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #444;
-    border-radius: 8px;
-    background-color: #2a2d2f;
-    color: white;
-    margin-bottom: 20px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--filter-background);
+  color: var(--filter-text);
+  margin-bottom: 20px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
 }
 
 .searchInput:focus {
-    border-color: #3498db;
-    outline: none;
+  border-color: var(--accent-color);
+  outline: none;
 }
 
 .genreSelect {
-    width: 100%;
-    padding: 12px;
-    background-color: #2a2d2f;
-    color: white;
-    border: 1px solid #444;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: border-color 0.2s;
+  width: 100%;
+  padding: 12px;
+  background-color: var(--filter-background);
+  color: var(--filter-text);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: border-color 0.2s;
 }
 
 .genreSelect:focus {
-    border-color: #3498db;
-    outline: none;
+  border-color: var(--accent-color);
+  outline: none;
 }
 
 .loadingContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
 }
 
 .loader {
-    border: 3px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 3px solid #3498db;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
+  border: 3px solid var(--border-color);
+  border-radius: 50%;
+  border-top: 3px solid var(--accent-color);
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .noResults {
-    text-align: center;
-    padding: 20px;
-    color: #888;
-}
-
-.animeListSection h2 {
-    margin-bottom: 20px;
-    color: #fff;
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
 }
 
 .removeGenreBtn {
-    font-size: 18px;
-    padding: 0 5px;
-    background: none;
-    border: none;
-    color: #ff4444;
-    cursor: pointer;
-    transition: color 0.2s;
+  font-size: 18px;
+  padding: 0 5px;
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  transition: color 0.2s;
 }
 
 .removeGenreBtn:hover {
-    color: #ff0000;
+  color: var(--danger-hover);
 }
 
 /* Responsive Design */
 @media screen and (max-width: 768px) {
-    .browseContainer {
-        grid-template:
-            'filter'
-            'anime-list'
-            / 1fr;
-        width: 96%;
-        padding: 15px;
-    }
+  .browseContainer {
+    grid-template:
+      'filter'
+      'anime-list'
+      / 1fr;
+    width: 96%;
+    padding: 15px;
+  }
 
-    .filterContainer {
-        position: static;  /* Remove sticky positioning on mobile */
-        width: 100%;
-        margin-bottom: 20px;
-    }
+  .filterContainer {
+    position: static; /* Remove sticky positioning on mobile */
+    width: 100%;
+    margin-bottom: 20px;
+  }
 
-    .animeList,
-    .mangaList,
-    .characterList {
-        gap: 25px;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    }
+  .animeList,
+  .mangaList,
+  .characterList {
+    gap: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
 }
 
 @media screen and (max-width: 480px) {
-    .browseContainer {
-        width: 98%;
-        padding: 10px;
-    }
+  .browseContainer {
+    width: 98%;
+    padding: 10px;
+  }
 
-    .animeList,
-    .mangaList,
-    .characterList {
-        gap: 20px;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
+  .animeList,
+  .mangaList,
+  .characterList {
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 
 .animeListItem {
-    list-style: none;
-    margin-bottom: 1rem;
+  list-style: none;
+  margin-bottom: 1rem;
 }

@@ -3,54 +3,66 @@
  * Description: Mongoose model for the 'UserModel' collection in MongoDB.
  */
 
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Defining the schema for the 'UserModel' collection
 const userSchema = new mongoose.Schema({
-    firstName : String,
-    lastName : String,
-    email : {
+  firstName: String,
+  lastName: String,
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: String,
+  animes: [
+    {
+      animeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "AnimeModel",
+      },
+      status: {
         type: String,
-        required :true,
-        unique : true,
+        enum: ["Watching", "Completed", "Planning"],
+      },
+      currentEpisode: Number,
+      activityTimestamp: {
+        type: Date,
+        default: Date.now,
+      },
     },
-    password : String,
-    animes: [
-        {
-            animeId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'AnimeModel'
-            },
-            status: {
-                type: String,
-                enum: ["Watching", "Completed", "Planning"]
-            },
-            currentEpisode: Number,
-            activityTimestamp: {
-                type: Date,
-                default: Date.now,
-            },
-        }
-    ],
-    mangas: [{
-        mangaId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'MangaModel'
-        },
-        status: {
-            type: String,
-            enum: ["Reading", "Completed", "Planning"]
-        },
-        currentChapter: Number,
-        currentVolume: Number,
-        activityTimestamp: {
-            type: Date,
-            default: Date.now,
-        },
-    }],
-})
+  ],
+  mangas: [
+    {
+      mangaId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MangaModel",
+      },
+      status: {
+        type: String,
+        enum: ["Reading", "Completed", "Planning"],
+      },
+      currentChapter: Number,
+      currentVolume: Number,
+      activityTimestamp: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
+});
 
 // Creating the 'UserModel' using the schema
-const UserModel = new mongoose.model("UserModel",userSchema)
+const UserModel = new mongoose.model("UserModel", userSchema);
 
 export default UserModel;

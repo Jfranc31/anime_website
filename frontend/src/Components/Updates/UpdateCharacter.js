@@ -6,63 +6,62 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 // Define the UpdateCharacter component
 export const UpdateCharacter = ({ match }) => {
-  
   // Use useParams to get the characterId from the URL
   const { id } = useParams();
   const navigate = useNavigate();
-  console.log("characterId: ", id);
+  console.log('characterId: ', id);
   // Initialize state for character data
   const [characterData, setCharacterData] = useState({
     names: {
-      givenName: "",
-      middleName: "",
-      surName: "",
-      alterNames: ""
+      givenName: '',
+      middleName: '',
+      surName: '',
+      alterNames: '',
     },
-    about: "",
-    gender: "",
+    about: '',
+    gender: '',
     age: 0,
     DOB: {
       year: 0,
       month: 0,
-      day: 0
+      day: 0,
     },
-    characterImage: ""
+    characterImage: '',
   });
 
   // Define the genders array
-  const genders = ["Female", "Male", "Non-binary"];
-  
+  const genders = ['Female', 'Male', 'Non-binary'];
 
   // Use useEffect to fetch character details when the component mounts
   useEffect(() => {
     const fetchCharacterDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/characters/character/${id}`);
+        const response = await axios.get(
+          `http://localhost:8080/characters/character/${id}`
+        );
         console.log('Character details response:', response.data); // Log the response
         setCharacterData(response.data);
       } catch (error) {
         console.error('Error fetching character details:', error);
       }
     };
-  
+
     fetchCharacterDetails();
   }, [id]);
-  
 
   // Define the handleChange function to update state based on user input
   const handleChange = (e) => {
     const { name, value, type } = e.target;
 
-    if (name.startsWith("names.") || name.startsWith("DOB.")) {
-      const [mainField, subField] = name.split(".");
+    if (name.startsWith('names.') || name.startsWith('DOB.')) {
+      const [mainField, subField] = name.split('.');
 
       setCharacterData((prev) => ({
         ...prev,
         [mainField]: {
           ...prev[mainField],
-          [subField]: type === 'number' ? parseInt(value, 10) : value
-        }
+          [subField]: type === 'number' ? parseInt(value, 10) : value,
+        },
       }));
     } else {
       setCharacterData((prev) => ({
@@ -72,23 +71,26 @@ export const UpdateCharacter = ({ match }) => {
     }
   };
 
-  console.log("character: ", characterData);
+  console.log('character: ', characterData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       console.log('Submitting form...', characterData);
-  
+
       // Make the API call to update character details
-      const res = await axios.put(`http://localhost:8080/characters/character/${id}`, characterData);
-  
+      const res = await axios.put(
+        `http://localhost:8080/characters/character/${id}`,
+        characterData
+      );
+
       console.log('Response from server:', res.data);
-  
+
       if (res.status === 200) {
         console.log('Character updated successfully');
         // Call the callback function passed from the parent component
-  
+
         navigate(`/characters/${id}`);
       } else {
         // Handle errors from the backend
@@ -98,7 +100,7 @@ export const UpdateCharacter = ({ match }) => {
       // Handle network or other errors
       console.error('Error during character update:', error.message);
     }
-  };  
+  };
 
   return (
     <div className="update-character-container">
@@ -152,17 +154,17 @@ export const UpdateCharacter = ({ match }) => {
 
         <div className="section">
           <h3>About</h3>
-            <div>
-              <label htmlFor="about">About:</label>
-              <textarea
-                id="about"
-                name="about"
-                value={characterData.about}
-                onChange={handleChange}
-                rows={4}
-                cols={80}
-              />
-            </div>
+          <div>
+            <label htmlFor="about">About:</label>
+            <textarea
+              id="about"
+              name="about"
+              value={characterData.about}
+              onChange={handleChange}
+              rows={4}
+              cols={80}
+            />
+          </div>
         </div>
 
         <div className="section">
@@ -177,7 +179,9 @@ export const UpdateCharacter = ({ match }) => {
                 value={characterData.gender}
                 onChange={handleChange}
               >
-                <option value="" disabled>Select Gender</option>
+                <option value="" disabled>
+                  Select Gender
+                </option>
                 {genders.map((gender) => (
                   <option key={gender} value={gender}>
                     {gender}
@@ -248,7 +252,10 @@ export const UpdateCharacter = ({ match }) => {
               />
               {characterData.characterImage && (
                 <div className="image-preview">
-                  <img src={characterData.characterImage} alt="Character Preview" />
+                  <img
+                    src={characterData.characterImage}
+                    alt="Character Preview"
+                  />
                 </div>
               )}
             </div>
@@ -261,5 +268,4 @@ export const UpdateCharacter = ({ match }) => {
       </form>
     </div>
   );
-}
-
+};

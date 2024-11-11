@@ -1,7 +1,7 @@
 /**
  * src/Components/ListEditors/AnimeEditor.js
  * Description: React component for editing details of an anime.
-*/
+ */
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -16,45 +16,46 @@ import editModalStyles from '../../styles/components/EditModal.module.css';
  * @param {function} props.onAnimeDelete - Function to handle anime deletion.
  * @returns {JSX.Element} - Rendered anime editor component.
  */
-const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
+const AnimeEditor = ({
+  anime,
+  userId,
+  closeModal,
+  onAnimeDelete,
+  setUserData,
+}) => {
   const [animeDetails, setAnimeDetails] = useState(null);
   const [userProgress, setUserProgress] = useState({
     status: '',
     currentEpisode: 0,
   });
   const [isInUserList, setIsInUserList] = useState(false);
-
-  console.log(anime);
-
-  const availableStatus = ["Planning", "Watching", "Completed"];
+  const availableStatus = ['Planning', 'Watching', 'Completed'];
 
   useEffect(() => {
     const fetchAnimeDetails = async () => {
-        console.log("isInUserList:", isInUserList);
+      if (!anime?._id || !userId) return;
+      
       try {
-        // Fetch anime details
-        const animeResponse = await axios.get(`http://localhost:8080/animes/anime/${anime._id}`);
-
-        // Fetch user details
-        const userResponse = await axios.get(`http://localhost:8080/users/${userId}/current`);
-
+        const animeResponse = await axios.get(
+          `http://localhost:8080/animes/anime/${anime._id}`
+        );
+        const userResponse = await axios.get(
+          `http://localhost:8080/users/${userId}/current`
+        );
         const currentUser = userResponse.data;
 
-        // Check if the anime is on the user's list
-        const existingAnimeIndex = currentUser?.animes?.findIndex((userAnime) => userAnime.animeId === anime._id);
+        const existingAnimeIndex = currentUser?.animes?.findIndex(
+          (userAnime) => userAnime.animeId === anime._id
+        );
 
-        if(existingAnimeIndex !== -1) {
-            setIsInUserList(true);
-        }
-
-        // Update component state based on fetched data
+        setIsInUserList(existingAnimeIndex !== -1);
         setAnimeDetails(animeResponse.data);
 
-        // Set initial userProgress when animeDetails is not null
-        if (currentUser) {
+        if (currentUser && existingAnimeIndex !== -1) {
           setUserProgress({
-            status: existingAnimeIndex !== -1 ? currentUser.animes[existingAnimeIndex].status : '',
-            currentEpisode: existingAnimeIndex !== -1 ? currentUser.animes[existingAnimeIndex].currentEpisode : 0,
+            status: currentUser.animes[existingAnimeIndex].status,
+            currentEpisode:
+              currentUser.animes[existingAnimeIndex].currentEpisode,
           });
         }
       } catch (error) {
@@ -63,128 +64,144 @@ const AnimeEditor = ({ anime, userId, closeModal, onAnimeDelete }) => {
     };
 
     fetchAnimeDetails();
-  }, [anime._id, isInUserList, userId]);
+  }, [anime?._id, userId]);
+
+  if (!anime) {
+    return null;
+  }
 
   const handleStatusChange = (e) => {
-    setUserProgress({
-      ...userProgress,
+    setUserProgress((prev) => ({
+      ...prev,
       status: e.target.value,
-    });
+    }));
   };
 
   const handleEpisodeChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      currentEpisode: e.target.value,
-    });
+    setUserProgress((prev) => ({
+      ...prev,
+      currentEpisode: parseInt(e.target.value) || 0,
+    }));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    e.preventDefault();
     try {
-        var response;
-      if(isInUserList){
-        response = await axios.post(`http://localhost:8080/users/${userId}/updateAnime`, {
-            animeId: anime._id,
-            status: userProgress.status,
-            currentEpisode: userProgress.currentEpisode,
-        });
-      } else {
-        response = await axios.post(`http://localhost:8080/users/${userId}/addAnime`, {
-            animeId: animeDetails._id,
-            status: userProgress.status || "Planning",
-            currentEpisode: userProgress.currentEpisode || 0,
-        });
-      }
-  
-      // Check the response for success or handle accordingly
-      if (response.data.success) {
-        // Close the modal after saving
+      const endpoint = isInUserList ? 'updateAnime' : 'addAnime';
+      const response = await axios.post(
+        `http://localhost:8080/users/${userId}/${endpoint}`,
+        {
+          animeId: anime._id,
+          status: userProgress.status || 'Planning',
+          currentEpisode: userProgress.currentEpisode || 0,
+        }
+      );
+
+      if (response.data) {
+        const userResponse = await axios.get(
+          `http://localhost:8080/users/${userId}/current`
+        );
+        setUserData(userResponse.data);
+        setIsInUserList(true);
         closeModal();
-      } else {
-        console.error('Error updating user progress:', response.data.message);
       }
     } catch (error) {
       console.error('Error updating user progress:', error);
     }
   };
-  
 
   const handleDelete = async () => {
     try {
-      // Make a request to remove the anime from the user's list
-      await axios.post(`http://localhost:8080/users/${userId}/removeAnime`, {
-        animeId: anime._id,
-      });
+      console.log('Starting delete process...');
 
-      // Call the parent component's function to update the UI
-      onAnimeDelete(anime._id);
+      const response = await axios.post(
+        `http://localhost:8080/users/${userId}/removeAnime`,
+        {
+          animeId: anime._id,
+        }
+      );
 
-      // Close the modal after deleting
-      closeModal();
+      console.log('API Response:', response);
+
+      if (response.data && response.data.user) {
+        setUserData(response.data.user);
+        onAnimeDelete(anime._id);
+        closeModal();
+      }
     } catch (error) {
-      console.error('Error removing anime from user list:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
     }
   };
 
   return (
-    <div className={editModalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
-        <div className={editModalStyles.modalHeader}>
-            <h2>{animeDetails?.titles?.english || ''}</h2>
-            <img src={anime?.images?.border} alt={anime?.titles?.english} />
-            <button className={editModalStyles.characterModalClose} onClick={closeModal}>
-                &times;
+    <div
+      className={editModalStyles.characterModal}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className={editModalStyles.modalHeader}>
+        <img src={anime?.images?.border} alt={anime?.titles?.english} />
+        <h2>{animeDetails?.titles?.english || ''}</h2>
+        <button
+          className={editModalStyles.characterModalClose}
+          onClick={closeModal}
+        >
+          ×
+        </button>
+      </div>
+      <div className={editModalStyles.modalBody}>
+        <form onSubmit={handleSave}>
+          <div className={editModalStyles.grid}>
+            <label htmlFor="status">Status:</label>
+            <select
+              id="status"
+              value={userProgress.status}
+              onChange={handleStatusChange}
+              className={editModalStyles.select}
+            >
+              <option value="" disabled>
+                Select Status
+              </option>
+              {availableStatus.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={editModalStyles.grid}>
+            <label htmlFor="currentEpisode">Current Episode:</label>
+            <input
+              type="number"
+              id="currentEpisode"
+              value={userProgress.currentEpisode}
+              onChange={handleEpisodeChange}
+              min="0"
+              max={animeDetails?.episodes || 9999}
+              className={editModalStyles.input}
+            />
+          </div>
+          <div className={editModalStyles.buttonContainer}>
+            <button type="submit" className={editModalStyles.modalSaveBtn}>
+              Save
             </button>
-        </div>
-        <div className={editModalStyles.modalBody}>
-            <form onSubmit={(e) => {
-                e.preventDefault();
-                handleSave();
-            }}>
-                <div className={editModalStyles.grid}>
-                    <label htmlFor="status">Status:</label>
-                    <select
-                        id="status"
-                        name="status"
-                        value={userProgress.status}
-                        onChange={handleStatusChange}
-                    >
-                        <option value="" disabled>Select Status</option>
-                        {availableStatus.map((status) => (
-                            <option key={status} value={status}>
-                                {status}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className={editModalStyles.grid}>
-                    <label htmlFor="currentEpisode">Current Episode:</label>
-                    <input
-                        type="number"
-                        id="currentEpisode"
-                        name="currentEpisode"
-                        value={userProgress.currentEpisode}
-                        onChange={handleEpisodeChange}
-                    />
-                </div>
-                <div className={editModalStyles.buttonContainer}>
-                    <button type="submit" className={editModalStyles.modalSaveBtn}>
-                        Save
-                    </button>
-                    {isInUserList && (
-                        <button 
-                            type="button" 
-                            className={editModalStyles.modalDeleteBtn} 
-                            onClick={handleDelete}
-                        >
-                            Delete
-                        </button>
-                    )}
-                </div>
-            </form>
-        </div>
+            {isInUserList && (
+              <button
+                type="button"
+                className={editModalStyles.modalDeleteBtn}
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
 
 export default AnimeEditor;
-

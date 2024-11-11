@@ -1,12 +1,19 @@
 // /src/pages/AddSection.js
-import React from 'react';
+import React, { useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AddAnime from './AddAnime';
 import AddManga from './AddManga';
 import AddNavbar from '../Components/Navbars/AddNavbar';
 import '../styles/components/add_navbar.module.css';
+import data from '../Context/ContextApi';
 
 const AddSection = () => {
+  const { userData } = useContext(data);
+
+  if (!userData || userData.role !== 'admin') {
+    return <Navigate to="/" />;
+  }
+
   return (
     <div className="add-page">
       <AddNavbar />
@@ -22,4 +29,3 @@ const AddSection = () => {
 };
 
 export default AddSection;
-

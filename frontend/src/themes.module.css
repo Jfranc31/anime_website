@@ -1,0 +1,119 @@
+/* Base theme variables */
+:root {
+  /* Layout Colors */
+  --page-bg: rgb(35, 38, 40);
+  --container-bg: #1a1c1e;
+  --card-bg: rgba(26, 28, 30, 0.9);
+  --modal-bg: #1a1d20;
+  --input-bg: #2a2d2f;
+  --overlay-bg: rgba(0, 0, 0, 0.85);
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #9fa1a3;
+
+  /* Form Colors */
+  --form-bg: rgba(25, 30, 39, 0.9);
+  --add-button-text: #ffffff;
+
+  /* Interactive Colors */
+  --accent-color: #4caf50;
+  --accent-hover: #134016;
+  --danger-color: #dc3545;
+  --danger-hover: #c82333;
+  --success-color: #04aa6d;
+  --success-hover: #038857;
+
+  /* Border & Shadow */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --card-hover-shadow: rgba(0, 0, 0, 0.2);
+
+  /* Filter Colors */
+  --filter-bg: rgba(19, 19, 19, 0.7);
+  --filter-text: #ffffff;
+  --filter-background: #2b2b2b;
+
+  /* Spoiler */
+  --spoiler-bg: rgba(76, 175, 80, 0.1);
+  --spoiler-border: rgba(76, 175, 80, 0.3);
+  --spoiler-text: rgba(76, 175, 80, 0.8);
+  --spoiler-text-hover: rgba(76, 175, 80, 1);
+  --spoiler-text-revealed: rgba(255, 255, 255, 0.8);
+
+  /* Navigation */
+  --nav-bg: rgba(25, 30, 39, 0.5);
+  --nav-bg-hover: rgba(25, 30, 39, 1);
+
+  /* Modal Colors */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.85);
+  --modal-box-shadow: rgba(0, 0, 0, 0.3);
+  --cancel-button-bg: rgb(159, 159, 159);
+  --cancel-button-hover: rgb(192, 192, 192);
+}
+
+/* Light theme */
+[data-theme='light'] {
+  /* Layout Colors */
+  --page-bg: #ffffff;
+  --container-bg: #f5f5f5;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --modal-bg: #ffffff;
+  --input-bg: #ffffff;
+  --overlay-bg: rgba(255, 255, 255, 0.85);
+
+  /* Text Colors */
+  --text-primary: black;
+  --text-secondary: #9fa1a3;
+
+  /* Form Colors */
+  --form-bg: rgba(255, 255, 255, 0.9);
+  --add-button-text: #ffffff;
+
+  /* Filter Colors */
+  --filter-bg: rgba(201, 201, 201, 0.9);
+  --filter-text: #333333;
+  --filter-background: #ffffff;
+
+  /* Interactive Colors */
+  --accent-color: #2e7d32;
+  --accent-hover: #134016;
+  --danger-color: #dc3545;
+  --danger-hover: #c82333;
+  --success-color: #04aa6d;
+  --success-hover: #038857;
+
+  /* Border & Shadow */
+  --border-color: rgba(0, 0, 0, 0.1);
+  --card-hover-shadow: rgba(0, 0, 0, 0.1);
+
+  /* Spoiler */
+  --spoiler-bg: rgba(76, 175, 80, 0.1);
+  --spoiler-border: rgba(76, 175, 80, 0.3);
+  --spoiler-text: rgba(76, 175, 80, 0.8);
+  --spoiler-text-hover: rgba(76, 175, 80, 1);
+  --spoiler-text-revealed: rgba(255, 255, 255, 0.8);
+
+  /* Navigation */
+  --nav-bg: rgba(255, 255, 255, 0.9);
+  --nav-bg-hover: rgba(255, 255, 255, 1);
+
+  /* Modal Colors */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.85);
+  --modal-box-shadow: rgba(0, 0, 0, 0.3);
+  --cancel-button-bg: rgb(159, 159, 159);
+  --cancel-button-hover: rgb(192, 192, 192);
+}
+
+/* Red theme */
+[data-theme='red'] {
+  --accent-color: #f44336;
+  --danger-color: #9a0007;
+  --danger-hover: #ba000d;
+}
+
+/* Green theme */
+[data-theme='green'] {
+  --accent-color: #4caf50;
+  --danger-color: #087f23;
+  --danger-hover: #005d16;
+}
