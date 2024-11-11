@@ -69,7 +69,8 @@ const loginUser = async (req, res) => {
         _id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        theme: user.theme
       };
 
       res.cookie("userInfo", JSON.stringify(userForCookie), {

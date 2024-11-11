@@ -26,9 +26,10 @@ import { CharacterProvider } from './Context/CharacterContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ThemeProvider } from './Context/ThemeContext';
-import ThemeSwitcher from './Components/ThemeSwitcher';
 import './themes.module.css';
 import UserManagement from './Components/Admin/UserManagement';
+import Settings from './pages/Settings';
+import ThemeInitializer from './Components/ThemeInitializer';
 
 function App() {
   const [userData, setUserData] = useState({});
@@ -50,12 +51,13 @@ function App() {
         Cookies.remove('userInfo');
       }
     }
-  }, []); // Remove userData from dependencies to prevent infinite loop
+  }, []);
 
   return (
     <Router>
       <data.Provider value={{ userData, setUserData }}>
         <ThemeProvider>
+          <ThemeInitializer />
           <div className="App">
             <Navbar />
             <AnimeProvider>
@@ -130,6 +132,7 @@ function App() {
                         )
                       }
                     />
+                    <Route path="/settings" element={userData?._id ? <Settings /> : <Navigate to="/login" />} />
                   </Routes>
                 </CharacterProvider>
               </MangaProvider>

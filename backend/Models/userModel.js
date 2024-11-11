@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema({
     unique: true,
   },
   password: String,
+  theme: {
+    type: String,
+    enum: ['light', 'dark'],
+    default: 'light'
+  },
   animes: [
     {
       animeId: {
