@@ -3,7 +3,7 @@
 // #region Importing React and other dependencies --------------------------
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import CreateCharacter from '../CreateCharacter';
 import CharacterSearch from '../Searches/CharacterSearch';
 import RelationSearch from '../Searches/RelationSearch';
@@ -152,8 +152,8 @@ export const UpdateAnime = ({ match }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const animeResponse = await axios.get(
-          `http://localhost:8080/animes/anime/${id}`
+        const animeResponse = await axiosInstance.get(
+          `/animes/anime/${id}`
         );
         const { genres, ...animeData } = animeResponse.data;
 
@@ -174,7 +174,7 @@ export const UpdateAnime = ({ match }) => {
         const charactersWithDetails = await Promise.all(
           animeData?.characters.map(async (character) => {
             try {
-              const characterResponse = await axios.get(
+              const characterResponse = await axiosInstance.get(
                 `http://localhost:8080/characters/character/${character.characterId}`
               );
               return {
@@ -194,8 +194,8 @@ export const UpdateAnime = ({ match }) => {
         const animeRelationsWithDetails = await Promise.all(
           animeData?.animeRelations.map(async (relation) => {
             try {
-              const referenceResponse = await axios.get(
-                `http://localhost:8080/animes/anime/${relation.relationId}`
+              const referenceResponse = await axiosInstance.get(
+                `/animes/anime/${relation.relationId}`
               );
               return {
                 ...relation,
@@ -214,7 +214,7 @@ export const UpdateAnime = ({ match }) => {
         const mangaRelationsWithDetails = await Promise.all(
           animeData?.mangaRelations.map(async (relation) => {
             try {
-              const referenceResponse = await axios.get(
+              const referenceResponse = await axiosInstance.get(
                 `http://localhost:8080/mangas/manga/${relation.relationId}`
               );
               return {
@@ -451,8 +451,8 @@ export const UpdateAnime = ({ match }) => {
     try {
       console.log('Current formData:', updatedFormData);
 
-      const res = await axios.put(
-        `http://localhost:8080/animes/anime/${id}`,
+      const res = await axiosInstance.put(
+        `/animes/anime/${id}`,
         updatedFormData
       );
 

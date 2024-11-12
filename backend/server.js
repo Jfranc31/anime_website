@@ -12,6 +12,9 @@ import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
 import cookieParser from "cookie-parser";
+import cron from 'node-cron';
+import { updateAnimeFromAnilist } from './services/updateService.js';
+import { runScheduledUpdates } from './services/scheduledUpdates.js';
 
 // Creating an Express application
 const app = express();
@@ -206,3 +209,12 @@ app.delete("/anime/:id/notes", async (req, res) => {
 app.listen(8080, () => {
   console.log("Server is runing at port 8080");
 });
+
+// Run updates every 6 hours
+cron.schedule('0 */6 * * *', async () => {
+  console.log('Running scheduled anime updates...');
+  await updateAnimeData();
+});
+
+// Add this after your other middleware setup
+runScheduledUpdates();

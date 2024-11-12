@@ -13,6 +13,8 @@ import AnimeCard from '../../cards/AnimeCard';
 import CharacterCard from '../../cards/CharacterCard';
 import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
+import { MONTHS } from '../../constants/filterOptions';
+import axiosInstance from '../../utils/axiosConfig';
 /**
  * Functional component representing details of an anime.
  * @returns {JSX.Element} - Rendered anime details component.
@@ -64,11 +66,14 @@ const AnimeDetails = () => {
             (anime) => anime.animeId.toString() === id.toString()
           );
 
+          setAnimeDetails(animeResponse.data);
+          setActiveTab('about');
           setIsAnimeAdded(isAnimeAdded);
 
           if (currentUser && existingAnimeIndex !== -1) {
             setUserProgress({
-              status: currentUser.animes[existingAnimeIndex].status,
+              status:
+                currentUser.animes[existingAnimeIndex].status,
               currentEpisode:
                 currentUser.animes[existingAnimeIndex].currentEpisode,
             });
@@ -80,7 +85,7 @@ const AnimeDetails = () => {
     };
 
     fetchAnimeDetails();
-  }, [id, userData?._id]);
+  }, [id, setUserData, userData?._id, setIsAnimeAdded]);
 
   useEffect(() => {
     const fetchCharacterDetails = async () => {
@@ -118,8 +123,8 @@ const AnimeDetails = () => {
         const relationsWithDetails = await Promise.all([
           ...(animeDetails?.mangaRelations?.map(async (relation) => {
             try {
-              const response = await axios.get(
-                `http://localhost:8080/mangas/manga/${relation.relationId}`
+              const response = await axiosInstance.get(
+                `/mangas/manga/${relation.relationId}`
               );
               return {
                 ...relation,
@@ -202,13 +207,13 @@ const AnimeDetails = () => {
     setIsAnimeEditorOpen(true);
   };
 
-  console.log(
-    'CH: ',
-    isAnimeAdded,
-    userProgress,
-    animeDetails,
-    relationsDetails
-  );
+  const getFullName = (names) => {
+    const nameParts = [];
+    if (names.givenName) nameParts.push(names.givenName);
+    if (names.middleName) nameParts.push(names.middleName);
+    if (names.surName) nameParts.push(names.surName);
+    return nameParts.join(' ');
+  };
 
   // Add this helper function to format the date
   const formatDate = (dateObj) => {
@@ -216,37 +221,14 @@ const AnimeDetails = () => {
     const { year, month, day } = dateObj;
     if (!year && !month && !day) return 'TBA';
 
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
     // If we have a month, subtract 1 as array is 0-based
-    const monthName = month ? months[month - 1] : '';
+    const monthName = month ? MONTHS[month - 1] : '';
     const formattedDay = day ? day : '';
 
     if (!monthName && !formattedDay) return year || 'TBA';
     if (!formattedDay) return `${monthName} ${year || 'TBA'}`;
 
     return `${monthName} ${formattedDay}, ${year || 'TBA'}`;
-  };
-
-  const getFullName = (names) => {
-    const nameParts = [];
-    if (names.givenName) nameParts.push(names.givenName);
-    if (names.middleName) nameParts.push(names.middleName);
-    if (names.surName) nameParts.push(names.surName);
-    return nameParts.join(' ');
   };
 
   const determineSeason = (startDate) => {

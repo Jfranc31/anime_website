@@ -10,29 +10,7 @@ import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
 import { Link } from 'react-router-dom';
-
-// Constants
-const AVAILABLE_GENRES = [
-  'Action',
-  'Adventure',
-  'Comedy',
-  'Drama',
-  'Ecchi',
-  'Fantasy',
-  'Horror',
-  'Hentai',
-  'Mahou Shoujo',
-  'Mecha',
-  'Music',
-  'Mystery',
-  'Psychological',
-  'Romance',
-  'Sci-Fi',
-  'Slice of Life',
-  'Sports',
-  'Supernatural',
-  'Thriller',
-];
+import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
@@ -42,6 +20,10 @@ const Animes = () => {
   const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
   const [selectedAnimeForEdit, setSelectedAnimeForEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedSeason, setSelectedSeason] = useState('');
+  const [selectedFormats, setSelectedFormats] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   const handleModalClose = () => {
     setIsAnimeEditorOpen(false);
@@ -61,15 +43,29 @@ const Animes = () => {
       });
   }, [setAnimeList]);
 
+  const determineSeason = (startDate) => {
+    if (!startDate || !startDate.month)
+      return { season: 'TBA', year: startDate?.year || 'TBA' };
+
+    const month = startDate.month;
+    let season;
+
+    if (month >= 3 && month <= 5) season = 'Spring';
+    else if (month >= 6 && month <= 8) season = 'Summer';
+    else if (month >= 9 && month <= 11) season = 'Fall';
+    else season = 'Winter';
+
+    return {
+      season,
+      year: startDate.year || 'TBA',
+    };
+  };
+
   const filteredAnime = Array.isArray(animeList)
     ? animeList.filter((anime) => {
         const matchesSearch =
-          anime.titles.romaji
-            .toLowerCase()
-            .includes(searchInput.toLowerCase()) ||
-          anime.titles.english
-            .toLowerCase()
-            .includes(searchInput.toLowerCase()) ||
+          anime.titles.romaji.toLowerCase().includes(searchInput.toLowerCase()) ||
+          anime.titles.english.toLowerCase().includes(searchInput.toLowerCase()) ||
           anime.titles.Native.toLowerCase().includes(searchInput.toLowerCase());
 
         const matchesGenres =
@@ -84,7 +80,25 @@ const Animes = () => {
               )
             ));
 
-        return matchesSearch && matchesGenres;
+        const matchesYear = !selectedYear || anime.releaseData.startDate.year === selectedYear;
+        
+        const { season } = determineSeason(anime.releaseData.startDate);
+        const matchesSeason = !selectedSeason || season === selectedSeason;
+
+        const matchesFormat = 
+          selectedFormats.length === 0 || 
+          selectedFormats.includes(anime.typings.Format);
+        
+        const matchesStatus = !selectedStatus || anime.releaseData.releaseStatus === selectedStatus;
+
+        return (
+          matchesSearch && 
+          matchesGenres && 
+          matchesYear && 
+          matchesSeason && 
+          matchesFormat && 
+          matchesStatus
+        );
       })
     : [];
 
@@ -133,11 +147,25 @@ const Animes = () => {
     setIsAnimeEditorOpen(true);
   };
 
-  const onTopRightButtonClick = handleTopRightButtonClick;
+  const handleFormatChange = (selectedFormat) => {
+    setSelectedFormats((prevFormats) => {
+      if (!prevFormats.includes(selectedFormat)) {
+        return [...prevFormats, selectedFormat];
+      }
+      return prevFormats;
+    });
+  };
+
+  const handleRemoveFormat = (removedFormat) => {
+    setSelectedFormats((prevFormats) =>
+      prevFormats.filter((format) => format !== removedFormat)
+    );
+  };
 
   return (
     <div className={browseStyles.browseContainer}>
       <div className={browseStyles.filterContainer}>
+        
         <div className={browseStyles.searchContainer}>
           <input
             type="text"
@@ -149,6 +177,7 @@ const Animes = () => {
             className={browseStyles.searchInput}
           />
         </div>
+
         <div className={browseStyles.genreFilterContainer}>
           <select
             value=""
@@ -180,6 +209,78 @@ const Animes = () => {
             ))}
           </div>
         </div>
+
+        <div className={browseStyles.filterSection}>
+          <div className={browseStyles.filterTitle}>Year</div>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className={browseStyles.filterSelect}
+          >
+            <option value="">All Years</option>
+            {YEARS.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className={browseStyles.filterSection}>
+          <div className={browseStyles.filterTitle}>Season</div>
+          <select
+            value={selectedSeason}
+            onChange={(e) => setSelectedSeason(e.target.value)}
+            className={browseStyles.filterSelect}
+          >
+            <option value="">All Seasons</option>
+            {SEASONS.map(season => (
+              <option key={season} value={season}>{season}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className={browseStyles.filterSection}>
+          <div className={browseStyles.filterTitle}>Format</div>
+          <select
+            value=""
+            onChange={(e) => handleFormatChange(e.target.value)}
+            className={browseStyles.filterSelect}
+          >
+            <option value="" disabled>
+              Select a format
+            </option>
+            {ANIME_FORMATS.map(format => (
+              <option key={format} value={format}>{format}</option>
+            ))}
+          </select>
+          <div className={browseStyles.selectedFilters}>
+            {selectedFormats.map((format) => (
+              <div key={format} className={browseStyles.selectedFilter}>
+                {format}
+                <button
+                  onClick={() => handleRemoveFormat(format)}
+                  className={browseStyles.removeGenreBtn}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={browseStyles.filterSection}>
+          <div className={browseStyles.filterTitle}>Airing Status</div>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className={browseStyles.filterSelect}
+          >
+            <option value="">All Status</option>
+            {AIRING_STATUS.map(status => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+        </div>
+
       </div>
 
       {isLoading ? (

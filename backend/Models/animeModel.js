@@ -165,8 +165,15 @@ const animeSchema = new mongoose.Schema({
     },
   ],
   activityTimestamp: {
-    type: Date,
-    default: Date.now,
+    type: Number,
+    default: Date.now
+  },
+  anilistId: {
+    type: Number,
+    unique: true
+  },
+  nextEpisodeAiringAt: {
+    type: Number
   },
 });
 

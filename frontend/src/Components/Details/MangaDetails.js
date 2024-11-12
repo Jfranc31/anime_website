@@ -10,7 +10,7 @@ import data from '../../Context/ContextApi';
 import MangaEditor from '../ListEditors/MangaEditor';
 import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
-
+import { MONTHS } from '../../constants/filterOptions';
 /**
  * Functional component representing details of a manga.
  * @returns {JSX.Element} - Rendered manga details component.
@@ -71,10 +71,12 @@ const MangaDetails = () => {
         // Set initial userResponse when mangaDetails is not null
         if (currentUser && existingMangaIndex !== -1) {
           setUserProgress({
-            status: currentUser.mangas[existingMangaIndex].status,
+            status:
+              currentUser.mangas[existingMangaIndex].status,
             currentChapter:
               currentUser.mangas[existingMangaIndex].currentChapter,
-            currentVolume: currentUser.mangas[existingMangaIndex].currentVolume,
+            currentVolume:
+              currentUser.mangas[existingMangaIndex].currentVolume,
           });
         }
       } catch (error) {
@@ -117,6 +119,7 @@ const MangaDetails = () => {
 
   useEffect(() => {
     const fetchRelationDetails = async () => {
+      try{
       const relationsWithDetails = await Promise.all([
         ...(mangaDetails?.mangaRelations.map(async (relation) => {
           try {
@@ -151,11 +154,18 @@ const MangaDetails = () => {
               `Error fetching details for anime relation ${relation.relationId}`,
               error
             );
-            return relation;
+            return null;
           }
         }) || []),
       ]);
-      setRelationsDetails(relationsWithDetails);
+
+      setRelationsDetails(
+        relationsWithDetails.filter((relation) => relation !== null)
+        );
+      } catch (error) {
+        console.error('Error fetching relation details:', error);
+        setRelationsDetails([]);
+      }
     };
 
     if (mangaDetails) {
@@ -204,29 +214,12 @@ const MangaDetails = () => {
     return nameParts.join(' ');
   };
 
-  console.log('CH: ', userProgress, isMangaAdded, mangaDetails);
-
   const formatDate = (dateObj) => {
     if (!dateObj) return 'TBA';
     const { year, month, day } = dateObj;
     if (!year && !month && !day) return 'TBA';
 
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
-    const monthName = month ? months[month - 1] : '';
+    const monthName = month ? MONTHS[month - 1] : '';
     const formattedDay = day ? day : '';
 
     if (!monthName && !formattedDay) return year || 'TBA';
@@ -312,6 +305,16 @@ const MangaDetails = () => {
                 </button>
               )}
             </div>
+            {userData.role === 'admin' && (
+              <Link
+                to={`/manga/${mangaDetails._id}/update`}
+                className={mangaDetailsStyles.editMangaLink}
+              >
+                <button className={mangaDetailsStyles.editMangaButton}>
+                  Edit Manga
+                </button>
+              </Link>
+            )}
           </div>
 
           <div className={mangaDetailsStyles.mangaInfo}>

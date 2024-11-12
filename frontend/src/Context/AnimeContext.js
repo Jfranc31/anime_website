@@ -1,6 +1,6 @@
 // src/context/AnimeContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
 export const AnimeContext = createContext();
 
@@ -15,13 +15,11 @@ export const AnimeProvider = ({ children }) => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await axios.get('/animes/animes', {
-          withCredentials: true
-        });
+        const response = await axiosInstance.get('/animes/animes');
         setAnimeList(response.data);
       } catch (error) {
         console.error('Error fetching anime list:', error);
-        setError('Unable to load anime list. Please try again later.');
+        setError(error.response?.data?.message || 'Unable to load anime list. Please try again later.');
         setAnimeList([]);
       } finally {
         setIsLoading(false);

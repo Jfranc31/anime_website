@@ -68,6 +68,7 @@
 }
 
 .activityInfo {
+  background-color: var(--input-bg);
   padding: 1rem;
 }
 

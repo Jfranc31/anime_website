@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import characterDetailsStyles from '../../styles/pages/character_details.module.css';
 /**
  * Functional component representing details of a character.
@@ -21,8 +21,8 @@ const CharacterDetails = () => {
   useEffect(() => {
     const fetchCharacterDetails = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8080/characters/character/${id}`
+        const response = await axiosInstance.get(
+          `/characters/character/${id}`
         );
         setCharacterDetails(response.data);
       } catch (error) {
@@ -39,8 +39,8 @@ const CharacterDetails = () => {
         const animeReferences = await Promise.all(
           (characterDetails?.animes || []).map(async (reference) => {
             try {
-              const response = await axios.get(
-                `http://localhost:8080/animes/anime/${reference.animeId}`
+              const response = await axiosInstance.get(
+                `/animes/anime/${reference.animeId}`
               );
               return {
                 ...reference,
@@ -60,8 +60,8 @@ const CharacterDetails = () => {
         const mangaReferences = await Promise.all(
           (characterDetails?.mangas || []).map(async (reference) => {
             try {
-              const response = await axios.get(
-                `http://localhost:8080/mangas/manga/${reference.mangaId}`
+              const response = await axiosInstance.get(
+                `/mangas/manga/${reference.mangaId}`
               );
               return {
                 ...reference,
