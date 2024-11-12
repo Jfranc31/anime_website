@@ -8,6 +8,7 @@ import CreateCharacter from '../Components/CreateCharacter';
 import CharacterSearch from '../Components/Searches/CharacterSearch';
 import RelationSearch from '../Components/Searches/RelationSearch';
 import addPageStyles from '../styles/pages/add_page.module.css';
+import { AnimeSearch } from '../Components/Searches/AnimeSearch';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -97,6 +98,7 @@ const AVAILABLE_RELATION = [
 
 // #region Initial Form State ----------------------------------------------
 const INITIAL_FORM_STATE = {
+  anilistId: '',
   titles: {
     romaji: '',
     english: '',
@@ -122,7 +124,7 @@ const INITIAL_FORM_STATE = {
   },
   lengths: {
     Episodes: '',
-    EpisodeDuration: 0,
+    EpisodeDuration: '',
   },
   genres: [],
   description: '',
@@ -133,7 +135,7 @@ const INITIAL_FORM_STATE = {
   characters: [],
   mangaRelations: [],
   animeRelations: [],
-  activityTimestamp: 0,
+  activityTimestamp: '',
 };
 // #endregion --------------------------------------------------------------
 
@@ -145,6 +147,7 @@ export default function AddAnime() {
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
+  const [showAnimeSearch, setShowAnimeSearch] = useState(false);
   // #endregion ------------------------------------------------------------
 
   // #region Modal Handlers ------------------------------------------------
@@ -312,6 +315,29 @@ export default function AddAnime() {
     });
   };
   // #endregion ------------------------------------------------------------
+
+  const handleAnimeSelected = (animeData) => {
+    console.log('AddAnime - Received Data:', animeData);
+    setFormData({
+      ...formData,
+      anilistId: animeData.anilistId || '',
+      titles: animeData.titles || '',
+      releaseData: animeData.releaseData || '',
+      typings: animeData.typings || '',
+      lengths: animeData.lengths || '',
+      genres: animeData.genres || [],
+      description: animeData.description || '',
+      images: animeData.images || '',
+      characters: [],
+      mangaRelations: [],
+      animeRelations: []
+    });
+
+    // Update selected genres
+    setSelectedGenres(animeData.genres || []);
+
+    console.log('AddAnime - Updated Form Data:', formData);
+  };
 
   // #region Form Submission ------------------------------------------------
   const handleSubmit = async (e) => {
@@ -886,6 +912,14 @@ export default function AddAnime() {
             Relations
           </button>
         </div>
+        
+        <button 
+          type="button" 
+          className={addPageStyles.anilistButton}
+          onClick={() => setActiveModal('animeSearch')}
+        >
+          Search on AniList
+        </button>
       </div>
 
       <form
@@ -922,6 +956,12 @@ export default function AddAnime() {
         <RelationSearch
           onRelationSelected={handleSelectRelation}
           searchType={'manga'}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+      {activeModal === 'animeSearch' && (
+        <AnimeSearch
+          onAnimeSelected={handleAnimeSelected}
           onClose={() => setActiveModal(null)}
         />
       )}

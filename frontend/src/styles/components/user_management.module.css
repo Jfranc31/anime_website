@@ -37,6 +37,7 @@
 .userTable td {
   padding: 1rem;
   text-align: left;
+  color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
 }
 

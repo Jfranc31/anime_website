@@ -7,6 +7,8 @@ import AnimeModel from "../Models/animeModel.js";
 import CharacterModel from "../Models/characterModel.js";
 import MangaModel from "../Models/mangaModel.js";
 import { getReverseRelationType } from "../functions.js";
+import { fetchAnimeData } from "../services/anilistService.js";
+import { compareAnimeData } from "../services/updateService.js";
 
 /**
  * @function getAllAnimes
@@ -474,9 +476,119 @@ const updateAnime = async (req, res) => {
   }
 };
 
-export default {
+const createAnimeFromAnilist = async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+    
+    const anilistData = await fetchAnimeData(title);
+    if (!anilistData) {
+      return res.status(404).json({ 
+        message: `No anime found on AniList matching "${title}"` 
+      });
+    }
+
+    // Map AniList status to our status
+    const statusMap = {
+      'RELEASING': 'Currently Releasing',
+      'FINISHED': 'Finished Releasing',
+      'NOT_YET_RELEASED': 'Not Yet Released',
+      'CANCELLED': 'Cancelled',
+      'HIATUS': 'Hiatus'
+    };
+
+    // Map AniList source to our source
+    const sourceMap = {
+      'MANGA': 'Manga',
+      'ORIGINAL': 'Original',
+      'LIGHT_NOVEL': 'Light Novel',
+      'VISUAL_NOVEL': 'Visual Novel',
+      'VIDEO_GAME': 'Video Game',
+      'OTHER': 'Other',
+      'NOVEL': 'Novel',
+      'DOUJINSHI': 'Doujinshi',
+      'ANIME': 'Anime'
+    };
+
+    // Map country codes to full names
+    const countryMap = {
+      'JP': 'Japan',
+      'KR': 'South Korea',
+      'CN': 'China',
+      'TW': 'Taiwan'
+    };
+
+    const animeData = {
+      anilistId: anilistData.id,
+      titles: {
+        romaji: anilistData.title.romaji,
+        english: anilistData.title.english,
+        Native: anilistData.title.native
+      },
+      releaseData: {
+        releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
+        startDate: anilistData.startDate,
+        endDate: anilistData.endDate
+      },
+      typings: {
+        Format: anilistData.format,
+        Source: sourceMap[anilistData.source] || 'Original',
+        CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || 'Japan'
+      },
+      lengths: {
+        Episodes: anilistData.episodes,
+        EpisodeDuration: anilistData.duration
+      },
+      genres: anilistData.genres,
+      description: anilistData.description,
+      images: {
+        image: anilistData.coverImage.large,
+        border: '#000000'
+      },
+      characters: [],
+      mangaRelations: [],
+      animeRelations: [],
+      activityTimestamp: Date.now()
+    };
+
+    res.status(200).json(animeData);
+  } catch (error) {
+    console.error('Error details:', error);
+    res.status(500).json({ 
+      message: 'Error searching AniList',
+      error: error.message 
+    });
+  }
+};
+
+const compareWithAnilist = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const anime = await AnimeModel.findById(id);
+    
+    if (!anime) {
+      return res.status(404).json({ message: 'Anime not found' });
+    }
+
+    const differences = await compareAnimeData(anime);
+    if (!differences) {
+      return res.status(400).json({ message: 'Failed to compare with AniList' });
+    }
+
+    res.json(differences);
+  } catch (error) {
+    console.error('Error comparing with AniList:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export {
   getAllAnimes,
   getAnimeInfo,
   createAnime,
   updateAnime,
+  createAnimeFromAnilist,
+  compareWithAnilist
 };

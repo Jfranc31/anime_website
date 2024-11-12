@@ -8,6 +8,7 @@ import CreateCharacter from '../CreateCharacter';
 import CharacterSearch from '../Searches/CharacterSearch';
 import RelationSearch from '../Searches/RelationSearch';
 import addPageStyles from '../../styles/pages/add_page.module.css';
+import { CompareAnimeData } from './CompareAnimeData';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -518,6 +519,7 @@ export const UpdateAnime = ({ match }) => {
 
       <div className={addPageStyles.section}>
         <h2>Release Data</h2>
+        <CompareAnimeData animeId={id} />
         <div className={addPageStyles.grid}>
           <div>
             <label htmlFor="releaseData.releaseStatus">Release Status</label>
@@ -1013,6 +1015,7 @@ export const UpdateAnime = ({ match }) => {
           onClose={() => setActiveModal(null)}
         />
       )}
+      <CompareAnimeData animeId={id} />
     </div>
   );
   // #endregion ------------------------------------------------------------

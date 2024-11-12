@@ -1,0 +1,59 @@
+.comparison-container {
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin: 20px 0;
+  background-color: #f8f9fa;
+}
+
+.comparison-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 6px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.comparison-section h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.current-data, .anilist-data {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 4px;
+}
+
+.current-data {
+  background-color: #e9ecef;
+}
+
+.anilist-data {
+  background-color: #f1f8ff;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  margin-right: 8px;
+}
+
+.update-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.update-button:hover {
+  background-color: #0056b3;
+} 
