@@ -9,6 +9,7 @@ import CharacterSearch from '../Components/Searches/CharacterSearch';
 import RelationSearch from '../Components/Searches/RelationSearch';
 import addPageStyles from '../styles/pages/add_page.module.css';
 import { AnimeSearch } from '../Components/Searches/AnimeSearch';
+import { DEFAULT_BORDER } from '../constants/assets';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -99,10 +100,11 @@ const AVAILABLE_RELATION = [
 // #region Initial Form State ----------------------------------------------
 const INITIAL_FORM_STATE = {
   anilistId: '',
+  nextEpisodeAiringAt: '',
   titles: {
     romaji: '',
     english: '',
-    Native: '',
+    native: '',
   },
   releaseData: {
     releaseStatus: '',
@@ -318,25 +320,54 @@ export default function AddAnime() {
 
   const handleAnimeSelected = (animeData) => {
     console.log('AddAnime - Received Data:', animeData);
-    setFormData({
-      ...formData,
+    
+    const updatedFormData = {
       anilistId: animeData.anilistId || '',
-      titles: animeData.titles || '',
-      releaseData: animeData.releaseData || '',
-      typings: animeData.typings || '',
-      lengths: animeData.lengths || '',
+      nextEpisodeAiringAt: animeData.nextEpisodeAiringAt || '',
+      titles: {
+        romaji: animeData.titles?.romaji || '',
+        english: animeData.titles?.english || '',
+        native: animeData.titles?.native || ''
+      },
+      releaseData: {
+        releaseStatus: animeData.releaseData?.releaseStatus || '',
+        startDate: {
+          year: animeData.releaseData?.startDate?.year || '',
+          month: animeData.releaseData?.startDate?.month || '',
+          day: animeData.releaseData?.startDate?.day || ''
+        },
+        endDate: {
+          year: animeData.releaseData?.endDate?.year || '',
+          month: animeData.releaseData?.endDate?.month || '',
+          day: animeData.releaseData?.endDate?.day || ''
+        }
+      },
+      typings: {
+        Format: animeData.typings?.Format || '',
+        Source: animeData.typings?.Source || '',
+        CountryOfOrigin: animeData.typings?.CountryOfOrigin || ''
+      },
+      lengths: {
+        Episodes: animeData.lengths?.Episodes || '',
+        EpisodeDuration: animeData.lengths?.EpisodeDuration || ''
+      },
       genres: animeData.genres || [],
       description: animeData.description || '',
-      images: animeData.images || '',
-      characters: [],
-      mangaRelations: [],
-      animeRelations: []
-    });
+      images: {
+        image: animeData.images?.image || '',
+        border: DEFAULT_BORDER
+      },
+      characters: animeData.characters || [],
+      animeRelations: animeData.animeRelations || [],
+      mangaRelations: animeData.mangaRelations || [],
+      activityTimestamp: animeData.activityTimestamp || ''
+    };
 
-    // Update selected genres
-    setSelectedGenres(animeData.genres || []);
+    setSelectedGenres(updatedFormData.genres);
 
-    console.log('AddAnime - Updated Form Data:', formData);
+    console.log('AddAnime - Updated Form Data:', updatedFormData);
+    setFormData(updatedFormData);
+    setActiveModal(null);
   };
 
   // #region Form Submission ------------------------------------------------
@@ -372,6 +403,8 @@ export default function AddAnime() {
     // Create a new object with character array
     const updatedFormData = {
       ...formData,
+      anilistId: formData.anilistId,
+      nextEpisodeAiringAt: formData.nextEpisodeAiringAt,
       characters: charactersArray,
       animeRelations: animeRelationsArray,
       mangaRelations: mangaRelationsArray,
@@ -441,13 +474,13 @@ export default function AddAnime() {
             />
           </div>
           <div>
-            <label htmlFor="titles.Native">Native</label>
+            <label htmlFor="titles.native">Native</label>
             <div></div>
             <input
               type="text"
-              id="titles.Native"
-              name="titles.Native"
-              value={formData.titles.Native}
+              id="titles.native"
+              name="titles.native"
+              value={formData.titles.native}
               onChange={handleChange}
             />
           </div>
@@ -676,6 +709,36 @@ export default function AddAnime() {
           rows={4}
           cols={80}
         ></textarea>
+      </div>
+
+      <div className={addPageStyles.section}>
+        <h2>AniList ID</h2>
+        <div className={addPageStyles.grid}>
+          <div>
+            <label htmlFor="anilistId">AniList ID:</label>
+            <div></div>
+            <input
+              type="number"
+              id="anilistId"
+              name="anilistId"
+              value={formData.anilistId}
+              onChange={(e) => setFormData({ ...formData, anilistId: e.target.value })}
+              placeholder="AniList ID"
+            />
+          </div>
+          <div>
+            <label htmlFor="nextEpisodeAiringAt">Next Episode Airing At:</label>
+            <div></div>
+            <input
+              type="number"
+              id="nextEpisodeAiringAt"
+              name="nextEpisodeAiringAt"
+              value={formData.nextEpisodeAiringAt}
+              onChange={(e) => setFormData({ ...formData, nextEpisodeAiringAt: e.target.value })}
+              placeholder="Next Episode Airing At"
+            />
+          </div>
+        </div>
       </div>
     </>
   );

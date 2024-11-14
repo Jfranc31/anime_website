@@ -35,6 +35,8 @@ const AnimeDetails = () => {
   const [activeSection, setActiveSection] = useState('relations');
   const [activeTab, setActiveTab] = useState('about');
 
+  const [revealedSpoilers, setRevealedSpoilers] = useState({});
+
   const showRelations = () => {
     setActiveSection('relations');
   };
@@ -282,6 +284,90 @@ const AnimeDetails = () => {
     }
   };
 
+  const toggleSpoiler = (index) => {
+    setRevealedSpoilers((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const renderSpoilerText = (text, index) => {
+    if (typeof text !== 'string') {
+      text = String(text);
+    }
+    
+    const parts = text.split(/~!(.+?)!~/g);
+    return parts.map((part, i) => {
+      if (i % 2 === 1) {
+        // This is spoiler content
+        return (
+          <span
+            key={i}
+            className={`${animeDetailsStyles.spoilerText} ${
+              revealedSpoilers[`${index}-${i}`] ? animeDetailsStyles.revealed : ''
+            }`}
+            onClick={() => toggleSpoiler(`${index}-${i}`)}
+          >
+            {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  const parseDescription = (description) => {
+    if (!description) return [];
+    
+    // First handle <b> tags by preserving them
+    const preserveBoldTags = description.replace(/<b>/g, '###BOLDSTART###')
+                                      .replace(/<\/b>/g, '###BOLDEND###');
+    
+    // Split by <br> tags
+    const paragraphs = preserveBoldTags.split(/<br>/);
+    
+    return paragraphs.map(paragraph => {
+      // Remove closing br tags and trim whitespace
+      const cleanParagraph = paragraph.replace(/<\/br>/g, '').trim();
+      
+      // Restore <b> tags
+      return cleanParagraph.replace(/###BOLDSTART###/g, '<b>')
+                          .replace(/###BOLDEND###/g, '</b>');
+    }).filter(p => p);
+  };
+
+  const renderParagraphContent = (text, index) => {
+    // First handle spoilers
+    const parts = text.split(/~!(.+?)!~/g);
+    
+    return parts.map((part, i) => {
+      if (i % 2 === 1) {
+        // This is spoiler content
+        return (
+          <span
+            key={`spoiler-${i}`}
+            className={`${animeDetailsStyles.spoilerText} ${
+              revealedSpoilers[`${index}-${i}`] ? animeDetailsStyles.revealed : ''
+            }`}
+            onClick={() => toggleSpoiler(`${index}-${i}`)}
+          >
+            {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
+          </span>
+        );
+      }
+      
+      // Handle bold text
+      const boldParts = part.split(/(<bold>.*?<\/bold>)/g);
+      return boldParts.map((boldPart, j) => {
+        if (boldPart.startsWith('<bold>') && boldPart.endsWith('</bold>')) {
+          const content = boldPart.replace(/<\/?bold>/g, '');
+          return <strong key={`bold-${j}`} className={animeDetailsStyles.boldText}>{content}</strong>;
+        }
+        return boldPart;
+      });
+    });
+  };
+
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
       <div className={animeDetailsStyles.animeHeader}>
@@ -390,7 +476,24 @@ const AnimeDetails = () => {
               {/* Metadata items */}
             </div>
             <div className={animeDetailsStyles.descriptionSection}>
-              <p>{animeDetails.description}</p>
+              {parseDescription(animeDetails.description).map((paragraph, index) => {
+                // First parse any bold tags in the paragraph
+                const parts = paragraph.split(/(<b>.*?<\/b>)/g);
+                
+                return (
+                  <p key={index} className={animeDetailsStyles.paragraph}>
+                    {parts.map((part, i) => {
+                      if (part.startsWith('<b>') && part.endsWith('</b>')) {
+                        // Handle bold text
+                        const boldContent = part.replace(/<\/?b>/g, '');
+                        return <strong key={`bold-${i}`}>{boldContent}</strong>;
+                      }
+                      // Handle regular text with potential spoilers
+                      return renderSpoilerText(part, `${index}-${i}`);
+                    })}
+                  </p>
+                );
+              })}
             </div>
           </div>
         )}

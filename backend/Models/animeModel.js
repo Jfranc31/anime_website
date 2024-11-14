@@ -15,7 +15,7 @@ const animeSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    Native: {
+    native: {
       type: String,
     },
   },
@@ -82,10 +82,10 @@ const animeSchema = new mongoose.Schema({
   },
   lengths: {
     Episodes: {
-      type: Number,
+      type: String,
     },
     EpisodeDuration: {
-      type: Number,
+      type: String,
       required: true,
     },
   },

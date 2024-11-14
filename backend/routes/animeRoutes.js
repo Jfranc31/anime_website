@@ -9,7 +9,8 @@ import {
   getAnimeInfo,
   createAnime,
   updateAnime,
-  createAnimeFromAnilist
+  createAnimeFromAnilist,
+  compareAnimeWithAnilist
 } from "../controllers/animeController.js";
 import { fetchAnimeData } from '../services/anilistService.js';
 import AnimeModel from '../Models/animeModel.js';
@@ -61,5 +62,7 @@ router.post('/update-from-anilist/:id', async (req, res) => {
 });
 
 router.post('/create-from-anilist', createAnimeFromAnilist);
+
+router.get('/compare/:id', compareAnimeWithAnilist);
 
 export default router;

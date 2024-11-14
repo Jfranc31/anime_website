@@ -98,10 +98,12 @@ const AVAILABLE_RELATION = [
 
 // #region Initial Form State ----------------------------------------------
 const INITIAL_FORM_STATE = {
+  anilistId: '',
+  nextEpisodeAiringAt: '',
   titles: {
     romaji: '',
     english: '',
-    Native: '',
+    native: '',
   },
   releaseData: {
     releaseStatus: '',
@@ -123,7 +125,7 @@ const INITIAL_FORM_STATE = {
   },
   lengths: {
     Episodes: '',
-    EpisodeDuration: 0,
+    EpisodeDuration: '',
   },
   genres: [],
   description: '',
@@ -134,7 +136,7 @@ const INITIAL_FORM_STATE = {
   characters: [],
   mangaRelations: [],
   animeRelations: [],
-  activityTimestamp: 0,
+  activityTimestamp: '',
 };
 // #endregion --------------------------------------------------------------
 
@@ -143,6 +145,8 @@ export const UpdateAnime = ({ match }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [anilistData, setAnilistData] = useState();
+  const [selectedData, setSelectedData] = useState();
   const [activeTab, setActiveTab] = useState('general');
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -158,6 +162,30 @@ export const UpdateAnime = ({ match }) => {
         );
         const { genres, ...animeData } = animeResponse.data;
 
+        // Ensure numeric values are converted to strings
+        const processedData = {
+          ...animeData,
+          anilistId: animeData.anilistId?.toString() || '',
+        releaseData: {
+          ...animeData.releaseData,
+          releaseStatus: animeData.releaseData?.releaseStatus || '',
+          startDate: {
+            year: animeData.releaseData?.startDate?.year?.toString() || '',
+            month: animeData.releaseData?.startDate?.month?.toString() || '',
+            day: animeData.releaseData?.startDate?.day?.toString() || '',
+          },
+          endDate: {
+            year: animeData.releaseData?.endDate?.year?.toString() || '',
+            month: animeData.releaseData?.endDate?.month?.toString() || '',
+            day: animeData.releaseData?.endDate?.day?.toString() || '',
+          },
+        },
+        lengths: {
+          Episodes: animeData.lengths?.Episodes?.toString() || '',
+          EpisodeDuration: animeData.lengths?.EpisodeDuration?.toString() || '',
+        },
+        };
+
         // Extract genre values from the genres array
         const genreValues = Array.isArray(genres)
           ? genres.map((genre) =>
@@ -167,7 +195,7 @@ export const UpdateAnime = ({ match }) => {
 
         setFormData((prevData) => ({
           ...prevData,
-          ...animeData,
+          ...processedData,
           genres: genreValues,
         }));
         setSelectedGenres(genreValues);
@@ -245,6 +273,104 @@ export const UpdateAnime = ({ match }) => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    const fetchComparisonData = async () => {
+      try {
+        const response = await axiosInstance.get(`/animes/compare/${id}`);
+
+        if (response.data) {
+          const newAnilistData = {
+            description: response.data.description.anilist,
+            genres: response.data.genres.anilist,
+            images: response.data.images.anilist,
+            lengths: response.data.lengths.anilist,
+            releaseData: response.data.releaseData.anilist,
+            titles: response.data.titles.anilist,
+            typings: response.data.typings.anilist,
+          };
+
+          setAnilistData(newAnilistData);
+        }
+      } catch (error) {
+        console.error('Error fetching comparison data:', error);
+      }
+    };
+
+    fetchComparisonData();
+  }, [id]);
+
+  const handleDataSelect = (field, value) => {
+    console.log('Updating form with:', field, value);
+    
+    setFormData(prev => {
+      const newData = { ...prev };
+      
+      switch (field) {
+        case 'titles':
+          newData.titles = {
+            ...prev.titles,
+            ...value
+          };
+          break;
+        case 'releaseStatus':
+          newData.releaseData = {
+            ...prev.releaseData,
+            releaseStatus: value
+          };
+          break;
+        case 'startDate':
+          newData.releaseData = {
+            ...prev.releaseData,
+            startDate: value
+          };
+          break;
+        case 'endDate':
+          newData.releaseData = {
+            ...prev.releaseData,
+            endDate: value
+          };
+          break;
+        case 'typings':
+          newData.typings = {
+            ...prev.typings,
+            ...value
+          };
+          break;
+        case 'lengths':
+          newData.lengths = {
+            ...prev.lengths,
+            ...value
+          };
+          break;
+        case 'genres':
+          newData.genres = [...value];
+          setSelectedGenres([...value]);
+          break;
+        case 'description':
+          newData.description = value;
+          break;
+        case 'images':
+          if (typeof value === 'string') {
+            newData.images = {
+              ...prev.images,
+              image: value
+            };
+          } else {
+            newData.images = {
+              ...prev.images,
+              ...value
+            };
+          }
+          break;
+        default:
+          console.warn(`Unhandled field type: ${field}`);
+      }
+      
+      console.log('Updated form data:', newData);
+      return newData;
+    });
+  };
   // #endregion ------------------------------------------------------------
 
   // #region Modal Handlers ------------------------------------------------
@@ -450,17 +576,12 @@ export const UpdateAnime = ({ match }) => {
     };
 
     try {
-      console.log('Current formData:', updatedFormData);
-
       const res = await axiosInstance.put(
         `/animes/anime/${id}`,
         updatedFormData
       );
 
-      console.log('Response from backend:', res.data);
-
       if (res.status === 200) {
-        console.log('Anime and characters updated successfully!', res.data);
 
         navigate(`/anime/${id}`);
       } else {
@@ -487,7 +608,7 @@ export const UpdateAnime = ({ match }) => {
               type="text"
               id="titles.romaji"
               name="titles.romaji"
-              value={formData.titles.romaji}
+              value={formData.titles.romaji || ''}
               onChange={handleChange}
             />
           </div>
@@ -498,19 +619,19 @@ export const UpdateAnime = ({ match }) => {
               type="text"
               id="titles.english"
               name="titles.english"
-              value={formData.titles.english}
+              value={formData.titles.english || ''}
               onChange={handleChange}
               required
             />
           </div>
           <div>
-            <label htmlFor="titles.Native">Native</label>
+            <label htmlFor="titles.native">Native</label>
             <div></div>
             <input
               type="text"
-              id="titles.Native"
-              name="titles.Native"
-              value={formData.titles.Native}
+              id="titles.native"
+              name="titles.native"
+              value={formData.titles.native || ''}
               onChange={handleChange}
             />
           </div>
@@ -519,7 +640,6 @@ export const UpdateAnime = ({ match }) => {
 
       <div className={addPageStyles.section}>
         <h2>Release Data</h2>
-        <CompareAnimeData animeId={id} />
         <div className={addPageStyles.grid}>
           <div>
             <label htmlFor="releaseData.releaseStatus">Release Status</label>
@@ -551,7 +671,7 @@ export const UpdateAnime = ({ match }) => {
                 id="releaseData.startDate.year"
                 name="releaseData.startDate.year"
                 placeholder="YYYY"
-                value={formData.releaseData.startDate.year}
+                value={formData.releaseData.startDate.year || ''}
                 onChange={handleChange}
                 min="1900"
                 max="2099"
@@ -561,7 +681,7 @@ export const UpdateAnime = ({ match }) => {
                 id="releaseData.startDate.month"
                 name="releaseData.startDate.month"
                 placeholder="MM"
-                value={formData.releaseData.startDate.month}
+                value={formData.releaseData.startDate.month || ''}
                 onChange={handleChange}
                 min="1"
                 max="12"
@@ -571,7 +691,7 @@ export const UpdateAnime = ({ match }) => {
                 id="releaseData.startDate.day"
                 name="releaseData.startDate.day"
                 placeholder="DD"
-                value={formData.releaseData.startDate.day}
+                value={formData.releaseData.startDate.day || ''}
                 onChange={handleChange}
                 min="1"
                 max="31"
@@ -586,7 +706,7 @@ export const UpdateAnime = ({ match }) => {
                 id="releaseData.endDate.year"
                 name="releaseData.endDate.year"
                 placeholder="YYYY"
-                value={formData.releaseData.endDate.year}
+                value={formData.releaseData.endDate.year || ''}
                 onChange={handleChange}
                 min="1900"
                 max="2099"
@@ -596,7 +716,7 @@ export const UpdateAnime = ({ match }) => {
                 id="releaseData.endDate.month"
                 name="releaseData.endDate.month"
                 placeholder="MM"
-                value={formData.releaseData.endDate.month}
+                value={formData.releaseData.endDate.month || ''}
                 onChange={handleChange}
                 min="1"
                 max="12"
@@ -606,7 +726,7 @@ export const UpdateAnime = ({ match }) => {
                 id="releaseData.endDate.day"
                 name="releaseData.endDate.day"
                 placeholder="DD"
-                value={formData.releaseData.endDate.day}
+                value={formData.releaseData.endDate.day || ''}
                 onChange={handleChange}
                 min="1"
                 max="31"
@@ -692,7 +812,7 @@ export const UpdateAnime = ({ match }) => {
               type="number"
               id="lengths.Episodes"
               name="lengths.Episodes"
-              value={formData.lengths.Episodes}
+              value={formData.lengths.Episodes || ''}
               onChange={handleChange}
             />
           </div>
@@ -703,7 +823,7 @@ export const UpdateAnime = ({ match }) => {
               type="number"
               id="lengths.EpisodeDuration"
               name="lengths.EpisodeDuration"
-              value={formData.lengths.EpisodeDuration}
+              value={formData.lengths.EpisodeDuration || ''}
               onChange={handleChange}
             />
           </div>
@@ -735,11 +855,29 @@ export const UpdateAnime = ({ match }) => {
           type="text"
           id="description"
           name="description"
-          value={formData.description}
+          value={formData.description || ''}
           onChange={handleChange}
           rows={4}
           cols={80}
         ></textarea>
+      </div>
+
+      <div className={addPageStyles.section}>
+        <h2>AniList ID</h2>
+        <div className={addPageStyles.grid}>
+          <div>
+            <label htmlFor="anilistId">AniList ID:</label>
+            <div></div>
+            <input
+              type="number"
+              id="anilistId"
+              name="anilistId"
+              value={formData.anilistId}
+              onChange={(e) => setFormData({ ...formData, anilistId: e.target.value })}
+              placeholder="AniList ID"
+            />
+          </div>
+        </div>
       </div>
     </>
   );
@@ -1015,7 +1153,50 @@ export const UpdateAnime = ({ match }) => {
           onClose={() => setActiveModal(null)}
         />
       )}
-      <CompareAnimeData animeId={id} />
+      {anilistData ? (
+        <CompareAnimeData 
+          currentData={{
+            titles: {
+              romaji: formData.titles.romaji,
+              english: formData.titles.english,
+              native: formData.titles.native
+            },
+            releaseStatus: formData.releaseData.releaseStatus,
+            startDate: formData.releaseData.startDate,
+            endDate: formData.releaseData.endDate,
+            typings: formData.typings,
+            lengths: formData.lengths,
+            genres: formData.genres,
+            description: formData.description,
+            images: formData.images.image
+          }}
+          anilistData={{
+            titles: {
+              romaji: anilistData.titles.romaji,
+              english: anilistData.titles.english,
+              native: anilistData.titles.native
+            },
+            releaseStatus: anilistData.releaseData.releaseStatus,
+            startDate: anilistData.releaseData.startDate,
+            endDate: anilistData.releaseData.endDate,
+            typings: {
+              Format: anilistData.typings.Format,
+              Source: anilistData.typings.Source,
+              CountryOfOrigin: anilistData.typings.CountryOfOrigin
+            },
+            lengths: {
+              Episodes: anilistData.lengths.Episodes,
+              EpisodeDuration: anilistData.lengths.EpisodeDuration
+            },
+            genres: anilistData.genres,
+            description: anilistData.description,
+            images: anilistData.images
+          }}
+          onDataSelect={handleDataSelect}
+        />
+      ) : (
+        <div>Loading AniList data...</div>
+      )}
     </div>
   );
   // #endregion ------------------------------------------------------------

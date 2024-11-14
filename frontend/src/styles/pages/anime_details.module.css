@@ -234,6 +234,20 @@
   color: var(--text-primary);
 }
 
+.paragraph {
+  margin-bottom: 1rem;
+  white-space: pre-line;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.boldText {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .charactersContainer {
   display: flex;
   flex-direction: column;
@@ -388,4 +402,29 @@
 .deleteButton:hover,
 .addButton:hover {
   opacity: 0.9;
+}
+
+.spoilerText {
+  background-color: var(--spoiler-bg, #2a2a2a);
+  border: 1px solid var(--spoiler-border, #3a3a3a);
+  color: transparent;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-style: italic;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.spoilerText.revealed {
+  background-color: var(--border-color);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  font-style: normal;
+}
+
+.spoilerText:hover {
+  background-color: var(--spoiler-hover-bg, #3a3a3a);
 }

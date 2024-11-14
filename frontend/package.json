@@ -10,6 +10,7 @@
     "axios": "^1.6.2",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.454.0",
+    "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.1",
@@ -48,5 +49,10 @@
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
-  }
+  },
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "test.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

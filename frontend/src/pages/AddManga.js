@@ -8,6 +8,8 @@ import CreateCharacter from '../Components/CreateCharacter';
 import CharacterSearch from '../Components/Searches/CharacterSearch';
 import RelationSearch from '../Components/Searches/RelationSearch';
 import addPageStyles from '../styles/pages/add_page.module.css';
+import { MangaSearch } from '../Components/Searches/MangaSearch';
+import { DEFAULT_BORDER } from '../constants/assets';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -96,6 +98,7 @@ const AVAILABLE_RELATION = [
 
 // #region Initial Form State ----------------------------------------------
 const INITIAL_FORM_STATE = {
+  anilistId: '',
   titles: {
     romaji: '',
     english: '',
@@ -132,7 +135,7 @@ const INITIAL_FORM_STATE = {
   characters: [],
   mangaRelations: [],
   animeRelations: [],
-  activityTimestamp: 0,
+  activityTimestamp: '',
 };
 // #endregion --------------------------------------------------------------
 
@@ -314,6 +317,58 @@ export default function AddManga() {
   };
   // #endregion ------------------------------------------------------------
 
+  const handleMangaSelected = (mangaData) => {
+    console.log('AddManga - Received Data:', mangaData);
+
+    const updatedFormData = {
+      ...formData,
+      anilistId: mangaData.anilistId || '',
+      titles: {
+        romaji: mangaData.titles?.romaji || '',
+        english: mangaData.titles?.english || '',
+        Native: mangaData.titles?.native || '',
+      },
+      releaseData: {
+        releaseStatus: mangaData.releaseData?.releaseStatus || '',
+        startDate: {
+          year: mangaData.releaseData?.startDate?.year || '',
+          month: mangaData.releaseData?.startDate?.month || '',
+          day: mangaData.releaseData?.startDate?.day || '',
+        },
+        endDate: {
+          year: mangaData.releaseData?.endDate?.year || '',
+          month: mangaData.releaseData?.endDate?.month || '',
+          day: mangaData.releaseData?.endDate?.day || '',
+        },
+      },
+      typings: {
+        Format: mangaData.typings?.Format || '',
+        Source: mangaData.typings?.Source || '',
+        CountryOfOrigin: mangaData.typings?.CountryOfOrigin || '',
+      },
+      lengths: {
+        chapters: mangaData.lengths?.chapters || '',
+        volumes: mangaData.lengths?.volumes || '',
+      },
+      genres: mangaData.genres || [],
+      description: mangaData.description || '',
+      images: {
+        image: mangaData.images?.image || '',
+        border: DEFAULT_BORDER,
+      },
+      characters: mangaData.characters || [],
+      mangaRelations: mangaData.mangaRelations || [],
+      animeRelations: mangaData.animeRelations || [],
+      activityTimestamp: mangaData.activityTimestamp || '',
+    };
+
+    setSelectedGenres(updatedFormData.genres);
+
+    console.log('AddManga - Updated Form Data:', updatedFormData);
+    setFormData(updatedFormData);
+    setActiveModal(null);
+  };
+
   // #region Form Submission -----------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -346,6 +401,7 @@ export default function AddManga() {
     // Create a new object with character and relation arrays
     const updatedFormData = {
       ...formData,
+      anilistId: formData.anilistId,
       characters: charactersArray,
       animeRelations: animeRelationsArray,
       mangaRelations: mangaRelationsArray,
@@ -388,10 +444,10 @@ export default function AddManga() {
   // #region General Section ------------------------------------------------
   const renderGeneralSection = () => (
     <>
-      <div className={addPageStyles.section}>
+      <div className={addPageStyles.section} data-testid="titles-section">
         <h2>Titles</h2>
         <div className={addPageStyles.grid}>
-          <div>
+          <div data-testid="romaji-title-input-container">
             <label htmlFor="titles.romaji">Romaji</label>
             <div></div>
             <input
@@ -400,6 +456,7 @@ export default function AddManga() {
               name="titles.romaji"
               value={formData.titles.romaji}
               onChange={handleChange}
+              data-testid="romaji-title-input"
             />
           </div>
           <div>
@@ -650,6 +707,24 @@ export default function AddManga() {
           cols={80}
         ></textarea>
       </div>
+
+      <div className={addPageStyles.section}>
+        <h2>AniList ID</h2>
+        <div className={addPageStyles.grid}>
+          <div>
+            <label htmlFor="anilistId">AniList ID:</label>
+            <div></div>
+            <input
+              type="number"
+              id="anilistId"
+              name="anilistId"
+              value={formData.anilistId}
+              onChange={(e) => setFormData({ ...formData, anilistId: e.target.value })}
+              placeholder="AniList ID"
+            />
+          </div>
+        </div>
+      </div>
     </>
   );
   // #endregion ------------------------------------------------------------
@@ -883,6 +958,14 @@ export default function AddManga() {
             Relations
           </button>
         </div>
+
+        <button 
+          type="button" 
+          className={addPageStyles.anilistButton}
+          onClick={() => setActiveModal('mangaSearch')}
+        >
+          Search on AniList
+        </button>
       </div>
 
       <form
@@ -919,6 +1002,12 @@ export default function AddManga() {
         <RelationSearch
           onRelationSelected={handleSelectRelation}
           searchType={'manga'}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+      {activeModal === 'mangaSearch' && (
+        <MangaSearch
+          onMangaSelected={handleMangaSelected}
           onClose={() => setActiveModal(null)}
         />
       )}

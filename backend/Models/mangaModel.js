@@ -170,6 +170,10 @@ const mangaSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  anilistId: {
+    type: Number,
+    unique: true
+  },
 });
 
 // Creating the 'MangaModel' using the schema

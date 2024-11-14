@@ -7,6 +7,8 @@ import MangaModel from "../Models/mangaModel.js";
 import CharacterModel from "../Models/characterModel.js";
 import AnimeModel from "../Models/animeModel.js";
 import { getReverseRelationType } from "../functions.js";
+import { fetchMangaData } from "../services/anilistService.js";
+import { compareMangaData } from "../services/updateService.js";
 
 /**
  * @function getAllManga
@@ -67,6 +69,7 @@ const createManga = async (req, res) => {
       mangaRelations,
       animeRelations,
       activityTimestamp,
+      anilistId,
     } = req.body;
 
     // Check if English title is provided
@@ -102,6 +105,7 @@ const createManga = async (req, res) => {
       mangaRelations: mangaRelationsArray,
       animeRelations: animeRelationsArray,
       activityTimestamp,
+      anilistId,
     });
 
     // Set activityTimestamp once after creating the manga
@@ -239,15 +243,15 @@ const updateManga = async (req, res) => {
         const { characterId, role } = characterInfo;
 
         // Use updateOne to atomically update the document
-        var exisitingCharacter = await CharacterModel.findOne({
+        var existingCharacter = await CharacterModel.findOne({
           _id: characterId,
           "mangas.mangaId": id, // Ensure mangaId is not already present
         });
 
         // Check if the document was modified (i.e., updated)
-        if (!exisitingCharacter) {
+        if (!existingCharacter) {
           // Document was updated, return the updated character
-          exisitingCharacter = await CharacterModel.findByIdAndUpdate(
+          existingCharacter = await CharacterModel.findByIdAndUpdate(
             characterId,
             {
               $push: {
@@ -260,12 +264,12 @@ const updateManga = async (req, res) => {
             { new: true, upsert: true },
           );
         } else {
-          exisitingCharacter.mangas.find(
+          existingCharacter.mangas.find(
             (manga) => String(manga.mangaId) === id,
           ).role = role;
-          exisitingCharacter = await exisitingCharacter.save();
+          existingCharacter = await existingCharacter.save();
         }
-        return exisitingCharacter;
+        return existingCharacter;
       }),
     );
 
@@ -464,9 +468,117 @@ const updateManga = async (req, res) => {
   }
 };
 
-export default {
+const createMangaFromAnilist = async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+
+    const anilistData = await fetchMangaData(title);
+    if (!anilistData) {
+      return res.status(404).json({ message: "Manga not found on AniList" });
+    }
+
+    // Map AniList status to our status
+    const statusMap = {
+      'RELEASING': 'Currently Releasing',
+      'FINISHED': 'Finished Releasing',
+      'NOT_YET_RELEASED': 'Not Yet Released',
+      'CANCELLED': 'Cancelled',
+      'HIATUS': 'Hiatus'
+    };
+
+    // Map AniList source to our source
+    const sourceMap = {
+      'MANGA': 'Manga',
+      'ORIGINAL': 'Original',
+      'LIGHT_NOVEL': 'Light Novel',
+      'VISUAL_NOVEL': 'Visual Novel',
+      'VIDEO_GAME': 'Video Game',
+      'OTHER': 'Other',
+      'NOVEL': 'Light Novel',
+      'DOUJINSHI': 'Doujinshi',
+      'ANIME': 'Anime',
+      'ONE_SHOT': 'One Shot'
+    };
+
+    // Map country codes to full names
+    const countryMap = {
+      'JP': 'Japan',
+      'KR': 'South Korea',
+      'CN': 'China',
+      'TW': 'Taiwan'
+    };
+
+    const mangaData = {
+      anilistId: anilistData.id,
+      titles: {
+        romaji: anilistData.title.romaji,
+        english: anilistData.title.english,
+        native: anilistData.title.native
+      },
+      releaseData: {
+        releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
+        startDate: anilistData.startDate,
+        endDate: anilistData.endDate
+      },
+      typings: {
+        Format: anilistData.format,
+        Source: sourceMap[anilistData.source] || 'Manga',
+        CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || 'Japan'
+      },
+      lengths: {
+        Chapters: anilistData.chapters,
+        Volumes: anilistData.volumes
+      },
+      genres: anilistData.genres,
+      description: anilistData.description,
+      images: {
+        image: anilistData.coverImage.large,
+        border: '#000000'
+      },
+      characters: [],
+      mangaRelations: [],
+      animeRelations: [],
+      activityTimestamp: Date.now()
+    };
+
+    res.status(200).json(mangaData);
+  } catch (error) {
+    console.error("Error details:", error);
+    res.status(500).json({
+      message: "Error searching AniList",
+      error: error.message
+    });
+  }
+};
+
+const compareMangaWithAnilist = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const manga = await MangaModel.findById(id);
+
+    if (!manga) {
+      return res.status(404).json({ message: "Manga not found" });
+    }
+
+    const differences = await compareMangaData(manga);
+    if (!differences) {
+      return res.status(400).json({ message: "Failed to compare manga with AniList" });
+    }
+    res.json(differences);
+  } catch (error) {
+    console.error("Error comparing manga with AniList:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export {
   getAllManga,
   getMangaInfo,
   createManga,
   updateManga,
+  createMangaFromAnilist,
+  compareMangaWithAnilist
 };

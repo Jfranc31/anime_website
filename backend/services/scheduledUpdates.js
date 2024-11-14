@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import AnimeModel from '../Models/animeModel.js';
-import { updateAnimeFromAnilist } from './updateService.js';
+import MangaModel from '../Models/mangaModel.js';
+import { updateAnimeFromAnilist, updateMangaFromAnilist } from './updateService.js';
 
 const runScheduledUpdates = () => {
   // Run every day at midnight
@@ -14,7 +15,19 @@ const runScheduledUpdates = () => {
         await updateAnimeFromAnilist(anime);
       }
     } catch (error) {
-      console.error('Scheduled update error:', error);
+      console.error('Scheduled anime update error:', error);
+    }
+
+    try {
+      const mangas = await MangaModel.find({
+        'releaseData.releaseStatus': 'Currently Releasing'
+      });
+
+      for (const manga of mangas) {
+        await updateMangaFromAnilist(manga);
+      }
+    } catch (error) {
+      console.error('Scheduled manga update error:', error);
     }
   });
 };

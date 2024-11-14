@@ -69,6 +69,8 @@ const createAnime = async (req, res) => {
       mangaRelations,
       animeRelations,
       activityTimestamp,
+      anilistId,
+      nextEpisodeAiringAt,
     } = req.body;
 
     // Check if the English title is provided
@@ -104,6 +106,8 @@ const createAnime = async (req, res) => {
       mangaRelations: mangaRelationsArray,
       animeRelations: animeRelationsArray,
       activityTimestamp,
+      anilistId,
+      nextEpisodeAiringAt,
     });
 
     // Set activityTimestamp once after creating the anime
@@ -384,7 +388,7 @@ const updateAnime = async (req, res) => {
 
         console.log("mangaRelationResult: ", mangaRelationResult);
 
-        // Check if the document was modefied (i.e., updated)
+        // Check if the document was modified (i.e., updated)
         if (mangaRelationResult.nModified > 0) {
           // Document was updated, return the updated relation
           const updatedAnime = await AnimeModel.findById(id);
@@ -430,7 +434,7 @@ const updateAnime = async (req, res) => {
               : null,
           ];
         } else {
-          // Document was not updated, try updaying the reverse relation on the related manga
+          // Document was not updated, try updating the reverse relation on the related manga
           const reverseRelationManga = await MangaModel.findOneAndUpdate(
             {
               "animeRelations.relationId": id,
@@ -509,7 +513,8 @@ const createAnimeFromAnilist = async (req, res) => {
       'OTHER': 'Other',
       'NOVEL': 'Novel',
       'DOUJINSHI': 'Doujinshi',
-      'ANIME': 'Anime'
+      'ANIME': 'Anime',
+      'ONE_SHOT': 'One Shot'
     };
 
     // Map country codes to full names
@@ -525,7 +530,7 @@ const createAnimeFromAnilist = async (req, res) => {
       titles: {
         romaji: anilistData.title.romaji,
         english: anilistData.title.english,
-        Native: anilistData.title.native
+        native: anilistData.title.native
       },
       releaseData: {
         releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
@@ -563,7 +568,7 @@ const createAnimeFromAnilist = async (req, res) => {
   }
 };
 
-const compareWithAnilist = async (req, res) => {
+const compareAnimeWithAnilist = async (req, res) => {
   try {
     const { id } = req.params;
     const anime = await AnimeModel.findById(id);
@@ -574,12 +579,12 @@ const compareWithAnilist = async (req, res) => {
 
     const differences = await compareAnimeData(anime);
     if (!differences) {
-      return res.status(400).json({ message: 'Failed to compare with AniList' });
+      return res.status(400).json({ message: 'Failed to compare anime with AniList' });
     }
 
     res.json(differences);
   } catch (error) {
-    console.error('Error comparing with AniList:', error);
+    console.error('Error comparing anime with AniList:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -590,5 +595,5 @@ export {
   createAnime,
   updateAnime,
   createAnimeFromAnilist,
-  compareWithAnilist
+  compareAnimeWithAnilist
 };
