@@ -6,6 +6,7 @@
 import CharacterModel from "../Models/characterModel.js";
 import AnimeModel from "../Models/animeModel.js";
 import MangaModel from "../Models/mangaModel.js";
+import { fetchCharacterData } from "../services/anilistService.js";
 
 /**
  * @function getAllCharacters
@@ -34,9 +35,15 @@ const getAllCharacters = async (req, res) => {
 const searchForCharacters = async (req, res) => {
   try {
     const searchTerm = req.query.query;
+    let foundCharacters = [];
+
+    console.log(
+      "Character Search - Search Term",
+      searchTerm,
+    );
 
     // Perform a case-insensitive search for characters with any name field containing the searchTerm
-    const foundCharacters = await CharacterModel.find({
+    foundCharacters = await CharacterModel.find({
       $or: [
         { "names.givenName": { $regex: searchTerm, $options: "i" } },
         { "names.middleName": { $regex: searchTerm, $options: "i" } },
@@ -45,7 +52,12 @@ const searchForCharacters = async (req, res) => {
       ],
     });
 
-    res.json({ characters: foundCharacters });
+    if (foundCharacters.length > 0) {
+      res.json({ characters: foundCharacters });
+    } else {
+      res.json({characters: []});
+    }
+
   } catch (error) {
     console.error("Error during character search:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
@@ -82,8 +94,14 @@ const getCharacterInfo = async (req, res) => {
  */
 const createCharacter = async (req, res) => {
   try {
-    const { names, about, gender, age, DOB, characterImage, animes, mangas } =
+    const { anilistId, names, about, gender, age, DOB, characterImage, animes, mangas } =
       req.body;
+
+    const character_in_list = await CharacterModel.findOne({ anilistId: anilistId });
+
+    if(character_in_list) {
+      return res.status(400).send({ message: "This character is already registered" });
+    }
 
     // Check if animes are provided
     if (animes && Array.isArray(animes) && animes.length > 0) {
@@ -94,6 +112,7 @@ const createCharacter = async (req, res) => {
       }));
 
       const character = await CharacterModel.create({
+        anilistId,
         names,
         about,
         gender,
@@ -121,6 +140,7 @@ const createCharacter = async (req, res) => {
       }));
 
       const character = await CharacterModel.create({
+        anilistId,
         names,
         about,
         gender,
@@ -141,6 +161,7 @@ const createCharacter = async (req, res) => {
     } else {
       // If animes are not provided, create the character without association
       const character = await CharacterModel.create({
+        anilistId,
         names,
         about,
         gender,
@@ -196,10 +217,70 @@ const updateCharacter = async (req, res) => {
   }
 };
 
-export default {
+/**
+ * @function createCharacterFromAnilist
+ * @description Get all character documents from the AniList database matching the search.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of characters documents.
+ */
+const createCharacterFromAnilist = async (req, res) => {
+  console.log('Starting createCharacterFromAnilist in characterController');
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({message: `Name is required: Search term: ${name}` });
+    }
+
+    const anilistResults = await fetchCharacterData(name);
+    if (!anilistResults) {
+      return res.status(404).json({ message: `No character found on AniList matching "${name}"` });
+    }
+
+    const characterList = anilistResults.map((anilistData) => ({
+      anilistId: anilistData.id.toString() || '',
+      names: {
+        givenName: anilistData.name?.first || '',
+        middleName: anilistData.name?.middle || '',
+        surName: anilistData.name?.last || '',
+        nativeName: anilistData.name?.native || '',
+        alterNames: anilistData.name?.alternative || '',
+        alterSpoiler: anilistData.name?.alternativeSpoiler || ''
+      },
+      about: anilistData.description || '',
+      gender: anilistData.gender || '',
+      age: anilistData.age?.toString() || '',
+      DOB: {
+        year: anilistData.dateOfBirth?.year?.toString() || '',
+        month: anilistData.dateOfBirth?.month?.toString() || '',
+        day: anilistData.dateOfBirth?.day?.toString() || '',
+      },
+      characterImage: anilistData.image?.large || ''
+    }));
+
+    res.status(201).json(characterList);
+  } catch (error) {
+    if (error.message === 'SERVICE_UNAVAILABLE') {
+      return res.status(503).json({
+        message: 'AniList API is temporarily unavailable. Please try again later.',
+        retryAfter: 300 // 5 minutes
+      });
+    } else {
+      console.error('Error creating character from AniList:', error);
+    }
+    res.status(500).json({
+      message: 'Error creating character from AniList',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+};
+
+export {
   getAllCharacters,
   searchForCharacters,
   getCharacterInfo,
   createCharacter,
   updateCharacter,
+  createCharacterFromAnilist
 };

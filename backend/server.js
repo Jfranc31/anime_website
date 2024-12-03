@@ -13,7 +13,6 @@ import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
 import cookieParser from "cookie-parser";
 import cron from 'node-cron';
-import { updateAnimeFromAnilist } from './services/updateService.js';
 import { runScheduledUpdates } from './services/scheduledUpdates.js';
 
 // Creating an Express application
@@ -65,7 +64,7 @@ app.get("/searchrelations", async (req, res) => {
         $or: [
           { "titles.english": { $regex: searchTerm, $options: "i" } },
           { "titles.romaji": { $regex: searchTerm, $options: "i" } },
-          { "titles.Native": { $regex: searchTerm, $options: "i" } },
+          { "titles.native": { $regex: searchTerm, $options: "i" } },
         ],
       });
     } else if (contentType === "manga") {
@@ -73,7 +72,7 @@ app.get("/searchrelations", async (req, res) => {
         $or: [
           { "titles.english": { $regex: searchTerm, $options: "i" } },
           { "titles.romaji": { $regex: searchTerm, $options: "i" } },
-          { "titles.Native": { $regex: searchTerm, $options: "i" } },
+          { "titles.native": { $regex: searchTerm, $options: "i" } },
         ],
       });
     } else {
@@ -207,7 +206,7 @@ app.delete("/anime/:id/notes", async (req, res) => {
 =============================*/
 // Starting the Express server
 app.listen(8080, () => {
-  console.log("Server is runing at port 8080");
+  console.log("Server is running at port 8080");
 });
 
 // Run updates every 6 hours

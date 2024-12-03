@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import axiosInstance from '../../utils/axiosConfig';
 import searchStyles from '../../styles/components/search.module.css';
 
-export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
+export const AnilistCharacterSearch = ({ onCharacterSelected, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedAnime, setSelectedAnime] = useState(null);
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -15,36 +15,44 @@ export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
     setError(null);
 
     try {
-      const response = await axiosInstance.post('/animes/create-from-anilist', {
-        title: searchTerm
+      const response = await axiosInstance.post(`/characters/create-from-anilist`, {
+        name: searchTerm
       });
-      
-      console.log('AnimeSearch - API Response:', response.data);
-      
+
+      console.log('AnilistCharacterSearch - API Response:', response.data);
+
       setSearchResults(response.data);
-      
+
     } catch (error) {
       console.error('Search error:', error);
       setError(
         error.response?.data?.message || 
         error.response?.data?.error || 
         error.message || 
-        'Error searching anime'
+        'Error searching character'
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelect = (anime) => {
-    setSelectedAnime(selectedAnime?.anilistId === anime.anilistId ? null : anime);
+  const handleSelect = (character) => {
+    setSelectedCharacter(selectedCharacter?.anilistId === character.anilistId ? null : character);
   };
 
   const handleSubmit = () => {
-    if (selectedAnime) {
-      onAnimeSelected(selectedAnime);
+    if (selectedCharacter) {
+      onCharacterSelected(selectedCharacter);
       onClose();
     }
+  };
+
+  const getFullName = (names) => {
+    const nameParts = [];
+    if (names.givenName) nameParts.push(names.givenName);
+    if (names.middleName) nameParts.push(names.middleName);
+    if (names.surName) nameParts.push(names.surName);
+    return nameParts.join(' ');
   };
 
   return (
@@ -52,14 +60,14 @@ export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
       <div className={searchStyles.searchModal}>
         <div className={searchStyles.modalBody}>
           <div className={searchStyles.searchContainer}>
-            <h2>Search Anime on AniList</h2>
+          <h2>Search Character on AniList</h2>
             <div className={searchStyles.searchBox}>
-              <form id="searchAnime" onSubmit={handleSearch} className={searchStyles.searchForm}>
+              <form id="searchCharacter" onSubmit={handleSearch} className={searchStyles.searchForm}>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Enter anime title..."
+                  placeholder="Enter character name..."
                   className={searchStyles.searchInput}
                 />
                 <button 
@@ -78,19 +86,19 @@ export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
 
             {searchResults.length > 0 && (
               <div className={searchStyles.itemsGrid}>
-                {searchResults.map(anime => (
+                {searchResults.map(character => (
                   <div 
-                    key={anime.anilistId} 
-                    className={`${searchStyles.itemCard} ${selectedAnime?.anilistId === anime.anilistId ? searchStyles.selected : ''}`}
-                    onClick={() => handleSelect(anime)}
+                    key={character.anilistId} 
+                    className={`${searchStyles.itemCard} ${selectedCharacter?.anilistId === character.anilistId ? searchStyles.selected : ''}`}
+                    onClick={() => handleSelect(character)}
                   >
                     <div className={searchStyles.itemImageContainer}>
                       <img 
-                        src={anime.images.image} 
-                        alt={anime.titles.english || anime.titles.romaji}
+                        src={character.characterImage} 
+                        alt={character.names.givenName || character.names.romaji}
                         className={searchStyles.itemImage}
                       />
-                      {selectedAnime?.anilistId === anime.anilistId && (
+                      {selectedCharacter?.anilistId === character.anilistId && (
                         <div className={searchStyles.selectedOverlay}>
                           <span className={searchStyles.checkmark}>✓</span>
                         </div>
@@ -100,17 +108,8 @@ export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
                       <p 
                         className={searchStyles.itemName} 
                       >
-                        {anime.titles.english || anime.titles.romaji}
+                        {getFullName(character.names) || getFullName(character.names)}
                       </p>
-                      <div className={searchStyles.itemMeta}>
-                        {[
-                          { key: 'format', content: anime.typings.Format },
-                          { key: 'dot', content: '•' },
-                          { key: 'year', content: anime.releaseData.startDate.year }
-                        ].map(item => (
-                          <span key={`${anime.anilistId}-${item.key}`}>{item.content}</span>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -120,7 +119,7 @@ export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
             <div className={searchStyles.actionButtons}>
               <button 
                 onClick={handleSubmit}
-                disabled={!selectedAnime || loading}
+                disabled={!selectedCharacter || loading}
                 className={searchStyles.selectButton}
               >
                 Select
@@ -137,4 +136,4 @@ export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
       </div>
     </div>
   );
-}; 
+};

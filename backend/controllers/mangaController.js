@@ -8,7 +8,7 @@ import CharacterModel from "../Models/characterModel.js";
 import AnimeModel from "../Models/animeModel.js";
 import { getReverseRelationType } from "../functions.js";
 import { fetchMangaData } from "../services/anilistService.js";
-import { compareMangaData } from "../services/updateService.js";
+import { updateMangaFromAnilist, compareMangaData } from "../services/updateService.js";
 
 /**
  * @function getAllManga
@@ -68,7 +68,6 @@ const createManga = async (req, res) => {
       characters,
       mangaRelations,
       animeRelations,
-      activityTimestamp,
       anilistId,
     } = req.body;
 
@@ -104,12 +103,9 @@ const createManga = async (req, res) => {
       characters: charactersArray,
       mangaRelations: mangaRelationsArray,
       animeRelations: animeRelationsArray,
-      activityTimestamp,
+      activityTimestamp: Date.now(),
       anilistId,
     });
-
-    // Set activityTimestamp once after creating the manga
-    manga.activityTimestamp = Date.now();
 
     // Update characters with the manga ID
     const updatedCharacters = await Promise.all(
@@ -194,7 +190,10 @@ const createManga = async (req, res) => {
       });
   } catch (error) {
     console.error("Error during manga creation:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
   }
 };
 
@@ -269,6 +268,7 @@ const updateManga = async (req, res) => {
           ).role = role;
           existingCharacter = await existingCharacter.save();
         }
+
         return existingCharacter;
       }),
     );
@@ -468,6 +468,13 @@ const updateManga = async (req, res) => {
   }
 };
 
+/**
+ * @function createMangaFromAnilist
+ * @description Get all manga documents from AniList database matching the search.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of manga documents.
+ */
 const createMangaFromAnilist = async (req, res) => {
   try {
     const { title } = req.body;
@@ -475,9 +482,9 @@ const createMangaFromAnilist = async (req, res) => {
       return res.status(400).json({ message: "Title is required" });
     }
 
-    const anilistData = await fetchMangaData(title);
-    if (!anilistData) {
-      return res.status(404).json({ message: "Manga not found on AniList" });
+    const anilistResults = await fetchMangaData(title);
+    if (!anilistResults) {
+      return res.status(404).json({ message: `No manga found on AniList matching "${title}"` });
     }
 
     // Map AniList status to our status
@@ -489,6 +496,13 @@ const createMangaFromAnilist = async (req, res) => {
       'HIATUS': 'Hiatus'
     };
 
+    // Map AniList format to our format
+    const formatMap = {
+      'MANGA': 'Manga',
+      'LIGHT NOVEL': 'Light Novel',
+      'ONE_SHOT': 'One Shot'
+    };
+
     // Map AniList source to our source
     const sourceMap = {
       'MANGA': 'Manga',
@@ -497,7 +511,7 @@ const createMangaFromAnilist = async (req, res) => {
       'VISUAL_NOVEL': 'Visual Novel',
       'VIDEO_GAME': 'Video Game',
       'OTHER': 'Other',
-      'NOVEL': 'Light Novel',
+      'NOVEL': 'Novel',
       'DOUJINSHI': 'Doujinshi',
       'ANIME': 'Anime',
       'ONE_SHOT': 'One Shot'
@@ -511,49 +525,72 @@ const createMangaFromAnilist = async (req, res) => {
       'TW': 'Taiwan'
     };
 
-    const mangaData = {
-      anilistId: anilistData.id,
+    const mangaList = anilistResults.map((anilistData) => ({
+      anilistId: anilistData.id.toString(),
       titles: {
-        romaji: anilistData.title.romaji,
-        english: anilistData.title.english,
-        native: anilistData.title.native
+        romaji: anilistData.title?.romaji || '',
+        english: anilistData.title?.english || '',
+        native: anilistData.title?.native || ''
       },
       releaseData: {
         releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
-        startDate: anilistData.startDate,
-        endDate: anilistData.endDate
+        startDate: {
+          year: anilistData.startDate?.year?.toString() || '',
+          month: anilistData.startDate?.month?.toString() || '',
+          day: anilistData.startDate?.day?.toString() || ''
+        },
+        endDate: {
+          year: anilistData.endDate?.year?.toString() || '',
+          month: anilistData.endDate?.month?.toString() || '',
+          day: anilistData.endDate?.day?.toString() || ''
+        }
       },
       typings: {
-        Format: anilistData.format,
-        Source: sourceMap[anilistData.source] || 'Manga',
+        Format: formatMap[anilistData.format] || 'Manga',
+        Source: sourceMap[anilistData.source] || 'Original',
         CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || 'Japan'
       },
       lengths: {
-        Chapters: anilistData.chapters,
-        Volumes: anilistData.volumes
+        Chapters: anilistData.chapters?.toString() || '',
+        Volumes: anilistData.volumes?.toString() || ''
       },
-      genres: anilistData.genres,
-      description: anilistData.description,
+      genres: anilistData.genres || [],
+      description: anilistData.description || '',
       images: {
-        image: anilistData.coverImage.large,
-        border: '#000000'
+        image: anilistData.coverImage?.large || '',
+        border: 'DEFAULT_BORDER'
       },
       characters: [],
       mangaRelations: [],
       animeRelations: [],
       activityTimestamp: Date.now()
-    };
+    }));
 
-    res.status(200).json(mangaData);
+    res.status(200).json(mangaList);
   } catch (error) {
-    console.error("Error details:", error);
+    if (error.message === 'SERVICE_UNAVAILABLE') {
+      return res.status(503).json({
+        message: 'AniList API is temporarily unavailable. Please try again later.',
+        retryAfter: 300 // 5 minutes
+      });
+    } else {
+      console.error('Error creating manga from Anilist:', error);
+    }
     res.status(500).json({
-      message: "Error searching AniList",
-      error: error.message
+      message: "Error creating manga from AniList",
+      error: error.message,
+      stack: error.stack
     });
   }
 };
 
+/**
+ * @function compareMangaWithAnilist
+ * @description Compare manga data with the data from AniList.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of differences.
+ */
 const compareMangaWithAnilist = async (req, res) => {
   try {
     const { id } = req.params;
@@ -574,11 +611,38 @@ const compareMangaWithAnilist = async (req, res) => {
   }
 };
 
+/**
+ * @function updateMangaAnilist
+ * @description Get all manga documents from AniList database matching search result.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of manga documents.
+ */
+const updateMangaAnilist = async (req, res) => {
+  try {
+    const manga = await MangaModel.findById(req.params.id);
+    if (!manga) {
+      return res.status(404).json({ message: 'Manga not found' });
+    }
+
+    const updatedManga = await updateMangaFromAnilist(manga);
+    if (!updatedManga) {
+      return res.status(400).json({ message: 'Failed to update from AniList' });
+    }
+
+    res.json(updatedManga);
+  } catch (error) {
+    console.error('Error updating manga from AniList:', error);
+    res.status(500).json({ message: 'Error updating manga from AniList' });
+  }
+};
+
 export {
   getAllManga,
   getMangaInfo,
   createManga,
   updateManga,
   createMangaFromAnilist,
-  compareMangaWithAnilist
+  compareMangaWithAnilist,
+  updateMangaAnilist
 };

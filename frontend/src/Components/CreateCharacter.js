@@ -3,15 +3,21 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import createCharacterStyles from './CreateCharacter.module.css';
+import { AnilistCharacterSearch } from './Searches/AnilistCharacterSearch';
 
 export default function CreateCharacter({ onCharacterCreated, onClose }) {
   const genders = ['Female', 'Male', 'Non-binary'];
+  const [altNames, setAltNames] = useState(['']);
+  const [altSpoilerNames, setAltSpoilerNames] = useState(['']);
   const [characterData, setCharacterData] = useState({
+    anilistId: '',
     names: {
       givenName: '',
       middleName: '',
       surName: '',
-      alterNames: '',
+      nativeName: '',
+      alterNames: [],
+      alterSpoiler: [],
     },
     about: '',
     gender: '',
@@ -25,6 +31,8 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
     animes: [],
     mangas: [],
   });
+
+  const [showCharacterSearch, setShowCharacterSearch] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -48,8 +56,102 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
     }
   };
 
+  const handleCharacterSelected = (selectedCharacters) => {
+    console.log('Selected Characters:', selectedCharacters);
+
+    const updatedFormData = {
+      anilistId: selectedCharacters.anilistId || '',
+      names: {
+        givenName: selectedCharacters.names?.givenName || '',
+        middleName: selectedCharacters.names?.middleName || '',
+        surName: selectedCharacters.names?.surName || '',
+        nativeName: selectedCharacters.names?.nativeName || '',
+        alterNames: selectedCharacters.names?.alterNames || [],
+        alterSpoiler: selectedCharacters.names?.alterSpoiler || [],
+      },
+      about: selectedCharacters.about || '',
+      gender: selectedCharacters.gender || '',
+      age: selectedCharacters.age || '',
+      DOB: {
+        year: selectedCharacters.DOB?.year || '',
+        month: selectedCharacters.DOB?.month || '',
+        day: selectedCharacters.DOB?.day || '',
+      },
+      characterImage: selectedCharacters.characterImage || ''
+    };
+
+    setCharacterData(updatedFormData);
+    // Ensure at least one input box, either with selected names or an empty one
+    const initialAltNames = updatedFormData.names.alterNames.length > 0 
+      ? [...updatedFormData.names.alterNames, '']
+      : [''];
+    setAltNames(initialAltNames);
+
+    const initialAltSpoilerNames = updatedFormData.names.alterSpoiler.length > 0
+      ? [...updatedFormData.names.alterSpoiler, '']
+      : [''];
+    setAltSpoilerNames(initialAltSpoilerNames);
+    console.log('createCharacter - Updated Form Data:', updatedFormData);
+
+  };
+
+  const handleAltNameChange = (value, index) => {
+    const newAltNames = [...altNames];
+    newAltNames[index] = value;
+  
+    // Automatically add a new empty input if the last one is filled
+    if (index === newAltNames.length - 1 && value.trim() !== '') {
+      newAltNames.push('');
+    }
+  
+    // Remove empty inputs except the last one
+    const filteredAltNames = newAltNames.filter((name, i) => 
+      name.trim() !== '' || i === newAltNames.length - 1
+    );
+  
+    setAltNames(filteredAltNames);
+    
+    // Update the characterData state to reflect alternative names
+    setCharacterData(prev => ({
+      ...prev,
+      names: {
+        ...prev.names,
+        alterNames: filteredAltNames.filter(name => name.trim() !== '')
+      }
+    }));
+  };
+
+  const handleAltSpoilerNameChange = (value, index) => {
+    const newAltSpoilerNames = [...altSpoilerNames];
+    newAltSpoilerNames[index] = value;
+
+    // Automatically add a new empty input if the last one is filled
+    if (index === newAltSpoilerNames.length - 1 && value.trim() !== '') {
+      newAltSpoilerNames.push('');
+    }
+  
+    // Remove empty inputs except the last one
+    const filteredAltSpoilerNames = newAltSpoilerNames.filter((name, i) => 
+      name.trim() !== '' || i === newAltSpoilerNames.length - 1
+    );
+  
+    setAltSpoilerNames(filteredAltSpoilerNames);
+    
+    // Update the characterData state to reflect alternative names
+    setCharacterData(prev => ({
+      ...prev,
+      names: {
+        ...prev.names,
+        alterSpoiler: filteredAltSpoilerNames.filter(name => name.trim() !== '')
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log('createCharacter - Character Data:', characterData);
+
 
     try {
       // Make API call to create character
@@ -63,11 +165,14 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
         onCharacterCreated(res.data);
         // Clear the form after successful submission
         setCharacterData({
+          anilistId: '',
           names: {
             givenName: '',
             middleName: '',
             surName: '',
-            alterNames: '',
+            nativeName: '',
+            alterNames: [],
+            alterSpoiler: [],
           },
           about: '',
           gender: '',
@@ -161,18 +266,62 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
               <div className={createCharacterStyles.gridItem}>
                 <label
                   className={createCharacterStyles.label}
-                  htmlFor="names.alterNames"
+                  htmlFor="names.nativeName"
                 >
-                  Alternative Name:
+                  Native Name:
                 </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
-                  id="names.alterNames"
-                  name="names.alterNames"
-                  value={characterData.names.alterNames}
+                  id="names.nativeName"
+                  name="names.nativeName"
+                  value={characterData.names.nativeName}
                   onChange={handleChange}
                 />
+              </div>
+              <div className={createCharacterStyles.gridItem}>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="names.alterNames"
+                >
+                  Alternative Name:
+                </label>
+                <div className={createCharacterStyles.gridItem}>
+                  {altNames.map((altName, index) => (
+                    <input
+                      className={createCharacterStyles.input}
+                      key={index}
+                      type="text"
+                      id="names.alterNames"
+                      name="names.alterNames"
+                      value={altName}
+                      onChange={(e) => handleAltNameChange(e.target.value, index)}
+                      placeholder={`Alternative Name...`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className={createCharacterStyles.gridItem}>
+                <label
+                  className={createCharacterStyles.label}
+                  htmlFor="names.alterSpoiler"
+                >
+                  Alternative Spoiler Name:
+                </label>
+                <div className={createCharacterStyles.gridItem}>
+                  {altSpoilerNames.map((altSpoilerName, index) => (
+                    <input
+                      className={createCharacterStyles.input}
+                      key={index}
+                      type="text"
+                      id="names.alterSpoilerNames"
+                      name="names.alterSpoilerNames"
+                      value={altSpoilerName}
+                      onChange={(e) => handleAltSpoilerNameChange(e.target.value, index)}
+                      placeholder={`Alternative Spoiler Name...`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -199,7 +348,10 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
             <h3>Gender and Age</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="gender">
+                <label 
+                  className={createCharacterStyles.label} 
+                  htmlFor="gender"
+                >
                   Gender:
                 </label>
                 <select
@@ -221,7 +373,10 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 </select>
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label className={createCharacterStyles.label} htmlFor="age">
+                <label 
+                  className={createCharacterStyles.label} 
+                  htmlFor="age"
+                >
                   Age:
                 </label>
                 <input
@@ -321,11 +476,23 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
           </div>
 
           <div className={createCharacterStyles.buttonContainer}>
-            <button className={createCharacterStyles.button} type="submit">
+            <button 
+              className={createCharacterStyles.button} 
+              type="submit"
+            >
               Create Character
             </button>
           </div>
+          <button type="button" onClick={() => setShowCharacterSearch(true)}>
+            Search Characters
+          </button>
         </form>
+          {showCharacterSearch && (
+            <AnilistCharacterSearch
+              onCharacterSelected={handleCharacterSelected}
+              onClose={() => setShowCharacterSearch(false)}
+            />
+          )}
       </div>
     </div>
   );

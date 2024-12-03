@@ -14,6 +14,21 @@
   margin: 10px;
   overflow: hidden;
   padding: auto;
+  transition: all 0.3s; /* Smooth transition */
+  background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
+}
+
+.card2 {
+  width: 100%; /* Full width of the parent card */
+  height: 100%; /* Full height of the parent card */
+  background-color: #1a1a1a;
+  border-radius: 20px; /* Match the outer card */
+  transition: all 0.2s;
+}
+
+.card2:hover {
+  transform: scale(0.98);
+  border-radius: 20px;
 }
 
 .imgContainer {
@@ -159,6 +174,13 @@ img {
   transition: opacity 0.3s ease-in-out;
 }
 
+.animeCard .animeTitle:hover,
+.mangaCard .animeTitle:hover,
+.characterCard .animeTitle:hover {
+  color: #37FF8B; /* Change text color on hover */
+  text-shadow: 0 0 10px rgba(55, 255, 139, 0.8); /* Add glow effect */
+}
+
 .animeCard .progress,
 .mangaCard .progress,
 .characterCard .progress {
@@ -179,10 +201,7 @@ img {
 .animeCard:hover,
 .mangaCard:hover,
 .characterCard:hover {
-  transform: scale(1.1);
-  color: inherit;
-  border-color: #4caf50;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 0px 30px 1px rgba(0, 255, 117, 0.30);
 }
 
 .animeCard .topRightButton,

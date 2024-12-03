@@ -24,15 +24,17 @@ function MangaCard({ manga, onTopRightButtonClick }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={cardsStyles.imgContainer}>
-        {/* Manga image */}
-        <img src={manga.images.image} alt={manga.titles.english} />
-        <div className={cardsStyles.titleAndProgress}>
-          {/* Link to manga details page */}
-          <Link to={`/manga/${manga._id}`}>
-            {/* Manga title */}
-            <div className={cardsStyles.animeTitle}>{manga.titles.english}</div>
-          </Link>
+      <div className={cardsStyles.card2}>
+        <div className={cardsStyles.imgContainer}>
+          {/* Manga image */}
+          <img src={manga.images.image} alt={manga.titles.english} />
+          <div className={cardsStyles.titleAndProgress}>
+            {/* Link to manga details page */}
+            <Link to={`/manga/${manga._id}`}>
+              {/* Manga title */}
+              <div className={cardsStyles.animeTitle}>{manga.titles.english}</div>
+            </Link>
+          </div>
         </div>
       </div>
       {/* Conditional rendering when hovered */}

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import editModalStyles from '../../styles/components/EditModal.module.css';
 
 /**
@@ -30,50 +30,48 @@ const MangaEditor = ({
     currentVolume: 0,
   });
   const [isInUserList, setIsInUserList] = useState(false);
-
   const availableStatus = ['Planning', 'Reading', 'Completed'];
 
   useEffect(() => {
     const fetchMangaDetails = async () => {
-      console.log('isInUserList:', isInUserList);
+      if (!manga?._id || !userId) return;
+
       try {
-        const mangaResponse = await axios.get(
-          `http://localhost:8080/mangas/manga/${manga._id}`
+        const mangaResponse = await axiosInstance.get(
+          `/mangas/manga/${manga._id}`
         );
-        const userResponse = await axios.get(
-          `http://localhost:8080/users/${userId}/current`
+        const userResponse = await axiosInstance.get(
+          `/users/${userId}/current`
         );
         const currentUser = userResponse.data;
+
         const existingMangaIndex = currentUser?.mangas?.findIndex(
           (userManga) => userManga.mangaId === manga._id
         );
-        if (existingMangaIndex !== -1) {
-          setIsInUserList(true);
-        }
+
+        setIsInUserList(existingMangaIndex !== -1);
         setMangaDetails(mangaResponse.data);
-        if (currentUser) {
+
+        if (currentUser && existingMangaIndex !== -1) {
           setUserProgress({
             status:
-              existingMangaIndex !== -1
-                ? currentUser.mangas[existingMangaIndex].status
-                : '',
+              currentUser.mangas[existingMangaIndex].status,
             currentChapter:
-              existingMangaIndex !== -1
-                ? currentUser.mangas[existingMangaIndex].currentChapter
-                : 0,
+              currentUser.mangas[existingMangaIndex].currentChapter,
             currentVolume:
-              existingMangaIndex !== -1
-                ? currentUser.mangas[existingMangaIndex].currentVolume
-                : 0,
+              currentUser.mangas[existingMangaIndex].currentVolume,
           });
         }
-        console.log('userProgress:', userProgress);
       } catch (error) {
         console.error('Error fetching manga details:', error);
       }
     };
     fetchMangaDetails();
-  }, [manga._id, isInUserList, userId]);
+  }, [manga?._id, userId]);
+
+  if (!manga) {
+    return null;
+  }
 
   const handleStatusChange = (e) => {
     setUserProgress({
@@ -85,14 +83,14 @@ const MangaEditor = ({
   const handleChapterChange = (e) => {
     setUserProgress({
       ...userProgress,
-      currentChapter: e.target.value,
+      currentChapter: parseInt(e.target.value) || '',
     });
   };
 
   const handleVolumeChange = (e) => {
     setUserProgress({
       ...userProgress,
-      currentVolume: e.target.value,
+      currentVolume: parseInt(e.target.value) || '',
     });
   };
 
@@ -100,8 +98,8 @@ const MangaEditor = ({
     e.preventDefault();
     try {
       const endpoint = isInUserList ? 'updateManga' : 'addManga';
-      const response = await axios.post(
-        `http://localhost:8080/users/${userId}/${endpoint}`,
+      const response = await axiosInstance.post(
+        `/users/${userId}/${endpoint}`,
         {
           mangaId: manga._id,
           status: userProgress.status || 'Planning',
@@ -111,8 +109,8 @@ const MangaEditor = ({
       );
 
       if (response.data) {
-        const userResponse = await axios.get(
-          `http://localhost:8080/users/${userId}/current`
+        const userResponse = await axiosInstance.get(
+          `/users/${userId}/current`
         );
         setUserData(userResponse.data);
         setIsInUserList(true);
@@ -127,8 +125,8 @@ const MangaEditor = ({
     try {
       console.log('Starting delete process...');
 
-      const response = await axios.post(
-        `http://localhost:8080/users/${userId}/removeManga`,
+      const response = await axiosInstance.post(
+        `/users/${userId}/removeManga`,
         {
           mangaId: manga._id,
         }
@@ -138,6 +136,7 @@ const MangaEditor = ({
 
       if (response.data && response.data.user) {
         setUserData(response.data.user);
+        onMangaDelete(manga._id);
         closeModal();
       }
     } catch (error) {

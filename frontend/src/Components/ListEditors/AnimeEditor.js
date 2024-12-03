@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import editModalStyles from '../../styles/components/EditModal.module.css';
 
 /**
@@ -36,11 +36,11 @@ const AnimeEditor = ({
       if (!anime?._id || !userId) return;
       
       try {
-        const animeResponse = await axios.get(
-          `http://localhost:8080/animes/anime/${anime._id}`
+        const animeResponse = await axiosInstance.get(
+          `/animes/anime/${anime._id}`
         );
-        const userResponse = await axios.get(
-          `http://localhost:8080/users/${userId}/current`
+        const userResponse = await axiosInstance.get(
+          `/users/${userId}/current`
         );
         const currentUser = userResponse.data;
 
@@ -88,8 +88,8 @@ const AnimeEditor = ({
     e.preventDefault();
     try {
       const endpoint = isInUserList ? 'updateAnime' : 'addAnime';
-      const response = await axios.post(
-        `http://localhost:8080/users/${userId}/${endpoint}`,
+      const response = await axiosInstance.post(
+        `/users/${userId}/${endpoint}`,
         {
           animeId: anime._id,
           status: userProgress.status || 'Planning',
@@ -98,8 +98,8 @@ const AnimeEditor = ({
       );
 
       if (response.data) {
-        const userResponse = await axios.get(
-          `http://localhost:8080/users/${userId}/current`
+        const userResponse = await axiosInstance.get(
+          `/users/${userId}/current`
         );
         setUserData(userResponse.data);
         setIsInUserList(true);
@@ -114,8 +114,8 @@ const AnimeEditor = ({
     try {
       console.log('Starting delete process...');
 
-      const response = await axios.post(
-        `http://localhost:8080/users/${userId}/removeAnime`,
+      const response = await axiosInstance.post(
+        `/users/${userId}/removeAnime`,
         {
           animeId: anime._id,
         }

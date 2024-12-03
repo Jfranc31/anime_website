@@ -27,19 +27,22 @@ const Characters = () => {
 
   const filteredCharacter = Array.isArray(characterList)
     ? characterList.filter((character) => {
-        const givenName = (character.names && character.names.givenName) || '';
-        const middleName =
-          (character.names && character.names.middleName) || '';
-        const surName = (character.names && character.names.surName) || '';
-        const alterName = (character.names && character.names.alterNames) || '';
+      const givenName = (character.names && character.names.givenName) || '';
+      const middleName = (character.names && character.names.middleName) || '';
+      const surName = (character.names && character.names.surName) || '';
+      const alterNames = (character.names && character.names.alterNames) || '';
 
-        const matchesSearch =
-          givenName.toLowerCase().includes(searchInput.toLowerCase()) ||
-          middleName.toLowerCase().includes(searchInput.toLowerCase()) ||
-          surName.toLowerCase().includes(searchInput.toLowerCase()) ||
-          alterName.toLowerCase().includes(searchInput.toLowerCase());
+      // Convert names to strings if they are not already
+      const namesToCheck = [
+        givenName,
+        middleName,
+        surName,
+        ...(Array.isArray(alterNames) ? alterNames : [alterNames]), // Handle alterNames as an array
+      ].map(name => (typeof name === 'string' ? name : '').toLowerCase());
 
-        return matchesSearch;
+      const matchesSearch = namesToCheck.some(name => name.includes(searchInput.toLowerCase()));
+
+      return matchesSearch;
       })
     : [];
 

@@ -474,9 +474,16 @@ const removeManga = async (req, res) => {
   }
 };
 
+/**
+ * @function makeAdmin
+ * @description Make another user an admin.
+ * @param {Object} req - Express request object with user ID.
+ * @param {Object} res - Express response object.
+ * @returns {Object} - Success or error message.
+ */
 const makeAdmin = async (req, res) => {
   const { userId } = req.params;
-  
+
   try {
     // Only existing admins can make other users admin
     if (req.user.role !== 'admin') {
@@ -503,10 +510,17 @@ const makeAdmin = async (req, res) => {
   }
 };
 
+/**
+ * @function updateTheme
+ * @description Change the theme the user wants to use.
+ * @param {Object} req - Express request object with user ID and and new theme.
+ * @param {Object} res - Express response object.
+ * @returns {Object} - Success or error message.
+ */
 const updateTheme = async (req, res) => {
   const { userId } = req.params;
   const { theme } = req.body;
-  
+
   try {
     const user = await UserModel.findByIdAndUpdate(
       userId,
@@ -525,6 +539,13 @@ const updateTheme = async (req, res) => {
   }
 };
 
+/**
+ * @function getAllUsers
+ * @description Get all the users to put on list.
+ * @param {Object} req - Express request object with user ID.
+ * @param {Object} res - Express response object.
+ * @returns {Object} - User list or error message.
+ */
 const getAllUsers = async (req, res) => {
   try {
     const users = await UserModel.find({}, 'username email role');

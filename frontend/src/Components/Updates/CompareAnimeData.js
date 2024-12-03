@@ -104,8 +104,6 @@ export const CompareAnimeData = ({ currentData, anilistData, onDataSelect }) => 
     setInitialCheckDone(true);
   }, [currentData, anilistData, initialCheckDone]);
 
-  console.log("anilistData endDate", anilistData.endDate);
-
   const formatValue = (value, field) => {
     if (!value) return 'Not set';
     

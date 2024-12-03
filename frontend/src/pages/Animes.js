@@ -9,7 +9,6 @@ import AnimeEditor from '../Components/ListEditors/AnimeEditor';
 import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
-import { Link } from 'react-router-dom';
 import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
 
 const Animes = () => {
@@ -64,9 +63,9 @@ const Animes = () => {
   const filteredAnime = Array.isArray(animeList)
     ? animeList.filter((anime) => {
         const matchesSearch =
-          anime.titles.romaji.toLowerCase().includes(searchInput.toLowerCase()) ||
-          anime.titles.english.toLowerCase().includes(searchInput.toLowerCase()) ||
-          anime.titles.Native.toLowerCase().includes(searchInput.toLowerCase());
+          anime.titles?.romaji?.toLowerCase().includes(searchInput.toLowerCase()) ||
+          anime.titles?.english?.toLowerCase().includes(searchInput.toLowerCase()) ||
+          anime.titles?.Native?.toLowerCase().includes(searchInput.toLowerCase());
 
         const matchesGenres =
           selectedGenres.length === 0 ||

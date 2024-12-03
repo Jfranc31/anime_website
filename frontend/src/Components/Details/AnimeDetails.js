@@ -5,16 +5,13 @@
 
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
-import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
-import AnimeCard from '../../cards/AnimeCard';
-import CharacterCard from '../../cards/CharacterCard';
 import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
 import { MONTHS } from '../../constants/filterOptions';
 import axiosInstance from '../../utils/axiosConfig';
+
 /**
  * Functional component representing details of an anime.
  * @returns {JSX.Element} - Rendered anime details component.
@@ -32,32 +29,23 @@ const AnimeDetails = () => {
     currentEpisode: 0,
   });
 
-  const [activeSection, setActiveSection] = useState('relations');
   const [activeTab, setActiveTab] = useState('about');
 
   const [revealedSpoilers, setRevealedSpoilers] = useState({});
-
-  const showRelations = () => {
-    setActiveSection('relations');
-  };
-
-  const showCharacters = () => {
-    setActiveSection('characters');
-  };
 
   useEffect(() => {
     const fetchAnimeDetails = async () => {
       try {
         // Fetch anime details
-        const animeResponse = await axios.get(
-          `http://localhost:8080/animes/anime/${id}`
+        const animeResponse = await axiosInstance.get(
+          `/animes/anime/${id}`
         );
         setAnimeDetails(animeResponse.data);
 
         // Only fetch user details if user is logged in
         if (userData?._id) {
-          const userResponse = await axios.get(
-            `http://localhost:8080/users/${userData._id}/current`
+          const userResponse = await axiosInstance.get(
+            `/users/${userData._id}/current`
           );
           const currentUser = userResponse.data;
 
@@ -94,8 +82,8 @@ const AnimeDetails = () => {
       const charactersWithDetails = await Promise.all(
         animeDetails?.characters.map(async (character) => {
           try {
-            const response = await axios.get(
-              `http://localhost:8080/characters/character/${character.characterId}`
+            const response = await axiosInstance.get(
+              `/characters/character/${character.characterId}`
             );
             return {
               ...character,
@@ -143,8 +131,8 @@ const AnimeDetails = () => {
           }) || []),
           ...(animeDetails?.animeRelations?.map(async (relation) => {
             try {
-              const response = await axios.get(
-                `http://localhost:8080/animes/anime/${relation.relationId}`
+              const response = await axiosInstance.get(
+                `/animes/anime/${relation.relationId}`
               );
               return {
                 ...relation,
@@ -253,37 +241,6 @@ const AnimeDetails = () => {
 
   const { season, year } = determineSeason(animeDetails.releaseData.startDate);
 
-  // Add this function to handle updates
-  const handleAnimeUpdate = async (updatedProgress) => {
-    try {
-      await axios.put(`http://localhost:8080/users/${userData._id}/animes/${id}`, {
-        status: updatedProgress.status,
-        currentEpisode: updatedProgress.currentEpisode,
-      });
-
-      setUserProgress(updatedProgress);
-      setUserData((prevUserData) => {
-        const updatedUser = { ...prevUserData };
-        const animeIndex = updatedUser.animes.findIndex(
-          (anime) => anime.animeId === id
-        );
-        
-        if (animeIndex !== -1) {
-          updatedUser.animes[animeIndex] = {
-            ...updatedUser.animes[animeIndex],
-            ...updatedProgress,
-          };
-        }
-        
-        return updatedUser;
-      });
-
-      setIsAnimeEditorOpen(false);
-    } catch (error) {
-      console.error('Error updating anime:', error);
-    }
-  };
-
   const toggleSpoiler = (index) => {
     setRevealedSpoilers((prev) => ({
       ...prev,
@@ -295,7 +252,7 @@ const AnimeDetails = () => {
     if (typeof text !== 'string') {
       text = String(text);
     }
-    
+
     const parts = text.split(/~!(.+?)!~/g);
     return parts.map((part, i) => {
       if (i % 2 === 1) {
@@ -318,31 +275,35 @@ const AnimeDetails = () => {
 
   const parseDescription = (description) => {
     if (!description) return [];
-    
+
     // First handle <b> tags by preserving them
     const preserveBoldTags = description.replace(/<b>/g, '###BOLDSTART###')
                                       .replace(/<\/b>/g, '###BOLDEND###');
-    
+
+    // Handle <i> tags by preserving them
+    const preserveItalicTags = preserveBoldTags.replace(/<i>/g, '###ITALICSTART###')
+                                              .replace(/<\/i>/g, '###ITALICEND###')
+
     // Split by <br> tags
-    const paragraphs = preserveBoldTags.split(/<br>/);
-    
+    const paragraphs = preserveItalicTags.split(/<br>/);
+
     return paragraphs.map(paragraph => {
       // Remove closing br tags and trim whitespace
       const cleanParagraph = paragraph.replace(/<\/br>/g, '').trim();
-      
+
       // Restore <b> tags
       return cleanParagraph.replace(/###BOLDSTART###/g, '<b>')
-                          .replace(/###BOLDEND###/g, '</b>');
+                          .replace(/###BOLDEND###/g, '</b>')
+                          .replace(/###ITALICSTART###/g, '<i>')
+                          .replace(/###ITALICEND###/g, '</i>');
     }).filter(p => p);
   };
 
   const renderParagraphContent = (text, index) => {
-    // First handle spoilers
     const parts = text.split(/~!(.+?)!~/g);
-    
+
     return parts.map((part, i) => {
       if (i % 2 === 1) {
-        // This is spoiler content
         return (
           <span
             key={`spoiler-${i}`}
@@ -355,18 +316,13 @@ const AnimeDetails = () => {
           </span>
         );
       }
-      
-      // Handle bold text
-      const boldParts = part.split(/(<bold>.*?<\/bold>)/g);
-      return boldParts.map((boldPart, j) => {
-        if (boldPart.startsWith('<bold>') && boldPart.endsWith('</bold>')) {
-          const content = boldPart.replace(/<\/?bold>/g, '');
-          return <strong key={`bold-${j}`} className={animeDetailsStyles.boldText}>{content}</strong>;
-        }
-        return boldPart;
-      });
+
+      return (
+        <p key={index} className={animeDetailsStyles.paragraph} dangerouslySetInnerHTML={{ __html: part }} />
+      );
     });
   };
+
 
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
@@ -477,21 +433,8 @@ const AnimeDetails = () => {
             </div>
             <div className={animeDetailsStyles.descriptionSection}>
               {parseDescription(animeDetails.description).map((paragraph, index) => {
-                // First parse any bold tags in the paragraph
-                const parts = paragraph.split(/(<b>.*?<\/b>)/g);
-                
                 return (
-                  <p key={index} className={animeDetailsStyles.paragraph}>
-                    {parts.map((part, i) => {
-                      if (part.startsWith('<b>') && part.endsWith('</b>')) {
-                        // Handle bold text
-                        const boldContent = part.replace(/<\/?b>/g, '');
-                        return <strong key={`bold-${i}`}>{boldContent}</strong>;
-                      }
-                      // Handle regular text with potential spoilers
-                      return renderSpoilerText(part, `${index}-${i}`);
-                    })}
-                  </p>
+                  <p key={index} className={animeDetailsStyles.paragraph} dangerouslySetInnerHTML={{ __html: paragraph }} />
                 );
               })}
             </div>
@@ -507,17 +450,19 @@ const AnimeDetails = () => {
                   key={character.characterDetails._id}
                   className={animeDetailsStyles.characterCard}
                 >
-                  <div className={animeDetailsStyles.characterImageContainer}>
-                    <img
-                      src={character.characterDetails.characterImage}
-                      alt={character.characterDetails.names.givenName}
-                    />
-                    <div className={animeDetailsStyles.characterRole}>
-                      {character.role}
+                  <div className={animeDetailsStyles.card2}>
+                    <div className={animeDetailsStyles.characterImageContainer}>
+                      <img
+                        src={character.characterDetails.characterImage}
+                        alt={character.characterDetails.names.givenName}
+                      />
+                      <div className={animeDetailsStyles.characterRole}>
+                        {character.role}
+                      </div>
                     </div>
-                  </div>
-                  <div className={animeDetailsStyles.characterInfo}>
-                    <h4>{getFullName(character.characterDetails.names)}</h4>
+                    <div className={animeDetailsStyles.characterInfo}>
+                      <h4>{getFullName(character.characterDetails.names)}</h4>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -534,17 +479,19 @@ const AnimeDetails = () => {
                   to={`/${relation.contentType}/${relation.relationDetails._id}`}
                   className={animeDetailsStyles.relationCard}
                 >
-                  <div className={animeDetailsStyles.relationImageContainer}>
-                    <img
-                      src={relation.relationDetails.images.image}
-                      alt={relation.relationDetails.titles.english}
-                    />
-                    <div className={animeDetailsStyles.relationType}>
-                      {relation.typeofRelation}
+                  <div className={animeDetailsStyles.card2}>
+                    <div className={animeDetailsStyles.relationImageContainer}>
+                      <img
+                        src={relation.relationDetails.images.image}
+                        alt={relation.relationDetails.titles.english}
+                      />
+                      <div className={animeDetailsStyles.relationType}>
+                        {relation.typeofRelation}
+                      </div>
                     </div>
-                  </div>
-                  <div className={animeDetailsStyles.relationInfo}>
-                    <h4>{relation.relationDetails.titles.english}</h4>
+                    <div className={animeDetailsStyles.relationInfo}>
+                      <h4>{relation.relationDetails.titles.english}</h4>
+                    </div>
                   </div>
                 </Link>
               ))}

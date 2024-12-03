@@ -4,18 +4,45 @@
  */
 
 import express from "express";
-import characterController from "../controllers/characterController.js";
+import { 
+  getAllCharacters,
+  searchForCharacters,
+  getCharacterInfo,
+  createCharacter,
+  updateCharacter,
+  createCharacterFromAnilist
+} from "../controllers/characterController.js";
+import { fetchCharacterData } from "../services/anilistService.js";
+import CharacterModel from "../Models/characterModel.js";
 
 const router = express.Router();
 
-router.get("/characters", characterController.getAllCharacters);
+router.get("/characters", getAllCharacters);
 
-router.get("/searchcharacters", characterController.searchForCharacters);
+router.get("/searchcharacters", searchForCharacters);
 
-router.get("/character/:id", characterController.getCharacterInfo);
+router.get('/search/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const characterData = await fetchCharacterData(name);
+    
+    if (!characterData) {
+      return res.status(404).json({ message: 'Character not found' });
+    }
+    
+    res.json(characterData);
+  } catch (error) {
+    console.error('Error searching character:', error);
+    res.status(500).json({ message: 'Error searching character' });
+  }
+});
 
-router.post("/addcharacter", characterController.createCharacter);
+router.get("/character/:id", getCharacterInfo);
 
-router.put("/character/:id", characterController.updateCharacter);
+router.post("/addcharacter", createCharacter);
+
+router.put("/character/:id", updateCharacter);
+
+router.post("/create-from-anilist", createCharacterFromAnilist);
 
 export default router;

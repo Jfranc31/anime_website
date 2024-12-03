@@ -3,7 +3,7 @@
 // #region Importing React and other dependencies --------------------------
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import CreateCharacter from '../Components/CreateCharacter';
 import CharacterSearch from '../Components/Searches/CharacterSearch';
 import RelationSearch from '../Components/Searches/RelationSearch';
@@ -137,6 +137,11 @@ const INITIAL_FORM_STATE = {
   characters: [],
   mangaRelations: [],
   animeRelations: [],
+  nextAiringEpisode: {
+    airingAt: '',
+    episode: '',
+    timeUntilAiring: '',
+  },
   activityTimestamp: '',
 };
 // #endregion --------------------------------------------------------------
@@ -149,7 +154,6 @@ export default function AddAnime() {
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
-  const [showAnimeSearch, setShowAnimeSearch] = useState(false);
   // #endregion ------------------------------------------------------------
 
   // #region Modal Handlers ------------------------------------------------
@@ -357,6 +361,11 @@ export default function AddAnime() {
         image: animeData.images?.image || '',
         border: DEFAULT_BORDER
       },
+      nextAiringEpisode: {
+        airingAt: animeData.nextAiringEpisode?.airingAt || '',
+        episode: animeData.nextAiringEpisode?.episode || '',
+        timeUntilAiring: animeData.nextAiringEpisode?.timeUntilAiring || '',
+      },
       characters: animeData.characters || [],
       animeRelations: animeData.animeRelations || [],
       mangaRelations: animeData.mangaRelations || [],
@@ -414,8 +423,8 @@ export default function AddAnime() {
       console.log('Current formData:', updatedFormData);
 
       // Use axios.post to send the form data to your backend API endpoint
-      const res = await axios.post(
-        'http://localhost:8080/animes/addanime',
+      const res = await axiosInstance.post(
+        '/animes/addanime',
         updatedFormData
       );
 
@@ -904,7 +913,7 @@ export default function AddAnime() {
               />
               <div className={addPageStyles.selectedCharacterInfo}>
                 <p className={addPageStyles.selectedCharacterName}>
-                  {relation.titles.english || relation.titles.romaji || ''}
+                  {relation.titles.english || ''}
                 </p>
                 <select
                   className={addPageStyles.selectedCharacterRole}

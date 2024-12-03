@@ -43,9 +43,9 @@ const Mangas = () => {
   const filteredManga = Array.isArray(mangaList)
     ? mangaList.filter((manga) => {
         const matchesSearch =
-          manga.titles.romaji.toLowerCase().includes(searchInput.toLowerCase()) ||
-          manga.titles.english.toLowerCase().includes(searchInput.toLowerCase()) ||
-          manga.titles.Native.toLowerCase().includes(searchInput.toLowerCase());
+          manga.titles?.romaji?.toLowerCase().includes(searchInput.toLowerCase()) ||
+          manga.titles?.english?.toLowerCase().includes(searchInput.toLowerCase()) ||
+          manga.titles?.Native?.toLowerCase().includes(searchInput.toLowerCase());
 
         const matchesGenres =
           selectedGenres.length === 0 ||

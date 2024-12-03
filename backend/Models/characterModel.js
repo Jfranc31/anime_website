@@ -7,6 +7,10 @@ import mongoose from "../db/mongoose.js";
 
 // Defining the schema for the 'CharacterModel' collection
 const characterSchema = new mongoose.Schema({
+  anilistId: {
+    type: Number,
+    unique: true
+  },
   names: {
     givenName: {
       type: String,
@@ -18,16 +22,25 @@ const characterSchema = new mongoose.Schema({
     surName: {
       type: String,
     },
-    alterNames: {
+    nativeName: {
       type: String,
     },
+    alterNames: [
+      {
+        type: String,
+      }
+    ],
+    alterSpoiler: [
+      {
+        type: String,
+      }
+    ],
   },
   about: {
     type: String,
   },
   gender: {
     type: String,
-    enum: ["Female", "Male", "Non-binary"],
   },
   age: {
     type: String,

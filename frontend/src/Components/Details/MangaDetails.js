@@ -2,15 +2,16 @@
  * src/Components/Details/MangaDetails.js
  * Description: React component for rendering details of a manga.
  */
+
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
-import AnimeNavbar from '../Navbars/AnimePageNavbar';
 import data from '../../Context/ContextApi';
 import MangaEditor from '../ListEditors/MangaEditor';
 import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
 import { MONTHS } from '../../constants/filterOptions';
+import axiosInstance from '../../utils/axiosConfig';
+
 /**
  * Functional component representing details of a manga.
  * @returns {JSX.Element} - Rendered manga details component.
@@ -29,55 +30,46 @@ const MangaDetails = () => {
     currentVolume: 0,
   });
 
-  const [activeSection, setActiveSection] = useState('relations');
   const [activeTab, setActiveTab] = useState('about');
 
-  const showRelations = () => {
-    setActiveSection('relations');
-  };
-
-  const showCharacters = () => {
-    setActiveSection('characters');
-  };
+  const [revealedSpoilers, setRevealedSpoilers] = useState({});
 
   useEffect(() => {
     const fetchMangaDetails = async () => {
       try {
         // Fetch manga details
-        const mangaResponse = await axios.get(
-          `http://localhost:8080/mangas/manga/${id}`
+        const mangaResponse = await axiosInstance.get(
+          `/mangas/manga/${id}`
         );
-
-        // Fetch user details (assuming authentication token is stored in context)
-        const userResponse = await axios.get(
-          `http://localhost:8080/users/${userData._id}/current`
-        );
-
-        const currentUser = userResponse.data;
-
-        // check if the manga is on the user's list
-        const isMangaAdded = currentUser?.mangas?.some(
-          (manga) => manga.mangaId === id
-        );
-        const existingMangaIndex = currentUser?.mangas?.findIndex(
-          (manga) => manga.mangaId.toString() === id.toString()
-        );
-
-        // Update component state or context based on fetched data
         setMangaDetails(mangaResponse.data);
-        setActiveTab('about');
-        setIsMangaAdded(isMangaAdded);
 
-        // Set initial userResponse when mangaDetails is not null
-        if (currentUser && existingMangaIndex !== -1) {
-          setUserProgress({
-            status:
-              currentUser.mangas[existingMangaIndex].status,
-            currentChapter:
-              currentUser.mangas[existingMangaIndex].currentChapter,
-            currentVolume:
-              currentUser.mangas[existingMangaIndex].currentVolume,
-          });
+        if (userData?.id) {
+          const userResponse = await axiosInstance.get(
+            `/users/${userData._id}/current`
+          );
+          const currentUser = userResponse.data;
+
+          const isMangaAdded = currentUser?.mangas?.some(
+            (manga) => manga.mangaId === id
+          );
+          const existingMangaIndex = currentUser?.mangas?.findIndex(
+            (manga) => manga.mangaId.toString() === id.toString()
+          );
+
+          setMangaDetails(mangaResponse.data);
+          setActiveTab('about');
+          setIsMangaAdded(isMangaAdded);
+
+          if (currentUser && existingMangaIndex !== -1) {
+            setUserProgress({
+              status:
+                currentUser.mangas[existingMangaIndex].status,
+              currentChapter:
+                currentUser.mangas[existingMangaIndex].currentChapter,
+              currentVolume:
+                currentUser.mangas[existingMangaIndex].currentVolume,
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching manga details:', error);
@@ -92,8 +84,8 @@ const MangaDetails = () => {
       const charactersWithDetails = await Promise.all(
         mangaDetails?.characters.map(async (character) => {
           try {
-            const response = await axios.get(
-              `http://localhost:8080/characters/character/${character.characterId}`
+            const response = await axiosInstance.get(
+              `/characters/character/${character.characterId}`
             );
             return {
               ...character,
@@ -123,8 +115,8 @@ const MangaDetails = () => {
       const relationsWithDetails = await Promise.all([
         ...(mangaDetails?.mangaRelations.map(async (relation) => {
           try {
-            const response = await axios.get(
-              `http://localhost:8080/mangas/manga/${relation.relationId}`
+            const response = await axiosInstance.get(
+              `/mangas/manga/${relation.relationId}`
             );
             return {
               ...relation,
@@ -136,13 +128,13 @@ const MangaDetails = () => {
               `Error fetching details for manga relation ${relation.relationId}`,
               error
             );
-            return relation;
+            return null;
           }
         }) || []),
         ...(mangaDetails?.animeRelations.map(async (relation) => {
           try {
-            const response = await axios.get(
-              `http://localhost:8080/animes/anime/${relation.relationId}`
+            const response = await axiosInstance.get(
+              `/animes/anime/${relation.relationId}`
             );
             return {
               ...relation,
@@ -248,32 +240,62 @@ const MangaDetails = () => {
 
   const { season, year } = determineSeason(mangaDetails.releaseData.startDate);
 
-  const handleMangaUpdate = async (updatedProgress) => {
-    try {
-      await axios.put(`http://localhost:8080/users/${userData._id}/mangas/${id}`, {
-        status: updatedProgress.status,
-        currentChapter: updatedProgress.currentChapter,
-        currentVolume: updatedProgress.currentVolume,
-      });
+  const toggleSpoiler = (index) => {
+    setRevealedSpoilers((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
 
-      setUserProgress(updatedProgress);
-      setUserData((prevUserData) => {
-        const updatedUser = { ...prevUserData };
-        const mangaIndex = updatedUser.mangas.findIndex(
-          (manga) => manga.mangaId === id
-        );
-        
-        if (mangaIndex !== -1) {
-          updatedUser.mangas[mangaIndex] = {
-            ...updatedUser.mangas[mangaIndex],
-            ...updatedProgress,
-          };
-        }
-        return updatedUser;
-      });
-    } catch (error) {
-      console.error('Error updating manga progress:', error);
+  const renderSpoilerText = (text, index) => {
+    if (typeof text !== 'string') {
+      text = String(text);
     }
+
+    const parts = text.split(/~!(.+?)!~/g);
+    return parts.map((part, i) => {
+      if (i % 2 === 1) {
+        // This is spoiler content
+        return (
+          <span
+            key={i}
+            className={`${mangaDetailsStyles.spoilerText} ${
+              revealedSpoilers[`${index}-${i}`] ? mangaDetailsStyles.revealed : ''
+            }`}
+            onClick={() => toggleSpoiler(`${index}-${i}`)}
+          >
+            {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  const parseDescription = (description) => {
+    if (!description) return [];
+
+    // First handle <b> tags by preserving them
+    const preserveBoldTags = description.replace(/<b>/g, '###BOLDSTART###')
+                                      .replace(/<\/b>/g, '###BOLDEND###');
+
+    // Handle <i> tags by preserving them
+    const preserveItalicTags = preserveBoldTags.replace(/<i>/g, '###ITALICSTART###')
+                                              .replace(/<\/i>/g, '###ITALICEND###')
+
+    // Split by <br> tags
+    const paragraphs = preserveItalicTags.split(/<br>/);
+
+    return paragraphs.map(paragraph => {
+      // Remove closing br tags and trim whitespace
+      const cleanParagraph = paragraph.replace(/<\/br>/g, '').trim();
+
+      // Restore <b> tags
+      return cleanParagraph.replace(/###BOLDSTART###/g, '<b>')
+                          .replace(/###BOLDEND###/g, '</b>')
+                          .replace(/###ITALICSTART###/g, '<i>')
+                          .replace(/###ITALICEND###/g, '</i>');
+    }).filter(p => p);
   };
 
   return (
@@ -384,7 +406,11 @@ const MangaDetails = () => {
               {/* Metadata items */}
             </div>
             <div className={mangaDetailsStyles.descriptionSection}>
-              <p>{mangaDetails.description}</p>
+              {parseDescription(mangaDetails.description).map((paragraph, index) => {
+                return (
+                  <p key={index} className={mangaDetailsStyles.paragraph} dangerouslySetInnerHTML={{ __html: paragraph }} />
+                );
+              })}
             </div>
           </div>
         )}
@@ -398,17 +424,19 @@ const MangaDetails = () => {
                   key={character.characterDetails._id}
                   className={mangaDetailsStyles.characterCard}
                 >
-                  <div className={mangaDetailsStyles.characterImageContainer}>
-                    <img
-                      src={character.characterDetails.characterImage}
-                      alt={character.characterDetails.names.givenName}
-                    />
-                    <div className={mangaDetailsStyles.characterRole}>
-                      {character.role}
+                  <div className={mangaDetailsStyles.card2}>
+                    <div className={mangaDetailsStyles.characterImageContainer}>
+                      <img
+                        src={character.characterDetails.characterImage}
+                        alt={character.characterDetails.names.givenName}
+                      />
+                      <div className={mangaDetailsStyles.characterRole}>
+                        {character.role}
+                      </div>
                     </div>
-                  </div>
-                  <div className={mangaDetailsStyles.characterInfo}>
-                    <h4>{getFullName(character.characterDetails.names)}</h4>
+                    <div className={mangaDetailsStyles.characterInfo}>
+                      <h4>{getFullName(character.characterDetails.names)}</h4>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -425,17 +453,19 @@ const MangaDetails = () => {
                   to={`/${relation.contentType}/${relation.relationDetails._id}`}
                   className={mangaDetailsStyles.relationCard}
                 >
-                  <div className={mangaDetailsStyles.relationImageContainer}>
-                    <img
-                      src={relation.relationDetails.images.image}
-                      alt={relation.relationDetails.titles.english}
-                    />
-                    <div className={mangaDetailsStyles.relationType}>
-                      {relation.typeofRelation}
+                  <div className={mangaDetailsStyles.card2}>
+                    <div className={mangaDetailsStyles.relationImageContainer}>
+                      <img
+                        src={relation.relationDetails.images.image}
+                        alt={relation.relationDetails.titles.english}
+                      />
+                      <div className={mangaDetailsStyles.relationType}>
+                        {relation.typeofRelation}
+                      </div>
                     </div>
-                  </div>
-                  <div className={mangaDetailsStyles.relationInfo}>
-                    <h4>{relation.relationDetails.titles.english}</h4>
+                    <div className={mangaDetailsStyles.relationInfo}>
+                      <h4>{relation.relationDetails.titles.english}</h4>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -443,7 +473,8 @@ const MangaDetails = () => {
           </div>
         )}
       </div>
-      {isMangaEditorOpen && (
+
+      {isMangaEditorOpen && userProgress && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
           <div
             className={modalStyles.characterModal}

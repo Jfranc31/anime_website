@@ -1,42 +1,49 @@
-import { fetchAnimeData, fetchMangaDataById } from './anilistService.js';
+import { fetchAnimeDataById, fetchMangaDataById } from './anilistService.js';
 import AnimeModel from '../Models/animeModel.js';
 import MangaModel from '../Models/mangaModel.js';
 
+// Map AniList status to our status
+const STATUS_MAP = {
+  'RELEASING': 'Currently Releasing',
+  'FINISHED': 'Finished Releasing',
+  'NOT_YET_RELEASED': 'Not Yet Released',
+  'CANCELLED': 'Cancelled',
+  'HIATUS': 'Hiatus'
+};
+
+// Map AniList format to our format
+const FORMAT_MAP = {
+  'MANGA': 'Manga',
+  'LIGHT NOVEL': 'Light Novel',
+  'ONE_SHOT': 'One Shot'
+};
+
+// Map AniList source to our source
+const SOURCE_MAP = {
+  'MANGA': 'Manga',
+  'ORIGINAL': 'Original',
+  'LIGHT_NOVEL': 'Light Novel',
+  'VISUAL_NOVEL': 'Visual Novel',
+  'VIDEO_GAME': 'Video Game',
+  'OTHER': 'Other',
+  'NOVEL': 'Novel',
+  'DOUJINSHI': 'Doujinshi',
+  'ANIME': 'Anime',
+  'ONE_SHOT': 'One Shot'
+};
+
+// Map country codes to full names
+const COUNTRY_MAP = {
+  'JP': 'Japan',
+  'KR': 'South Korea',
+  'CN': 'China',
+  'TW': 'Taiwan'
+};
+
 const compareAnimeData = async (anime) => {
   try {
-    const anilistData = await fetchAnimeData(anime.titles.english);
+    const anilistData = await fetchAnimeDataById(anime.anilistId);
     if (!anilistData) return null;
-
-    // Map AniList status to our status
-    const statusMap = {
-      'RELEASING': 'Currently Releasing',
-      'FINISHED': 'Finished Releasing',
-      'NOT_YET_RELEASED': 'Not Yet Released',
-      'CANCELLED': 'Cancelled',
-      'HIATUS': 'Hiatus'
-    };
-
-    // Map AniList source to our source
-    const sourceMap = {
-      'MANGA': 'Manga',
-      'ORIGINAL': 'Original',
-      'LIGHT_NOVEL': 'Light Novel',
-      'VISUAL_NOVEL': 'Visual Novel',
-      'VIDEO_GAME': 'Video Game',
-      'OTHER': 'Other',
-      'NOVEL': 'Novel',
-      'DOUJINSHI': 'Doujinshi',
-      'ANIME': 'Anime',
-      'ONE_SHOT': 'One Shot'
-    };
-
-    // Map country codes to full names
-    const countryMap = {
-      'JP': 'Japan',
-      'KR': 'South Korea',
-      'CN': 'China',
-      'TW': 'Taiwan'
-    };
 
     // Compare and return differences
     const differences = {
@@ -55,7 +62,7 @@ const compareAnimeData = async (anime) => {
           romaji: anime.titles.romaji,
           english: anime.titles.english,
           native: anime.titles.native
-        }) !== 
+        }) !==
           JSON.stringify({
             romaji: anilistData.title.romaji,
             english: anilistData.title.english,
@@ -70,13 +77,13 @@ const compareAnimeData = async (anime) => {
         },
         anilist: {
           Format: anilistData.format || '',
-          Source: sourceMap[anilistData.source] || '',
-          CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || ''
+          Source: SOURCE_MAP[anilistData.source] || '',
+          CountryOfOrigin: COUNTRY_MAP[anilistData.countryOfOrigin] || ''
         },
-        isDifferent: 
+        isDifferent:
           (anime.typings.Format || '') !== (anilistData.format || '') ||
-          (anime.typings.Source || '') !== (sourceMap[anilistData.source] || '') ||
-          (anime.typings.CountryOfOrigin || '') !== (countryMap[anilistData.countryOfOrigin] || '')
+          (anime.typings.Source || '') !== (SOURCE_MAP[anilistData.source] || '') ||
+          (anime.typings.CountryOfOrigin || '') !== (COUNTRY_MAP[anilistData.countryOfOrigin] || '')
       },
       description: {
         current: anime.description,
@@ -90,7 +97,7 @@ const compareAnimeData = async (anime) => {
           endDate: anime.releaseData.endDate
         },
         anilist: {
-          releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
+          releaseStatus: STATUS_MAP[anilistData.status] || 'Currently Releasing',
           startDate: {
             year: anilistData.startDate?.year?.toString() || '',
             month: anilistData.startDate?.month?.toString() || '',
@@ -102,7 +109,7 @@ const compareAnimeData = async (anime) => {
             day: anilistData.endDate?.day?.toString() || ''
           }
         },
-        isDifferent: anime.releaseData.releaseStatus !== statusMap[anilistData.status] ||
+        isDifferent: anime.releaseData.releaseStatus !== STATUS_MAP[anilistData.status] ||
           JSON.stringify(anime.releaseData.startDate) !== JSON.stringify({
             year: anilistData.startDate?.year?.toString() || '',
             month: anilistData.startDate?.month?.toString() || '',
@@ -132,19 +139,7 @@ const compareAnimeData = async (anime) => {
         current: anime.images.image,
         anilist: anilistData.coverImage.large,
         isDifferent: anime.images.image !== anilistData.coverImage.large
-      }
-    };
-
-    const startDateAnilist = {
-      year: anilistData.startDate?.year?.toString() || '',
-      month: anilistData.startDate?.month?.toString() || '',
-      day: anilistData.startDate?.day?.toString() || ''
-    };
-    
-    const endDateAnilist = {
-      year: anilistData.endDate?.year?.toString() || '',
-      month: anilistData.endDate?.month?.toString() || '',
-      day: anilistData.endDate?.day?.toString() || ''
+      },
     };
 
     console.log('CompareAnimeData - Detailed Differences:', {
@@ -182,6 +177,11 @@ const compareAnimeData = async (anime) => {
         current: differences.images.current,
         anilist: differences.images.anilist,
         isDifferent: differences.images.isDifferent
+      },
+      nextAiringEpisode: {
+        current: differences.nextAiringEpisode.current,
+        anilist: differences.nextAiringEpisode.anilist,
+        isDifferent: differences.nextAiringEpisode.isDifferent
       }
     });
 
@@ -192,71 +192,43 @@ const compareAnimeData = async (anime) => {
   }
 };
 
-const updateAnimeSelectively = async (animeId, fieldsToUpdate) => {
-  try {
-    const anime = await AnimeModel.findById(animeId);
-    if (!anime) return null;
-
-    const anilistData = await fetchAnimeDataById(anime.anilistId);
-    if (!anilistData) return null;
-
-    const updateData = {};
-
-    // Only update selected fields
-    if (fieldsToUpdate.includes('releaseData')) {
-      updateData.releaseData = {
-        releaseStatus: anilistData.status,
-        startDate: anilistData.startDate,
-        endDate: anilistData.endDate
-      };
-    }
-
-    if (fieldsToUpdate.includes('lengths')) {
-      updateData.lengths = {
-        Episodes: anilistData.episodes,
-        EpisodeDuration: anilistData.duration
-      };
-    }
-
-    if (fieldsToUpdate.includes('genres')) {
-      updateData.genres = anilistData.genres;
-    }
-
-    return await AnimeModel.findByIdAndUpdate(
-      animeId,
-      updateData,
-      { new: true }
-    );
-  } catch (error) {
-    console.error('Error updating anime selectively:', error);
-    return null;
-  }
-};
-
 const updateAnimeFromAnilist = async (anime) => {
   try {
     const anilistData = await fetchAnimeDataById(anime.anilistId);
-    if (!anilistData) return null;
+    if (!anilistData) {
+      console.warn(`No data found for anime ID: ${anime.anilistId}`);
+      return null;
+    }
 
     const updateData = {
       releaseData: {
-        releaseStatus: anilistData.status,
-        startDate: anilistData.startDate,
-        endDate: anilistData.endDate
+        releaseStatus: STATUS_MAP[anilistData.status],
+        startDate: {
+          year: anilistData.startDate?.year?.toString() || '',
+          month: anilistData.startDate?.month?.toString() || '',
+          day: anilistData.startDate?.day?.toString() || ''
+        },
+        endDate: {
+          year: anilistData.endDate?.year?.toString() || '',
+          month: anilistData.endDate?.month?.toString() || '',
+          day: anilistData.endDate?.day?.toString() || ''
+        },
       },
       lengths: {
-        Episodes: anilistData.episodes,
-        EpisodeDuration: anilistData.duration
+        Episodes: anilistData.episodes?.toString() || '',
+        EpisodeDuration: anilistData.duration?.toString() || ''
       },
       genres: anilistData.genres,
-      activityTimestamp: Date.now()
+      description: anilistData.description,
+      activityTimestamp: Date.now(),
     };
-    
+
     return await AnimeModel.findByIdAndUpdate(
       anime._id,
       updateData,
       { new: true }
     );
+
   } catch (error) {
     console.error('Error updating anime from AniList:', error);
     return null;
@@ -270,77 +242,104 @@ const compareMangaData = async (manga) => {
 
     // Compare and return differences
     const differences = {
-      releaseData: {
-        current: manga.releaseData,
-        anilist: {
-          releaseStatus: anilistData.status,
-          startDate: anilistData.startDate,
-          endDate: anilistData.endDate
+      titles: {
+        current: {
+          romaji: manga.titles.romaji,
+          english: manga.titles.english,
+          native: manga.titles.native
         },
-        isDifferent: manga.releaseData.releaseStatus !== anilistData.status ||
-          JSON.stringify(manga.releaseData.startDate) !== JSON.stringify(anilistData.startDate) ||
-          JSON.stringify(manga.releaseData.endDate) !== JSON.stringify(anilistData.endDate)
+        anilist: {
+          romaji: anilistData.title.romaji,
+          english: anilistData.title.english,
+          native: anilistData.title.native
+        },
+        isDifferent: JSON.stringify({
+          romaji: manga.titles.romaji,
+          english: manga.titles.english,
+          native: manga.titles.native
+        }) !==
+          JSON.stringify({
+            romaji: anilistData.title.romaji,
+            english: anilistData.title.english,
+            native: anilistData.title.native
+          })
+      },
+      typings: {
+        current: {
+          Format: manga.typings.Format || '',
+          Source: manga.typings.Source || '',
+          CountryOfOrigin: manga.typings.CountryOfOrigin || ''
+        },
+        anilist: {
+          Format: FORMAT_MAP[anilistData.format] || '',
+          Source: SOURCE_MAP[anilistData.source] || '',
+          CountryOfOrigin: COUNTRY_MAP[anilistData.countryOfOrigin] || ''
+        },
+        isDifferent:
+          (manga.typings.Format || '') !== (FORMAT_MAP[anilistData.format] || '') ||
+          (manga.typings.Source || '') !== (SOURCE_MAP[anilistData.source] || '') ||
+          (manga.typings.CountryOfOrigin || '') !== (COUNTRY_MAP[anilistData.countryOfOrigin] || '')
+      },
+      description: {
+        current: manga.description,
+        anilist: anilistData.description,
+        isDifferent: manga.description !== anilistData.description
+      },
+      releaseData: {
+        current: {
+          releaseStatus: manga.releaseData.releaseStatus,
+          startDate: manga.releaseData.startDate,
+          endDate: manga.releaseData.endDate
+        },
+        anilist: {
+          releaseStatus: STATUS_MAP[anilistData.status] || 'Currently Releasing',
+          startDate: {
+            year: anilistData.startDate?.year?.toString() || '',
+            month: anilistData.startDate?.month?.toString() || '',
+            day: anilistData.startDate?.day?.toString() || ''
+          },
+          endDate: {
+            year: anilistData.endDate?.year?.toString() || '',
+            month: anilistData.endDate?.month?.toString() || '',
+            day: anilistData.endDate?.day?.toString() || ''
+          }
+        },
+        isDifferent: manga.releaseData.releaseStatus !== STATUS_MAP[anilistData.status] ||
+          JSON.stringify(manga.releaseData.startDate) !== JSON.stringify({
+            year: anilistData.startDate?.year?.toString() || '',
+            month: anilistData.startDate?.month?.toString() || '',
+            day: anilistData.startDate?.day?.toString() || ''
+          }) ||
+          JSON.stringify(manga.releaseData.endDate) !== JSON.stringify({
+            year: anilistData.endDate?.year?.toString() || '',
+            month: anilistData.endDate?.month?.toString() || '',
+            day: anilistData.endDate?.day?.toString() || ''
+          })
       },
       lengths: {
         current: manga.lengths,
         anilist: {
-          Chapters: anilistData.chapters,
-          Volumes: anilistData.volumes
+          Chapters: anilistData.chapters?.toString() || '',
+          Volumes: anilistData.volumes?.toString() || ''
         },
-        isDifferent: manga.lengths.Chapters !== anilistData.chapters ||
-          manga.lengths.Volumes !== anilistData.volumes
+        isDifferent: manga.lengths.Chapters !== anilistData.chapters?.toString() ||
+          manga.lengths.Volumes !== anilistData.volumes?.toString()
       },
       genres: {
         current: manga.genres,
         anilist: anilistData.genres,
         isDifferent: JSON.stringify(manga.genres.sort()) !== JSON.stringify(anilistData.genres.sort())
+      },
+      images: {
+        current: manga.images.image,
+        anilist: anilistData.coverImage.large,
+        isDifferent: manga.images.image !== anilistData.coverImage.large
       }
     };
 
     return differences;
   } catch (error) {
     console.error('Error comparing manga data:', error);
-    return null;
-  }
-};
-
-const updateMangaSelectively = async (mangaId, fieldsToUpdate) => {
-  try {
-    const manga = await MangaModel.findById(mangaId);
-    if (!manga) return null;
-
-    const anilistData = await fetchMangaDataById(manga.anilistId);
-    if (!anilistData) return null;
-
-    const updateData = {};
-
-    // Only update selected fields
-    if (fieldsToUpdate.includes('releaseData')) {
-      updateData.releaseData = {
-        releaseStatus: anilistData.status,
-        startDate: anilistData.startDate,
-        endDate: anilistData.endDate
-      };
-    }
-
-    if(fieldsToUpdate.includes('lengths')) {
-      updateData.lengths = {
-        Chapters: anilistData.chapters,
-        Volumes: anilistData.volumes
-      };
-    }
-
-    if (fieldsToUpdate.includes('genres')) {
-      updateData.genres = anilistData.genres;
-    }
-
-    return await MangaModel.findByIdAndUpdate(
-      mangaId,
-      updateData,
-      { new: true }
-    );
-  } catch (error) {
-    console.error('Error updating manga selectively:', error);
     return null;
   }
 };
@@ -376,11 +375,9 @@ const updateMangaFromAnilist = async (manga) => {
 };
 
 // Export all functions
-export { 
-  compareAnimeData, 
-  updateAnimeSelectively,
+export {
+  compareAnimeData,
   updateAnimeFromAnilist,
   compareMangaData,
-  updateMangaSelectively,
   updateMangaFromAnilist
-}; 
+};

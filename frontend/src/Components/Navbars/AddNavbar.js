@@ -23,14 +23,6 @@ const AddNavbar = () => {
         >
           Manga
         </NavLink>
-        <NavLink
-          to="/add/character"
-          className={({ isActive }) =>
-            `${styles.link} ${isActive ? styles.active : ''}`
-          }
-        >
-          Character
-        </NavLink>
       </div>
     </nav>
   );

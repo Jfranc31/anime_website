@@ -23,17 +23,19 @@ function CharacterCard({ character }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={cardsStyles.imgContainer}>
-        {/* Character image */}
-        <img src={character.characterImage} alt={character.names.givenName} />
-        <div className={cardsStyles.titleAndProgress}>
-          {/* Link to character details page */}
-          <Link to={`/characters/${character._id}`}>
-            <div className={cardsStyles.animeTitle}>
-              {character.names.givenName} {character.names.middleName}{' '}
-              {character.names.surName}
-            </div>
-          </Link>
+      <div className={cardsStyles.card2}>
+        <div className={cardsStyles.imgContainer}>
+          {/* Character image */}
+          <img src={character.characterImage} alt={character.names.givenName} />
+          <div className={cardsStyles.titleAndProgress}>
+            {/* Link to character details page */}
+            <Link to={`/characters/${character._id}`}>
+              <div className={cardsStyles.animeTitle}>
+                {character.names.givenName} {character.names.middleName}{' '}
+                {character.names.surName}
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
       {/* Conditional rendering when hovered */}

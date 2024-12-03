@@ -10,11 +10,10 @@ import {
   createAnime,
   updateAnime,
   createAnimeFromAnilist,
-  compareAnimeWithAnilist
+  compareAnimeWithAnilist,
+  updateAnimeAnilist
 } from "../controllers/animeController.js";
-import { fetchAnimeData } from '../services/anilistService.js';
-import AnimeModel from '../Models/animeModel.js';
-import { updateAnimeFromAnilist } from '../services/updateService.js';
+import { fetchAnimeDataById } from '../services/anilistService.js';
 
 const router = express.Router();
 
@@ -26,15 +25,15 @@ router.post("/addanime", createAnime);
 
 router.put("/anime/:id", updateAnime);
 
-router.get('/search/:title', async (req, res) => {
+router.get('/search/:id', async (req, res) => {
   try {
-    const { title } = req.params;
-    const animeData = await fetchAnimeData(title);
-    
+    const { id } = req.params;
+    const animeData = await fetchAnimeDataById(id);
+
     if (!animeData) {
       return res.status(404).json({ message: 'Anime not found' });
     }
-    
+
     res.json(animeData);
   } catch (error) {
     console.error('Error searching anime:', error);
@@ -42,24 +41,7 @@ router.get('/search/:title', async (req, res) => {
   }
 });
 
-router.post('/update-from-anilist/:id', async (req, res) => {
-  try {
-    const anime = await AnimeModel.findById(req.params.id);
-    if (!anime) {
-      return res.status(404).json({ message: 'Anime not found' });
-    }
-
-    const updatedAnime = await updateAnimeFromAnilist(anime);
-    if (!updatedAnime) {
-      return res.status(400).json({ message: 'Failed to update from AniList' });
-    }
-
-    res.json(updatedAnime);
-  } catch (error) {
-    console.error('Error updating from AniList:', error);
-    res.status(500).json({ message: 'Error updating from AniList' });
-  }
-});
+router.post('/update-from-anilist/:id', updateAnimeAnilist);
 
 router.post('/create-from-anilist', createAnimeFromAnilist);
 

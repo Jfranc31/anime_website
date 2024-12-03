@@ -3,20 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import searchStyles from '../../styles/components/search.module.css';
-/**
- * Functional component for character search.
- * @param {Object} props - Props passed to the component.
- * @param {function} props.onCharacterSelected - Function to handle character selection.
- * @param {function} props.onClose - Function to close the character search.
- * @returns {JSX.Element} - Rendered character search component.
- */
+
 export default function CharacterSearch({ onCharacterSelected, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedCharacters, setSelectedCharacters] = useState([]);
 
-  // Add debounce to prevent too many API
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm) {
@@ -32,15 +25,12 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
   const searchCharacters = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:8080/characters/searchcharacters`,
-        {
-          params: {
-            query: searchTerm,
-          },
-        }
-      );
+      const response = await axios.get('/characters/searchcharacters', {
+        params: { query: searchTerm },
+      });
+      console.log('Character Data Response: ', response);
       const characterData = response.data.characters || [];
+      console.log('Character Data: ', characterData);
       setCharacters(characterData);
     } catch (error) {
       console.error('Error searching characters:', error);
@@ -71,6 +61,7 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
       <div className={searchStyles.searchModal}>
         <div className={searchStyles.modalBody}>
           <div className={searchStyles.searchContainer}>
+            <h2>Search Characters</h2>
             <div className={searchStyles.searchBox}>
               <input
                 type="text"
@@ -87,9 +78,7 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
               <div className={searchStyles.itemsGrid}>
                 {characters.length === 0 ? (
                   <div className={searchStyles.noResults}>
-                    {searchTerm
-                      ? 'No characters found'
-                      : 'Start typing to search characters'}
+                    {searchTerm ? 'No characters found' : 'Start typing to search characters'}
                   </div>
                 ) : (
                   characters.map((character) => (
@@ -101,7 +90,7 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
                       <div className={searchStyles.itemImageContainer}>
                         <img
                           src={character.characterImage}
-                          alt={`${character.names.givenName}${character.names.middleName ? ` ${character.names.middleName}` : ''}${character.names.surName ? ` ${character.names.surName}` : ''}`}
+                          alt={`${character.names?.givenName || ''} ${character.names?.middleName || ''} ${character.names?.surName || ''}`}
                           className={searchStyles.itemImage}
                         />
                         {selectedCharacters.includes(character) && (
@@ -112,7 +101,7 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
                       </div>
                       <div className={searchStyles.itemInfo}>
                         <p className={searchStyles.itemName}>
-                          {`${character.names.givenName}${character.names.middleName ? ` ${character.names.middleName}` : ''}${character.names.surName ? ` ${character.names.surName}` : ''}`}
+                          {`${character.names?.givenName || 'Unknown'} ${character.names?.middleName || ''} ${character.names?.surName || ''}`}
                         </p>
                       </div>
                     </div>

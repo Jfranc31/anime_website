@@ -1,6 +1,76 @@
 /*=============================================
               Main Navbar css
 ==============================================*/
+/* Remove the button class and apply styles to navLink */
+.navLink {
+  margin: 0;
+  padding: 10px 15px; /* Add padding for button-like appearance */
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 2em; /* Adjust font size as needed */
+  color: white; /* Default text color */
+  position: relative;
+  text-transform: uppercase;
+  transition: color 0.3s, text-shadow 0.3s; /* Smooth transition */
+}
+
+/* Hover effect */
+.navLink:hover {
+  color: #37FF8B; /* Change text color on hover */
+  text-shadow: 0 0 10px rgba(55, 255, 139, 0.8); /* Add glow effect */
+}
+
+.value {
+  background-color: transparent;
+  border: none;
+  padding: 10px;
+  color: white;
+  display: flex;
+  position: relative;
+  gap: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.value:not(:active):hover,
+.value:focus {
+  background-color: #21262C;
+}
+
+.value:focus,
+.value:active {
+  background-color: #1A1F24;
+  outline: none;
+}
+
+.value::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: -10px;
+  width: 5px;
+  height: 80%;
+  background-color: #2F81F7;
+  border-radius: 5px;
+  opacity: 0;
+}
+
+.value:focus::before,
+.value:active::before {
+  opacity: 1;
+}
+
+.value svg {
+  width: 15px
+}
+
+.profileDropdown:hover > :not(.value:hover) {
+  transition: 300ms;
+  filter: blur(1px);
+  transform: scale(0.95,0.95);
+}
+
 .top {
   position: relative;
   top: 0;
@@ -101,11 +171,11 @@
   .top {
     display: none;
   }
-  
+
   .menuButton {
     display: block;
   }
-  
+
   .mobileMenu.show {
     display: block;
   }
@@ -140,11 +210,12 @@
 
 .profileDropdown {
   position: absolute;
+  flex-direction: column;
   top: 50px;
   right: -50%;
   transform: translateX(25%);
   background: rgba(25, 30, 39, 0.95);
-  border-radius: 8px;
+  border-radius: 5px;
   padding: 10px 0;
   min-width: 180px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -161,36 +232,14 @@
   background: transparent;
 }
 
-.profileDropdown a {
-  display: block;
-  padding: 10px 20px;
-  color: white;
-  text-decoration: none;
-  transition: background-color 0.3s, color 0.3s;
+.logoutLink {
+  color: #E74C3C; /* Red color for logout */
 }
 
-.profileDropdown a:hover {
-  background-color: rgba(4, 170, 109, 0.1);
-  color: #04aa6d;
-  text-decoration: none;
-}
-
-.logoutButton {
-  display: block;
-  width: 100%;
-  padding: 10px 20px;
-  color: #E74C3C;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.logoutButton:hover {
-  background-color: rgba(231, 76, 60, 0.1);
-  color: #E74C3C;
+.logoutLink:hover {
+  background-color: rgba(255, 0, 0, 0.1); /* Light red background on hover */
+  color: #FF0000; /* Darker red text on hover */
+  text-shadow: none; /* Remove text shadow if needed */
 }
 
 .mobileLogoutButton {

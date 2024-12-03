@@ -8,7 +8,7 @@ import CharacterModel from "../Models/characterModel.js";
 import MangaModel from "../Models/mangaModel.js";
 import { getReverseRelationType } from "../functions.js";
 import { fetchAnimeData } from "../services/anilistService.js";
-import { compareAnimeData } from "../services/updateService.js";
+import { updateAnimeFromAnilist, compareAnimeData } from "../services/updateService.js";
 
 /**
  * @function getAllAnimes
@@ -68,9 +68,8 @@ const createAnime = async (req, res) => {
       characters,
       mangaRelations,
       animeRelations,
-      activityTimestamp,
       anilistId,
-      nextEpisodeAiringAt,
+      nextAiringEpisode,
     } = req.body;
 
     // Check if the English title is provided
@@ -88,10 +87,9 @@ const createAnime = async (req, res) => {
       typeofRelation: relationInfo.typeofRelation,
     }));
 
-    // Assuming characters is an array of character objects
     const charactersArray = characters.map((characterInfo) => ({
       characterId: characterInfo.characterId,
-      role: characterInfo.role, // Assuming the type of character is provided in the request
+      role: characterInfo.role,
     }));
 
     const anime = await AnimeModel.create({
@@ -105,13 +103,10 @@ const createAnime = async (req, res) => {
       characters: charactersArray,
       mangaRelations: mangaRelationsArray,
       animeRelations: animeRelationsArray,
-      activityTimestamp,
+      activityTimestamp: Date.now(),
       anilistId,
-      nextEpisodeAiringAt,
+      nextAiringEpisode,
     });
-
-    // Set activityTimestamp once after creating the anime
-    anime.activityTimestamp = Date.now();
 
     // Update characters with the anime ID
     const updatedCharacters = await Promise.all(
@@ -194,9 +189,13 @@ const createAnime = async (req, res) => {
         animeRelations: updatedAnimeRelations.flat(),
         mangaRelations: updatedMangaRelations.flat(),
       });
+
   } catch (error) {
     console.error("Error during anime creation:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({
+      message: "Error during anime creation",
+      error: error.message
+    });
   }
 };
 
@@ -211,8 +210,7 @@ const updateAnime = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { characters, mangaRelations, animeRelations, ...otherFields } =
-      req.body;
+    const { characters, mangaRelations, animeRelations, nextAiringEpisode, ...otherFields } = req.body;
 
     // Filter out characters with empty characterId
     const validCharacters = characters.filter(
@@ -228,10 +226,10 @@ const updateAnime = async (req, res) => {
     // Update the anime, excluding characters with empty characterId
     const updatedAnime = await AnimeModel.findByIdAndUpdate(
       id,
-      { ...otherFields, characters: validCharacters },
+      { ...otherFields, characters: validCharacters, nextAiringEpisode },
       {
-        new: true, // Return the modified document
-        runValidators: true, // Run validators for update operations
+        new: true,
+        runValidators: true,
       },
     );
 
@@ -293,8 +291,6 @@ const updateAnime = async (req, res) => {
             },
           },
         );
-
-        console.log("animeRelationResult: ", animeRelationResult);
 
         // Check if the document was modified (i.e., updated)
         if (animeRelationResult.nModified > 0) {
@@ -386,8 +382,6 @@ const updateAnime = async (req, res) => {
           },
         );
 
-        console.log("mangaRelationResult: ", mangaRelationResult);
-
         // Check if the document was modified (i.e., updated)
         if (mangaRelationResult.nModified > 0) {
           // Document was updated, return the updated relation
@@ -460,11 +454,6 @@ const updateAnime = async (req, res) => {
         }
       }),
     );
-    // Debugging logs
-    // console.log('Updated Anime:', updatedAnime);
-    // console.log('Updated Characters:', updatedCharacters);
-    console.log("Updated Anime Relations:", updatedAnimeRelations);
-    // console.log('Updated Manga Relations:', updatedMangaRelations);
 
     res
       .status(200)
@@ -480,24 +469,29 @@ const updateAnime = async (req, res) => {
   }
 };
 
+/**
+ * @function createAnimeFromAnilist
+ * @description Get all anime documents from AniList database matching search result.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of anime documents.
+ */
 const createAnimeFromAnilist = async (req, res) => {
   try {
     const { title } = req.body;
     if (!title) {
       return res.status(400).json({ message: 'Title is required' });
     }
-    
-    const anilistData = await fetchAnimeData(title);
-    if (!anilistData) {
-      return res.status(404).json({ 
-        message: `No anime found on AniList matching "${title}"` 
-      });
+
+    const anilistResults = await fetchAnimeData(title);
+    if (!anilistResults) {
+      return res.status(404).json({ message: `No anime found on AniList matching "${title}"` });
     }
 
     // Map AniList status to our status
     const statusMap = {
-      'RELEASING': 'Currently Releasing',
       'FINISHED': 'Finished Releasing',
+      'RELEASING': 'Currently Releasing',
       'NOT_YET_RELEASED': 'Not Yet Released',
       'CANCELLED': 'Cancelled',
       'HIATUS': 'Hiatus'
@@ -525,54 +519,78 @@ const createAnimeFromAnilist = async (req, res) => {
       'TW': 'Taiwan'
     };
 
-    const animeData = {
-      anilistId: anilistData.id,
+    const animeList = anilistResults.map((anilistData) => ({
+      anilistId: anilistData.id.toString(),
       titles: {
-        romaji: anilistData.title.romaji,
-        english: anilistData.title.english,
-        native: anilistData.title.native
+        romaji: anilistData.title?.romaji || '',
+        english: anilistData.title?.english || '',
+        native: anilistData.title?.native || ''
       },
       releaseData: {
         releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
-        startDate: anilistData.startDate,
-        endDate: anilistData.endDate
+        startDate: {
+          year: anilistData.startDate?.year?.toString() || '',
+          month: anilistData.startDate?.month?.toString() || '',
+          day: anilistData.startDate?.day?.toString() || ''
+        },
+        endDate: {
+          year: anilistData.endDate?.year?.toString() || '',
+          month: anilistData.endDate?.month?.toString() || '',
+          day: anilistData.endDate?.day?.toString() || ''
+        }
       },
       typings: {
-        Format: anilistData.format,
+        Format: anilistData.format || '',
         Source: sourceMap[anilistData.source] || 'Original',
         CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || 'Japan'
       },
       lengths: {
-        Episodes: anilistData.episodes,
-        EpisodeDuration: anilistData.duration
+        Episodes: anilistData.episodes?.toString() || '',
+        EpisodeDuration: anilistData.duration?.toString() || ''
       },
-      genres: anilistData.genres,
-      description: anilistData.description,
+      genres: anilistData.genres || [],
+      description: anilistData.description || '',
       images: {
-        image: anilistData.coverImage.large,
-        border: '#000000'
+        image: anilistData.coverImage?.large || '',
+        border: 'DEFAULT_BORDER'
       },
       characters: [],
-      mangaRelations: [],
       animeRelations: [],
+      mangaRelations: [],
+      nextAiringEpisode: anilistData.nextAiringEpisode,
       activityTimestamp: Date.now()
-    };
+    }));
 
-    res.status(200).json(animeData);
+    res.status(201).json(animeList);
   } catch (error) {
-    console.error('Error details:', error);
-    res.status(500).json({ 
-      message: 'Error searching AniList',
-      error: error.message 
+    if (error.message === 'SERVICE_UNAVAILABLE') {
+      return res.status(503).json({
+        message: 'AniList API is temporarily unavailable. Please try again later.',
+        retryAfter: 300 // 5 minutes
+      });
+    } else {
+      console.error('Error creating anime from AniList:', error);
+    }
+    res.status(500).json({
+      message: 'Error creating anime from AniList',
+      error: error.message,
+      stack: error.stack
     });
   }
 };
 
+/**
+ * @function compareAnimeWithAnilist
+ * @description Compare the anime from the database with the AniList database.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of differences.
+ */
 const compareAnimeWithAnilist = async (req, res) => {
   try {
     const { id } = req.params;
     const anime = await AnimeModel.findById(id);
-    
+
     if (!anime) {
       return res.status(404).json({ message: 'Anime not found' });
     }
@@ -589,11 +607,38 @@ const compareAnimeWithAnilist = async (req, res) => {
   }
 };
 
+/**
+ * @function updateAnimeAnilist
+ * @description Get all anime documents from AniList database matching search result.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @return {Array} - Array of anime documents.
+ */
+const updateAnimeAnilist = async (req, res) => {
+  try {
+    const anime = await AnimeModel.findById(req.params.id);
+    if (!anime) {
+      return res.status(404).json({ message: 'Anime not found' });
+    }
+
+    const updatedAnime = await updateAnimeFromAnilist(anime);
+    if (!updatedAnime) {
+      return res.status(400).json({ message: 'Failed to update from AniList' });
+    }
+
+    res.json(updatedAnime);
+  } catch (error) {
+    console.error('Error updating anime from AniList:', error);
+    res.status(500).json({ message: 'Error updating anime from AniList' });
+  }
+};
+
 export {
   getAllAnimes,
   getAnimeInfo,
   createAnime,
   updateAnime,
   createAnimeFromAnilist,
-  compareAnimeWithAnilist
+  compareAnimeWithAnilist,
+  updateAnimeAnilist
 };

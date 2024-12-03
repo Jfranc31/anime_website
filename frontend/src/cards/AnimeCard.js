@@ -28,14 +28,18 @@ function AnimeCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={cardsStyles.imgContainer}>
-        {/* Anime image */}
-        <img src={anime.images.image} alt={anime.titles.english} />
-        <div className={cardsStyles.titleAndProgress}>
-          {/* Link to anime details page */}
-          <Link to={`/anime/${anime._id}`}>
-            <div className={cardsStyles.animeTitle}>{anime.titles.english}</div>
-          </Link>
+      <div className={cardsStyles.card2}>
+        <div className={cardsStyles.imgContainer}>
+          {/* Anime image */}
+          <img src={anime.images.image} alt={anime.titles.english} />
+          <div className={cardsStyles.titleAndProgress}>
+            {/* Link to anime details page */}
+            <Link to={`/anime/${anime._id}`}>
+              <div className={cardsStyles.animeTitle}>
+                {anime.titles.english}
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
       {/* Button for top-right action (Edit) */}

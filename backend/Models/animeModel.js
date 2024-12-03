@@ -172,8 +172,16 @@ const animeSchema = new mongoose.Schema({
     type: Number,
     unique: true
   },
-  nextEpisodeAiringAt: {
-    type: Number
+  nextAiringEpisode: {
+      airingAt: {
+        type: Number
+      },
+      episode: {
+        type: Number
+      },
+      timeUntilAiring: {
+        type: Number
+      }
   },
 });
 

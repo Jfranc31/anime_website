@@ -136,6 +136,11 @@ const INITIAL_FORM_STATE = {
   characters: [],
   mangaRelations: [],
   animeRelations: [],
+  nextAiringEpisode: {
+    airingAt: '',
+    episode: '',
+    timeUntilAiring: '',
+  },
   activityTimestamp: '',
 };
 // #endregion --------------------------------------------------------------
@@ -146,7 +151,6 @@ export const UpdateAnime = ({ match }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [anilistData, setAnilistData] = useState();
-  const [selectedData, setSelectedData] = useState();
   const [activeTab, setActiveTab] = useState('general');
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -166,24 +170,29 @@ export const UpdateAnime = ({ match }) => {
         const processedData = {
           ...animeData,
           anilistId: animeData.anilistId?.toString() || '',
-        releaseData: {
-          ...animeData.releaseData,
-          releaseStatus: animeData.releaseData?.releaseStatus || '',
-          startDate: {
-            year: animeData.releaseData?.startDate?.year?.toString() || '',
-            month: animeData.releaseData?.startDate?.month?.toString() || '',
-            day: animeData.releaseData?.startDate?.day?.toString() || '',
+          releaseData: {
+            ...animeData.releaseData,
+            releaseStatus: animeData.releaseData?.releaseStatus || '',
+            startDate: {
+              year: animeData.releaseData?.startDate?.year?.toString() || '',
+              month: animeData.releaseData?.startDate?.month?.toString() || '',
+              day: animeData.releaseData?.startDate?.day?.toString() || '',
+            },
+            endDate: {
+              year: animeData.releaseData?.endDate?.year?.toString() || '',
+              month: animeData.releaseData?.endDate?.month?.toString() || '',
+              day: animeData.releaseData?.endDate?.day?.toString() || '',
+            },
           },
-          endDate: {
-            year: animeData.releaseData?.endDate?.year?.toString() || '',
-            month: animeData.releaseData?.endDate?.month?.toString() || '',
-            day: animeData.releaseData?.endDate?.day?.toString() || '',
+          lengths: {
+            Episodes: animeData.lengths?.Episodes?.toString() || '',
+            EpisodeDuration: animeData.lengths?.EpisodeDuration?.toString() || '',
           },
-        },
-        lengths: {
-          Episodes: animeData.lengths?.Episodes?.toString() || '',
-          EpisodeDuration: animeData.lengths?.EpisodeDuration?.toString() || '',
-        },
+          nextAiringEpisode: {
+            airingAt: animeData.nextAiringEpisode?.airingAt || '',
+            episode: animeData.nextAiringEpisode?.episode || '',
+            timeUntilAiring: animeData.nextAiringEpisode?.timeUntilAiring || '',
+          }
         };
 
         // Extract genre values from the genres array
@@ -204,7 +213,7 @@ export const UpdateAnime = ({ match }) => {
           animeData?.characters.map(async (character) => {
             try {
               const characterResponse = await axiosInstance.get(
-                `http://localhost:8080/characters/character/${character.characterId}`
+                `/characters/character/${character.characterId}`
               );
               return {
                 ...character,
@@ -244,7 +253,7 @@ export const UpdateAnime = ({ match }) => {
           animeData?.mangaRelations.map(async (relation) => {
             try {
               const referenceResponse = await axiosInstance.get(
-                `http://localhost:8080/mangas/manga/${relation.relationId}`
+                `/mangas/manga/${relation.relationId}`
               );
               return {
                 ...relation,

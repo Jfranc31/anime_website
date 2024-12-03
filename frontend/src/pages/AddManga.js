@@ -3,7 +3,7 @@
 // #region Importing React and other dependencies --------------------------
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import CreateCharacter from '../Components/CreateCharacter';
 import CharacterSearch from '../Components/Searches/CharacterSearch';
 import RelationSearch from '../Components/Searches/RelationSearch';
@@ -102,7 +102,7 @@ const INITIAL_FORM_STATE = {
   titles: {
     romaji: '',
     english: '',
-    Native: '',
+    native: '',
   },
   releaseData: {
     releaseStatus: '',
@@ -321,12 +321,11 @@ export default function AddManga() {
     console.log('AddManga - Received Data:', mangaData);
 
     const updatedFormData = {
-      ...formData,
       anilistId: mangaData.anilistId || '',
       titles: {
         romaji: mangaData.titles?.romaji || '',
         english: mangaData.titles?.english || '',
-        Native: mangaData.titles?.native || '',
+        native: mangaData.titles?.native || '',
       },
       releaseData: {
         releaseStatus: mangaData.releaseData?.releaseStatus || '',
@@ -347,8 +346,8 @@ export default function AddManga() {
         CountryOfOrigin: mangaData.typings?.CountryOfOrigin || '',
       },
       lengths: {
-        chapters: mangaData.lengths?.chapters || '',
-        volumes: mangaData.lengths?.volumes || '',
+        chapters: mangaData.lengths?.Chapters || '',
+        volumes: mangaData.lengths?.Volumes || '',
       },
       genres: mangaData.genres || [],
       description: mangaData.description || '',
@@ -407,12 +406,13 @@ export default function AddManga() {
       mangaRelations: mangaRelationsArray,
     };
 
+    console.log('Current formData:', updatedFormData);
+
     try {
-      console.log('Current formData:', updatedFormData);
 
       // Use axios.post to send the form data to your backend API endpoint
-      const res = await axios.post(
-        `http://localhost:8080/mangas/addmanga`,
+      const res = await axiosInstance.post(
+        `/mangas/addmanga`,
         updatedFormData
       );
 
@@ -444,10 +444,10 @@ export default function AddManga() {
   // #region General Section ------------------------------------------------
   const renderGeneralSection = () => (
     <>
-      <div className={addPageStyles.section} data-testid="titles-section">
+      <div className={addPageStyles.section}>
         <h2>Titles</h2>
         <div className={addPageStyles.grid}>
-          <div data-testid="romaji-title-input-container">
+          <div>
             <label htmlFor="titles.romaji">Romaji</label>
             <div></div>
             <input
@@ -456,7 +456,6 @@ export default function AddManga() {
               name="titles.romaji"
               value={formData.titles.romaji}
               onChange={handleChange}
-              data-testid="romaji-title-input"
             />
           </div>
           <div>
@@ -472,13 +471,13 @@ export default function AddManga() {
             />
           </div>
           <div>
-            <label htmlFor="titles.Native">Native</label>
+            <label htmlFor="titles.native">Native</label>
             <div></div>
             <input
               type="text"
-              id="titles.Native"
-              name="titles.Native"
-              value={formData.titles.Native}
+              id="titles.native"
+              name="titles.native"
+              value={formData.titles.native}
               onChange={handleChange}
             />
           </div>
@@ -795,7 +794,7 @@ export default function AddManga() {
                 className={addPageStyles.selectedCharacterImage}
               />
               <div className={addPageStyles.selectedCharacterInfo}>
-                <p>
+                <p className={addPageStyles.selectedCharacterName}>
                   {character.names &&
                     `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
                 </p>
@@ -852,7 +851,7 @@ export default function AddManga() {
               />
               <div className={addPageStyles.selectedCharacterInfo}>
                 <p className={addPageStyles.selectedCharacterName}>
-                  {relation.titles.english || relation.titles.romaji || ''}
+                  {relation.titles.english || ''}
                 </p>
                 <select
                   className={addPageStyles.selectedCharacterRole}
@@ -887,7 +886,7 @@ export default function AddManga() {
               />
               <div className={addPageStyles.selectedCharacterInfo}>
                 <p className={addPageStyles.selectedCharacterName}>
-                  {relation.titles.english || relation.titles.romaji || ''}
+                  {relation.titles.english || ''}
                 </p>
                 <select
                   className={addPageStyles.selectedCharacterRole}

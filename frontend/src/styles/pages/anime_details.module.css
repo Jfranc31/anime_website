@@ -152,14 +152,25 @@
 
 .characterCard {
   background: var(--border-color);
-  border-radius: 8px;
+  border-radius: 3px;
   overflow: hidden;
-  transition: transform 0.3s ease;
   text-decoration: none;
+  padding: auto;
+  transition: all 0.3s; /* Smooth transition */
+  background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
 }
 
-.characterCard:hover {
-  transform: translateY(-4px);
+.card2 {
+  width: 100%; /* Full width of the parent card */
+  height: 100%; /* Full height of the parent card */
+  background-color: #1a1a1a;
+  border-radius: 20px; /* Match the outer card */
+  transition: all 0.2s;
+}
+
+.card2:hover {
+  transform: scale(0.98);
+  border-radius: 20px;
 }
 
 .characterImageContainer {
@@ -270,12 +281,9 @@
   background: var(--border-color);
   border-radius: 8px;
   overflow: hidden;
-  transition: transform 0.3s ease;
   text-decoration: none;
-}
-
-.relationCard:hover {
-  transform: translateY(-4px);
+  transition: all 0.3s; /* Smooth transition */
+  background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
 }
 
 .relationImageContainer {

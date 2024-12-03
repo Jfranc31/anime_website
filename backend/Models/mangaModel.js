@@ -15,7 +15,7 @@ const mangaSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    Native: {
+    native: {
       type: String,
     },
   },
@@ -85,10 +85,10 @@ const mangaSchema = new mongoose.Schema({
   },
   lengths: {
     chapters: {
-      type: Number,
+      type: String,
     },
     volumes: {
-      type: Number,
+      type: String,
     },
   },
   genres: [String],
@@ -167,7 +167,7 @@ const mangaSchema = new mongoose.Schema({
     },
   ],
   activityTimestamp: {
-    type: Date,
+    type: Number,
     default: Date.now,
   },
   anilistId: {

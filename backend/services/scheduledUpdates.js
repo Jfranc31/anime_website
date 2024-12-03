@@ -6,6 +6,7 @@ import { updateAnimeFromAnilist, updateMangaFromAnilist } from './updateService.
 const runScheduledUpdates = () => {
   // Run every day at midnight
   cron.schedule('0 0 * * *', async () => {
+    console.log('Running scheduled updates for anime and manga...');
     try {
       const animes = await AnimeModel.find({
         'releaseData.releaseStatus': 'Currently Releasing'
@@ -13,6 +14,7 @@ const runScheduledUpdates = () => {
 
       for (const anime of animes) {
         await updateAnimeFromAnilist(anime);
+        await checkAndUpdateAnimeStatus(anime);
       }
     } catch (error) {
       console.error('Scheduled anime update error:', error);
@@ -30,6 +32,19 @@ const runScheduledUpdates = () => {
       console.error('Scheduled manga update error:', error);
     }
   });
+};
+
+// Function to check and update anime status
+const checkAndUpdateAnimeStatus = async (anime) => {
+  const currentDate = Date.now();
+  const endDate = new Date(anime.releaseData.endDate.year, anime.releaseData.endDate.month - 1, anime.releaseData.endDate.day).getTime();
+
+  // Check if the current date is past the end date
+  if (currentDate > endDate && anime.releaseData.releaseStatus === "Currently Releasing") {
+    anime.releaseData.releaseStatus = "Finished Releasing";
+    await anime.save();
+    console.log(`Updated ${anime.titles.english} status to Finished Releasing.`);
+  }
 };
 
 export { runScheduledUpdates }; 

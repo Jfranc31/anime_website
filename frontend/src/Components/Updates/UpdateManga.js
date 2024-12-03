@@ -8,6 +8,7 @@ import CreateCharacter from '../CreateCharacter';
 import CharacterSearch from '../Searches/CharacterSearch';
 import RelationSearch from '../Searches/RelationSearch';
 import addPageStyles from '../../styles/pages/add_page.module.css';
+import { CompareMangaData } from './CompareMangaData';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -96,10 +97,11 @@ const AVAILABLE_RELATION = [
 
 // #region Initial Form State ----------------------------------------------
 const INITIAL_FORM_STATE = {
+  anilistId: '',
   titles: {
     romaji: '',
     english: '',
-    Native: '',
+    native: '',
   },
   releaseData: {
     releaseStatus: '',
@@ -132,7 +134,7 @@ const INITIAL_FORM_STATE = {
   characters: [],
   mangaRelations: [],
   animeRelations: [],
-  activityTimestamp: 0,
+  activityTimestamp: '',
 };
 // #endregion --------------------------------------------------------------
 
@@ -141,6 +143,7 @@ export const UpdateManga = ({ match }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [anilistData, setAnilistData] = useState();
   const [activeTab, setActiveTab] = useState('general');
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -156,6 +159,29 @@ export const UpdateManga = ({ match }) => {
         );
         const { genres, ...mangaData } = mangaResponse.data;
 
+        const processedData = {
+          ...mangaData,
+          anilistId: mangaData.anilistId?.toString() || '',
+          releaseData: {
+            ...mangaData.releaseData,
+            releaseStatus: mangaData.releaseData?.releaseStatus || '',
+            startDate: {
+              year: mangaData.releaseData?.startDate?.year?.toString() || '',
+              month: mangaData.releaseData?.startDate?.month?.toString() || '',
+              day: mangaData.releaseData?.startDate?.day?.toString() || '',
+            },
+            endDate: {
+              year: mangaData.releaseData?.endDate?.year?.toString() || '',
+              month: mangaData.releaseData?.endDate?.month?.toString() || '',
+              day: mangaData.releaseData?.endDate?.day?.toString() || '',
+            },
+          },
+          lengths: {
+            chapters: mangaData.lengths?.chapters?.toString() || '',
+            volumes: mangaData.lengths?.volumes?.toString() || '',
+          },
+        };
+
         // Extract genre values from the genres array
         const genreValues = Array.isArray(genres)
           ? genres.map((genre) =>
@@ -165,7 +191,7 @@ export const UpdateManga = ({ match }) => {
 
         setFormData((prevData) => ({
           ...prevData,
-          ...mangaData,
+          ...processedData,
           genres: genreValues,
         }));
         setSelectedGenres(genreValues);
@@ -174,7 +200,7 @@ export const UpdateManga = ({ match }) => {
           mangaData?.characters.map(async (character) => {
             try {
               const characterResponse = await axiosInstance.get(
-                `http://localhost:8080/characters/character/${character.characterId}`
+                `/characters/character/${character.characterId}`
               );
               return {
                 ...character,
@@ -194,7 +220,7 @@ export const UpdateManga = ({ match }) => {
           mangaData?.animeRelations.map(async (relation) => {
             try {
               const referenceResponse = await axiosInstance.get(
-                `http://localhost:8080/animes/anime/${relation.relationId}`
+                `/animes/anime/${relation.relationId}`
               );
               return {
                 ...relation,
@@ -214,7 +240,7 @@ export const UpdateManga = ({ match }) => {
           mangaData?.mangaRelations.map(async (relation) => {
             try {
               const referenceResponse = await axiosInstance.get(
-                `http://localhost:8080/mangas/manga/${relation.relationId}`
+                `/mangas/manga/${relation.relationId}`
               );
               return {
                 ...relation,
@@ -242,7 +268,106 @@ export const UpdateManga = ({ match }) => {
     };
 
     fetchData();
+    console.log("form data-", formData);
   }, [id]);
+
+  useEffect(() => {
+    const fetchComparisonData = async () => {
+      try {
+        const response = await axiosInstance.get(`/mangas/compare/${id}`);
+
+        if (response.data) {
+          const newAnilistData = {
+            description: response.data.description.anilist,
+            genres: response.data.genres.anilist,
+            images: response.data.images.anilist,
+            lengths: response.data.lengths.anilist,
+            releaseData: response.data.releaseData.anilist,
+            titles: response.data.titles.anilist,
+            typings: response.data.typings.anilist,
+          };
+
+          setAnilistData(newAnilistData);
+        }
+      } catch (error) {
+        console.error('Error fetching comparison data:', error);
+      }
+    };
+
+    fetchComparisonData();
+  }, [id]);
+
+  const handleDataSelect = (field, value) => {
+    console.log('Updating form with:', field, value);
+    
+    setFormData(prev => {
+      const newData = { ...prev };
+      
+      switch (field) {
+        case 'titles':
+          newData.titles = {
+            ...prev.titles,
+            ...value
+          };
+          break;
+        case 'releaseStatus':
+          newData.releaseData = {
+            ...prev.releaseData,
+            releaseStatus: value
+          };
+          break;
+        case 'startDate':
+          newData.releaseData = {
+            ...prev.releaseData,
+            startDate: value
+          };
+          break;
+        case 'endDate':
+          newData.releaseData = {
+            ...prev.releaseData,
+            endDate: value
+          };
+          break;
+        case 'typings':
+          newData.typings = {
+            ...prev.typings,
+            ...value
+          };
+          break;
+        case 'lengths':
+          newData.lengths = {
+            ...prev.lengths,
+            ...value
+          };
+          break;
+        case 'genres':
+          newData.genres = [...value];
+          setSelectedGenres([...value]);
+          break;
+        case 'description':
+          newData.description = value;
+          break;
+        case 'images':
+          if (typeof value === 'string') {
+            newData.images = {
+              ...prev.images,
+              image: value
+            };
+          } else {
+            newData.images = {
+              ...prev.images,
+              ...value
+            };
+          }
+          break;
+        default:
+          console.warn(`Unhandled field type: ${field}`);
+      }
+      
+      console.log('Updated form data:', newData);
+      return newData;
+    });
+  };
   // #endregion ------------------------------------------------------------
 
   // #region Modal Handlers ------------------------------------------------
@@ -451,17 +576,12 @@ export const UpdateManga = ({ match }) => {
     };
 
     try {
-      console.log('Current formData:', updatedFormData);
-
       const res = await axiosInstance.put(
         `/mangas/manga/${id}`,
         updatedFormData
       );
 
-      console.log('Response from backend:', res.data);
-
       if (res.status === 200) {
-        console.log('Manga and characters updated successfully!', res.data);
 
         navigate(`/manga/${id}`);
       } else {
@@ -488,7 +608,7 @@ export const UpdateManga = ({ match }) => {
               type="text"
               id="titles.romaji"
               name="titles.romaji"
-              value={formData.titles.romaji}
+              value={formData.titles.romaji || ''}
               onChange={handleChange}
             />
           </div>
@@ -499,7 +619,7 @@ export const UpdateManga = ({ match }) => {
               type="text"
               id="titles.english"
               name="titles.english"
-              value={formData.titles.english}
+              value={formData.titles.english || ''}
               onChange={handleChange}
               required
             />
@@ -511,7 +631,7 @@ export const UpdateManga = ({ match }) => {
               type="text"
               id="titles.Native"
               name="titles.Native"
-              value={formData.titles.Native}
+              value={formData.titles.native || ''}
               onChange={handleChange}
             />
           </div>
@@ -550,7 +670,7 @@ export const UpdateManga = ({ match }) => {
                 id="releaseData.startDate.year"
                 name="releaseData.startDate.year"
                 placeholder="YYYY"
-                value={formData.releaseData.startDate.year}
+                value={formData.releaseData.startDate.year || ''}
                 onChange={handleChange}
                 min="1900"
                 max="2099"
@@ -560,7 +680,7 @@ export const UpdateManga = ({ match }) => {
                 id="releaseData.startDate.month"
                 name="releaseData.startDate.month"
                 placeholder="MM"
-                value={formData.releaseData.startDate.month}
+                value={formData.releaseData.startDate.month || ''}
                 onChange={handleChange}
                 min="1"
                 max="12"
@@ -570,7 +690,7 @@ export const UpdateManga = ({ match }) => {
                 id="releaseData.startDate.day"
                 name="releaseData.startDate.day"
                 placeholder="DD"
-                value={formData.releaseData.startDate.day}
+                value={formData.releaseData.startDate.day || ''}
                 onChange={handleChange}
                 min="1"
                 max="31"
@@ -585,7 +705,7 @@ export const UpdateManga = ({ match }) => {
                 id="releaseData.endDate.year"
                 name="releaseData.endDate.year"
                 placeholder="YYYY"
-                value={formData.releaseData.endDate.year}
+                value={formData.releaseData.endDate.year || ''}
                 onChange={handleChange}
                 min="1900"
                 max="2099"
@@ -595,7 +715,7 @@ export const UpdateManga = ({ match }) => {
                 id="releaseData.endDate.month"
                 name="releaseData.endDate.month"
                 placeholder="MM"
-                value={formData.releaseData.endDate.month}
+                value={formData.releaseData.endDate.month || ''}
                 onChange={handleChange}
                 min="1"
                 max="12"
@@ -605,7 +725,7 @@ export const UpdateManga = ({ match }) => {
                 id="releaseData.endDate.day"
                 name="releaseData.endDate.day"
                 placeholder="DD"
-                value={formData.releaseData.endDate.day}
+                value={formData.releaseData.endDate.day || ''}
                 onChange={handleChange}
                 min="1"
                 max="31"
@@ -691,7 +811,7 @@ export const UpdateManga = ({ match }) => {
               type="number"
               id="lengths.chapters"
               name="lengths.chapters"
-              value={formData.lengths.chapters}
+              value={formData.lengths.chapters || ''}
               onChange={handleChange}
             />
           </div>
@@ -702,7 +822,7 @@ export const UpdateManga = ({ match }) => {
               type="number"
               id="lengths.volumes"
               name="lengths.volumes"
-              value={formData.lengths.volumes}
+              value={formData.lengths.volumes || ''}
               onChange={handleChange}
             />
           </div>
@@ -734,11 +854,29 @@ export const UpdateManga = ({ match }) => {
           type="text"
           id="description"
           name="description"
-          value={formData.description}
+          value={formData.description || ''}
           onChange={handleChange}
           rows={4}
           cols={80}
         ></textarea>
+      </div>
+
+      <div className={addPageStyles.section}>
+        <h2>AniList ID</h2>
+        <div className={addPageStyles.grid}>
+          <div>
+            <label htmlFor="anilistId">AniList ID:</label>
+            <div></div>
+            <input
+              type="number"
+              id="anilistId"
+              name="anilistId"
+              value={formData.anilistId}
+              onChange={(e) => setFormData({ ...formData, anilistId: e.target.value })}
+              placeholder="AniList ID"
+            />
+          </div>
+        </div>
       </div>
     </>
   );
@@ -810,7 +948,7 @@ export const UpdateManga = ({ match }) => {
                 className={addPageStyles.selectedCharacterImage}
               />
               <div className={addPageStyles.selectedCharacterInfo}>
-                <p>
+                <p className={addPageStyles.selectedCharacterName}>
                   {character.names &&
                     `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
                 </p>
@@ -933,8 +1071,6 @@ export const UpdateManga = ({ match }) => {
   );
   // #endregion ------------------------------------------------------------
 
-  console.log('form data: ', formData);
-
   // #region Submit Section -------------------------------------------------
   return (
     <div className={addPageStyles.addContainer}>
@@ -1013,6 +1149,50 @@ export const UpdateManga = ({ match }) => {
           searchType={'manga'}
           onClose={() => setActiveModal(null)}
         />
+      )}
+      {anilistData ? (
+        <CompareMangaData 
+          currentData={{
+            titles: {
+              romaji: formData.titles.romaji,
+              english: formData.titles.english,
+              native: formData.titles.native
+            },
+            releaseStatus: formData.releaseData.releaseStatus,
+            startDate: formData.releaseData.startDate,
+            endDate: formData.releaseData.endDate,
+            typings: formData.typings,
+            lengths: formData.lengths,
+            genres: formData.genres,
+            description: formData.description,
+            images: formData.images.image
+          }}
+          anilistData={{
+            titles: {
+              romaji: anilistData.titles.romaji,
+              english: anilistData.titles.english,
+              native: anilistData.titles.native
+            },
+            releaseStatus: anilistData.releaseData.releaseStatus,
+            startDate: anilistData.releaseData.startDate,
+            endDate: anilistData.releaseData.endDate,
+            typings: {
+              Format: anilistData.typings.Format,
+              Source: anilistData.typings.Source,
+              CountryOfOrigin: anilistData.typings.CountryOfOrigin
+            },
+            lengths: {
+              chapters: anilistData.lengths.Chapters,
+              volumes: anilistData.lengths.Volumes
+            },
+            genres: anilistData.genres,
+            description: anilistData.description,
+            images: anilistData.images
+          }}
+          onDataSelect={handleDataSelect}
+        />
+      ) : (
+        <div>Loading AniList data...</div>
       )}
     </div>
   );

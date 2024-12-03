@@ -137,11 +137,18 @@ const CharacterDetails = () => {
     const lines = description.split('\n');
 
     lines.forEach((line) => {
-      const metadataMatch = line.match(/^__(.+?):__ (.+)$/);
+      const metadataMatch = line.match(/^__(.+?):__ (.+)$/) || line.match(/^__(.+?)__: (.+)$/);
       if (metadataMatch) {
+        // Handle metadata with potential links
+        const label = metadataMatch[1].trim();
+        const value = metadataMatch[2].trim().replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, name, link) => {
+          return `<a href="${link}" target="_blank" rel="noopener noreferrer">${name}</a>`;
+        });
+        console.log('line: ', line);
+        console.log('value: ', value);
         metadata.push({
-          label: metadataMatch[1],
-          value: metadataMatch[2],
+          label,
+          value: value.replace(/~!(.+?)!~/g, '<span className={characterDetailsStyles.markdown-spoiler}>$1</span>'), // Handle spoilers
         });
       } else if (line.trim()) {
         currentParagraph += line + ' ';
@@ -150,6 +157,7 @@ const CharacterDetails = () => {
         currentParagraph = '';
       }
     });
+    console.log('Metadata Value: ', metadata.value);
 
     if (currentParagraph) {
       paragraphs.push(currentParagraph.trim());
@@ -203,7 +211,7 @@ const CharacterDetails = () => {
             <div className={characterDetailsStyles.metadataItem}>
               <span className={characterDetailsStyles.metadataLabel}>Age</span>
               <span className={characterDetailsStyles.metadataValue}>
-                : {characterDetails.age}
+                {characterDetails.age}
               </span>
             </div>
           )}
@@ -213,7 +221,7 @@ const CharacterDetails = () => {
                 Gender
               </span>
               <span className={characterDetailsStyles.metadataValue}>
-                : {characterDetails.gender}
+                {characterDetails.gender}
               </span>
             </div>
           )}
@@ -223,7 +231,7 @@ const CharacterDetails = () => {
                 Date of Birth
               </span>
               <span className={characterDetailsStyles.metadataValue}>
-                : {formatDOB(characterDetails.DOB)}
+                {formatDOB(characterDetails.DOB)}
               </span>
             </div>
           )}
@@ -233,9 +241,7 @@ const CharacterDetails = () => {
               <span className={characterDetailsStyles.metadataLabel}>
                 {item.label}
               </span>
-              <span className={characterDetailsStyles.metadataValue}>
-                : {renderMetadataValue(item.value, index)}
-              </span>
+              <span className={characterDetailsStyles.metadataValue} dangerouslySetInnerHTML={{ __html: item.value }} />
             </div>
           ))}
         </div>
@@ -275,17 +281,19 @@ const CharacterDetails = () => {
               to={`/${activeAppearanceType}/${reference.referenceDetails?._id}`}
               className={characterDetailsStyles.referenceCard}
             >
-              <div className={characterDetailsStyles.referenceImageContainer}>
-                <img
-                  src={reference.referenceDetails?.images.image}
-                  alt={reference.referenceDetails?.titles.english}
-                />
-                <div className={characterDetailsStyles.referenceRole}>
-                  {reference.role}
+              <div className={characterDetailsStyles.card2}>
+                <div className={characterDetailsStyles.referenceImageContainer}>
+                  <img
+                    src={reference.referenceDetails?.images.image}
+                    alt={reference.referenceDetails?.titles.english}
+                  />
+                  <div className={characterDetailsStyles.referenceRole}>
+                    {reference.role}
+                  </div>
                 </div>
-              </div>
-              <div className={characterDetailsStyles.referenceInfo}>
-                <h4>{reference.referenceDetails?.titles.english}</h4>
+                <div className={characterDetailsStyles.referenceInfo}>
+                  <h4>{reference.referenceDetails?.titles.english}</h4>
+                </div>
               </div>
             </Link>
           ))}
@@ -319,7 +327,7 @@ const CharacterDetails = () => {
           {characterDetails.names.alterNames && (
             <div className={characterDetailsStyles.characterAltNames}>
               <span>Alternative Names:</span>{' '}
-              {characterDetails.names.alterNames}
+              {characterDetails.names.alterNames.join(', ')}
             </div>
           )}
           <div className={characterDetailsStyles.characterTabs}>
