@@ -19,12 +19,17 @@
 .characterModal {
   position: relative;
   background: var(--modal-bg);
-  width: min(90%, 500px);
+  width: 80%;
+  max-width: 1000px;
   max-height: 90vh;
   border-radius: 12px;
   box-shadow: 0 8px 32px var(--modal-box-shadow);
   overflow: hidden;
   animation: modalFadeIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .modalHeader {
