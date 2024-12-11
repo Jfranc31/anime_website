@@ -299,10 +299,10 @@ export const UpdateManga = ({ match }) => {
 
   const handleDataSelect = (field, value) => {
     console.log('Updating form with:', field, value);
-    
+
     setFormData(prev => {
       const newData = { ...prev };
-      
+
       switch (field) {
         case 'titles':
           newData.titles = {
@@ -363,7 +363,7 @@ export const UpdateManga = ({ match }) => {
         default:
           console.warn(`Unhandled field type: ${field}`);
       }
-      
+
       console.log('Updated form data:', newData);
       return newData;
     });
@@ -525,7 +525,7 @@ export const UpdateManga = ({ match }) => {
         // If genre is already selected, remove it
         updatedGenres = prevGenres.filter((genre) => genre !== selectedGenre);
       } else {
-        // If genre is not selected, add it 
+        // If genre is not selected, add it
         updatedGenres = [...prevGenres, selectedGenre];
       }
 
@@ -663,7 +663,7 @@ export const UpdateManga = ({ match }) => {
 
         <div className={addPageStyles.grid}>
           <div>
-            <label>Start Date</label>
+            <label htmlFor="releaseData.startDate.year">Start Date</label>
             <div className={addPageStyles.dateGrid}>
               <input
                 type="number"
@@ -698,7 +698,7 @@ export const UpdateManga = ({ match }) => {
             </div>
           </div>
           <div>
-            <label>End Date</label>
+            <label htmlFor="releaseData.endDate.year">End Date</label>
             <div className={addPageStyles.dateGrid}>
               <input
                 type="number"
@@ -953,6 +953,8 @@ export const UpdateManga = ({ match }) => {
                     `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
                 </p>
                 <select
+                  id={`characterRole-${index}`} // Add a unique ID
+                  name={`characterRole[${index}]`} // Add a name attribute
                   className={addPageStyles.selectedCharacterRole}
                   value={character.role}
                   onChange={(e) => handleCharacterTypeChange(e, index)}
@@ -1008,6 +1010,8 @@ export const UpdateManga = ({ match }) => {
                   {relation.titles.english || relation.titles.romaji || ''}
                 </p>
                 <select
+                  id={`animeRole-${index}`}
+                  name={`animeRole-${index}`}
                   className={addPageStyles.selectedCharacterRole}
                   value={relation.typeofRelation}
                   onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
@@ -1043,6 +1047,8 @@ export const UpdateManga = ({ match }) => {
                   {relation.titles.english || relation.titles.romaji || ''}
                 </p>
                 <select
+                  id={`mangaRole-${index}`}
+                  name={`mangaRole-${index}`}
                   className={addPageStyles.selectedCharacterRole}
                   value={relation.typeofRelation}
                   onChange={(e) => handleRelationTypeChange(e, 'manga', index)}
@@ -1151,7 +1157,7 @@ export const UpdateManga = ({ match }) => {
         />
       )}
       {anilistData ? (
-        <CompareMangaData 
+        <CompareMangaData
           currentData={{
             titles: {
               romaji: formData.titles.romaji,

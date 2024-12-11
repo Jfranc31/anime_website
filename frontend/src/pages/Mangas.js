@@ -188,6 +188,8 @@ const Mangas = () => {
         <div className={browseStyles.filterSection}>
           <div className={browseStyles.filterTitle}>Year</div>
           <select
+            id="selectedYear"
+            name="selectedYear"
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
             className={browseStyles.filterSelect}
@@ -202,6 +204,8 @@ const Mangas = () => {
         <div className={browseStyles.filterSection}>
           <div className={browseStyles.filterTitle}>Format</div>
           <select
+            id="selectedFormat"
+            name="selectedFormat"
             value=""
             onChange={(e) => handleFormatChange(e.target.value)}
             className={browseStyles.filterSelect}
@@ -229,6 +233,8 @@ const Mangas = () => {
         <div className={browseStyles.filterSection}>
           <div className={browseStyles.filterTitle}>Status</div>
           <select
+            id="selectedStatus"
+            name="selectedStatus"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             className={browseStyles.filterSelect}

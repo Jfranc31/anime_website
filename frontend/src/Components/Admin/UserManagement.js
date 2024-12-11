@@ -71,6 +71,8 @@ const UserManagement = () => {
       <div className={styles.header}>
         <h2>User Management</h2>
         <input
+          id="userSearch"
+          name="userSearch"
           type="text"
           placeholder="Search users..."
           value={searchTerm}

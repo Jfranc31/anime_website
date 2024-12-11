@@ -90,6 +90,7 @@ const createAnime = async (req, res) => {
     const charactersArray = characters.map((characterInfo) => ({
       characterId: characterInfo.characterId,
       role: characterInfo.role,
+      animeName: titles
     }));
 
     const anime = await AnimeModel.create({
@@ -118,6 +119,7 @@ const createAnime = async (req, res) => {
               animes: {
                 animeId: anime._id,
                 role: characterInfo.role,
+                animeName: titles
               },
             },
           },

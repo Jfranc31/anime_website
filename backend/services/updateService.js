@@ -177,11 +177,6 @@ const compareAnimeData = async (anime) => {
         current: differences.images.current,
         anilist: differences.images.anilist,
         isDifferent: differences.images.isDifferent
-      },
-      nextAiringEpisode: {
-        current: differences.nextAiringEpisode.current,
-        anilist: differences.nextAiringEpisode.anilist,
-        isDifferent: differences.nextAiringEpisode.isDifferent
       }
     });
 
@@ -221,6 +216,11 @@ const updateAnimeFromAnilist = async (anime) => {
       genres: anilistData.genres,
       description: anilistData.description,
       activityTimestamp: Date.now(),
+      nextAiringEpisode: {
+        airingAt: anilistData.nextAiringEpisode.airingAt,
+        episode: anilistData.nextAiringEpisode.episode,
+        timeUntilAiring: anilistData.nextAiringEpisode.timeUntilAiring
+      }
     };
 
     return await AnimeModel.findByIdAndUpdate(
@@ -356,8 +356,8 @@ const updateMangaFromAnilist = async (manga) => {
         endDate: anilistData.endDate
       },
       lengths: {
-        Chapters: anilistData.chapters,
-        Volumes: anilistData.volumes
+        Chapters: anilistData.chapters?.toString() || '',
+        Volumes: anilistData.volumes.toString() || ''
       },
       genres: anilistData.genres,
       activityTimestamp: Date.now()

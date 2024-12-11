@@ -2,8 +2,9 @@
  * src/Components/Details/CharacterDetails.js
  * Description: React component for rendering details of a character.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import data from '../../Context/ContextApi';
 import axiosInstance from '../../utils/axiosConfig';
 import characterDetailsStyles from '../../styles/pages/character_details.module.css';
 /**
@@ -12,6 +13,7 @@ import characterDetailsStyles from '../../styles/pages/character_details.module.
  */
 const CharacterDetails = () => {
   const { id } = useParams();
+  const { userData, setUserData } = useContext(data);
   const [characterDetails, setCharacterDetails] = useState(null);
   const [referencesDetails, setReferencesDetails] = useState([]);
   const [activeTab, setActiveTab] = useState('about');
@@ -310,14 +312,16 @@ const CharacterDetails = () => {
             alt={characterDetails.names.givenName}
             className={characterDetailsStyles.characterMainImage}
           />
-          <Link
-            to={`/characters/${characterDetails._id}/update`}
-            className={characterDetailsStyles.editCharacterLink}
-          >
-            <button className={characterDetailsStyles.editCharacterButton}>
-              Edit Character
-            </button>
-          </Link>
+          {userData.role === 'admin' && (
+            <Link
+              to={`/characters/${characterDetails._id}/update`}
+              className={characterDetailsStyles.editCharacterLink}
+            >
+              <button className={characterDetailsStyles.editCharacterButton}>
+                Edit Character
+              </button>
+            </Link>
+          )}
         </div>
         <div className={characterDetailsStyles.characterInfoSection}>
           <h1 className={characterDetailsStyles.characterName}>

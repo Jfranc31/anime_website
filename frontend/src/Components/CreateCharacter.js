@@ -215,111 +215,82 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
             <h3>Names</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.givenName"
-                >
-                  Given Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
                   id="names.givenName"
                   name="names.givenName"
+                  placeholder={`Given Name...`}
                   value={characterData.names.givenName}
                   onChange={handleChange}
                   required
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.middleName"
-                >
-                  Middle Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
                   id="names.middleName"
                   name="names.middleName"
+                  placeholder={`Middle Name...`}
                   value={characterData.names.middleName}
                   onChange={handleChange}
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.surName"
-                >
-                  Sur Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
                   id="names.surName"
                   name="names.surName"
+                  placeholder={`Sur Name...`}
                   value={characterData.names.surName}
                   onChange={handleChange}
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.nativeName"
-                >
-                  Native Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
                   id="names.nativeName"
                   name="names.nativeName"
+                  placeholder={`Native Name...`}
                   value={characterData.names.nativeName}
                   onChange={handleChange}
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.alterNames"
-                >
-                  Alternative Name:
-                </label>
                 <div className={createCharacterStyles.gridItem}>
                   {altNames.map((altName, index) => (
+                    <div key={index}>
                     <input
                       className={createCharacterStyles.input}
                       key={index}
                       type="text"
-                      id="names.alterNames"
-                      name="names.alterNames"
+                      id={`names.alterNames-${index}`}
+                      name={`names.alterNames[${index}]`}
                       value={altName}
                       onChange={(e) => handleAltNameChange(e.target.value, index)}
                       placeholder={`Alternative Name...`}
                     />
+                    </div>
                   ))}
                 </div>
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.alterSpoiler"
-                >
-                  Alternative Spoiler Name:
-                </label>
                 <div className={createCharacterStyles.gridItem}>
                   {altSpoilerNames.map((altSpoilerName, index) => (
-                    <input
-                      className={createCharacterStyles.input}
-                      key={index}
-                      type="text"
-                      id="names.alterSpoilerNames"
-                      name="names.alterSpoilerNames"
-                      value={altSpoilerName}
-                      onChange={(e) => handleAltSpoilerNameChange(e.target.value, index)}
-                      placeholder={`Alternative Spoiler Name...`}
-                    />
+                    <div key={index}>
+                      <input
+                        className={createCharacterStyles.input}
+                        type="text"
+                        id={`alterSpoilerName-${index}`}
+                        name={`names.alterSpoiler[${index}]`}
+                        value={altSpoilerName}
+                        onChange={(e) => handleAltSpoilerNameChange(e.target.value, index)}
+                        placeholder={`Alternative Spoiler Name...`}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -476,6 +447,9 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
           </div>
 
           <div className={createCharacterStyles.buttonContainer}>
+            <button className={createCharacterStyles.button} type="button" onClick={() => setShowCharacterSearch(true)}>
+              Search Anilist Characters
+            </button>
             <button 
               className={createCharacterStyles.button} 
               type="submit"
@@ -483,9 +457,6 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
               Create Character
             </button>
           </div>
-          <button type="button" onClick={() => setShowCharacterSearch(true)}>
-            Search Characters
-          </button>
         </form>
           {showCharacterSearch && (
             <AnilistCharacterSearch

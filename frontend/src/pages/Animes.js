@@ -212,6 +212,8 @@ const Animes = () => {
         <div className={browseStyles.filterSection}>
           <div className={browseStyles.filterTitle}>Year</div>
           <select
+            id="selectedYear"
+            name="selectedYear"
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
             className={browseStyles.filterSelect}
@@ -226,6 +228,8 @@ const Animes = () => {
         <div className={browseStyles.filterSection}>
           <div className={browseStyles.filterTitle}>Season</div>
           <select
+            id="selectedSeason"
+            name="selectedSeason"
             value={selectedSeason}
             onChange={(e) => setSelectedSeason(e.target.value)}
             className={browseStyles.filterSelect}
@@ -240,6 +244,8 @@ const Animes = () => {
         <div className={browseStyles.filterSection}>
           <div className={browseStyles.filterTitle}>Format</div>
           <select
+            id="selectedFormat"
+            name="selectedFormat"
             value=""
             onChange={(e) => handleFormatChange(e.target.value)}
             className={browseStyles.filterSelect}
@@ -269,6 +275,8 @@ const Animes = () => {
         <div className={browseStyles.filterSection}>
           <div className={browseStyles.filterTitle}>Airing Status</div>
           <select
+            id="selectedAiring"
+            name="selectedAiring"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             className={browseStyles.filterSelect}

@@ -79,6 +79,8 @@ export default function RelationSearch({
           <div className={searchStyles.searchContainer}>
             <div className={searchStyles.searchBox}>
               <input
+                id="searchRelation"
+                name="searchRelation"
                 type="text"
                 placeholder={`Search ${searchType}...`}
                 value={searchQuery}

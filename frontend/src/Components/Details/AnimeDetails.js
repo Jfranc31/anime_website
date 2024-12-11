@@ -49,16 +49,18 @@ const AnimeDetails = () => {
           );
           const currentUser = userResponse.data;
 
-          const isAnimeAdded = currentUser?.animes?.some(
+          setUserData(currentUser);
+
+          const animeAdded = currentUser?.animes?.some(
             (anime) => anime.animeId === id
           );
+          setIsAnimeAdded(animeAdded);
+          
           const existingAnimeIndex = currentUser?.animes?.findIndex(
             (anime) => anime.animeId.toString() === id.toString()
           );
 
           setAnimeDetails(animeResponse.data);
-          setActiveTab('about');
-          setIsAnimeAdded(isAnimeAdded);
 
           if (currentUser && existingAnimeIndex !== -1) {
             setUserProgress({
@@ -75,7 +77,7 @@ const AnimeDetails = () => {
     };
 
     fetchAnimeDetails();
-  }, [id, setUserData, userData?._id, setIsAnimeAdded]);
+  }, [id, userData, setUserData]);
 
   useEffect(() => {
     const fetchCharacterDetails = async () => {
@@ -323,6 +325,7 @@ const AnimeDetails = () => {
     });
   };
 
+  console.log('userData: ', userData);
 
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
@@ -343,14 +346,18 @@ const AnimeDetails = () => {
               alt={animeDetails.titles.english}
             />
             <div className={animeDetailsStyles.actionButtons}>
-              {isAnimeAdded ? (
-                  <button onClick={openEditor} className={animeDetailsStyles.editButton}>
-                    Edit Progress
-                  </button>
-              ) : (
-                <button onClick={openEditor} className={animeDetailsStyles.addButton}>
-                  Add to List
-                </button>
+              {userData && (userData.role === 'admin' || userData.role === 'user') && (
+                <>
+                  {isAnimeAdded ? (
+                      <button onClick={openEditor} className={animeDetailsStyles.editButton}>
+                        Edit Progress
+                      </button>
+                  ) : (
+                    <button onClick={openEditor} className={animeDetailsStyles.addButton}>
+                      Add to List
+                    </button>
+                  )}
+                </>
               )}
             </div>
             {userData.role === 'admin' && (

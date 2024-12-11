@@ -49,7 +49,9 @@ const MangaDetails = () => {
           );
           const currentUser = userResponse.data;
 
-          const isMangaAdded = currentUser?.mangas?.some(
+          setUserData(currentUser);
+
+          const mangaAdded = currentUser?.mangas?.some(
             (manga) => manga.mangaId === id
           );
           const existingMangaIndex = currentUser?.mangas?.findIndex(
@@ -57,8 +59,7 @@ const MangaDetails = () => {
           );
 
           setMangaDetails(mangaResponse.data);
-          setActiveTab('about');
-          setIsMangaAdded(isMangaAdded);
+          setIsMangaAdded(mangaAdded);
 
           if (currentUser && existingMangaIndex !== -1) {
             setUserProgress({
@@ -317,14 +318,18 @@ const MangaDetails = () => {
               alt={mangaDetails.titles.english}
             />
             <div className={mangaDetailsStyles.actionButtons}>
-              {isMangaAdded ? (
-                  <button onClick={openEditor} className={mangaDetailsStyles.editButton}>
-                    Edit Progress
-                  </button>
-              ) : (
-                <button onClick={openEditor} className={mangaDetailsStyles.addButton}>
-                  Add to List
-                </button>
+              {userData && (userData.role === 'admin' || userData.role === 'user') && (
+                <>
+                  {isMangaAdded ? (
+                      <button onClick={openEditor} className={mangaDetailsStyles.editButton}>
+                        Edit Progress
+                      </button>
+                  ) : (
+                    <button onClick={openEditor} className={mangaDetailsStyles.addButton}>
+                      Add to List
+                    </button>
+                  )}
+                </>
               )}
             </div>
             {userData.role === 'admin' && (

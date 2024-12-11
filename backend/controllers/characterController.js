@@ -48,7 +48,14 @@ const searchForCharacters = async (req, res) => {
         { "names.givenName": { $regex: searchTerm, $options: "i" } },
         { "names.middleName": { $regex: searchTerm, $options: "i" } },
         { "names.surName": { $regex: searchTerm, $options: "i" } },
+        { "names.nativeName": { $regex: searchTerm, $options: "i" } },
         { "names.alterNames": { $regex: searchTerm, $options: "i" } },
+        { "animes.animeName.romaji": { $regex: searchTerm, $options: "i" } },
+        { "animes.animeName.english": { $regex: searchTerm, $options: "i" } },
+        { "animes.animeName.native": { $regex: searchTerm, $options: "i" } },
+        { "mangas.mangaName.romaji": { $regex: searchTerm, $options: "i" } },
+        { "mangas.mangaName.english": { $regex: searchTerm, $options: "i" } },
+        { "mangas.mangaName.native": { $regex: searchTerm, $options: "i" } },
       ],
     });
 
@@ -109,6 +116,13 @@ const createCharacter = async (req, res) => {
       const animeIds = animes.map((animeInfo) => ({
         animeId: animeInfo.animeId,
         role: animeInfo.role,
+        animeName: [
+          {
+            romaji: animeInfo.animeName.romaji || '',
+            english: animeInfo.animeName.english || '',
+            native: animeInfo.animeName.native || '',
+          },
+        ],
       }));
 
       const character = await CharacterModel.create({
@@ -137,6 +151,7 @@ const createCharacter = async (req, res) => {
       const mangaIds = mangas.map((mangaInfo) => ({
         mangaId: mangaInfo.mangaId,
         role: mangaInfo.role,
+        mangaName: mangaInfo.mangaName,
       }));
 
       const character = await CharacterModel.create({

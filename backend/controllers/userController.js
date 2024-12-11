@@ -332,6 +332,7 @@ const updateUserManga = async (req, res) => {
 
       console.log("Current Chapter:", currentChapter);
       console.log("Current Volume:", currentVolume);
+      console.log("Manga Volume:", mangaVolumes.lengths.volumes);
       console.log("Max Chapters:", maxChapters);
       console.log("Max Volumes:", maxVolumes);
 

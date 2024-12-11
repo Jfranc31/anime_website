@@ -64,6 +64,8 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
             <h2>Search Characters</h2>
             <div className={searchStyles.searchBox}>
               <input
+                id="searchCharacter"
+                name="searchCharacter"
                 type="text"
                 placeholder="Search characters..."
                 value={searchTerm}

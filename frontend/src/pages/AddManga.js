@@ -509,7 +509,7 @@ export default function AddManga() {
 
         <div className={addPageStyles.grid}>
           <div>
-            <label>Start Date</label>
+            <label htmlFor="releaseData.startDate.year">Start Date</label>
             <div className={addPageStyles.dateGrid}>
               <input
                 type="number"
@@ -544,7 +544,7 @@ export default function AddManga() {
             </div>
           </div>
           <div>
-            <label>End Date</label>
+            <label htmlFor="releaseData.endDate.year">End Date</label>
             <div className={addPageStyles.dateGrid}>
               <input
                 type="number"
@@ -799,6 +799,8 @@ export default function AddManga() {
                     `${character.names.givenName || ''} ${character.names.middleName || ''} ${character.names.surName || ''}`}
                 </p>
                 <select
+                  id={`characterRole-${index}`} // Add a unique ID
+                  name={`characterRole[${index}]`} // Add a name attribute
                   className={addPageStyles.selectedCharacterRole}
                   value={character.role}
                   onChange={(e) => handleCharacterTypeChange(e, index)}
@@ -854,6 +856,8 @@ export default function AddManga() {
                   {relation.titles.english || ''}
                 </p>
                 <select
+                  id={`animeRole-${index}`}
+                  name={`animeRole-${index}`}
                   className={addPageStyles.selectedCharacterRole}
                   value={relation.typeofRelation}
                   onChange={(e) => handleRelationTypeChange(e, 'anime', index)}
@@ -889,6 +893,8 @@ export default function AddManga() {
                   {relation.titles.english || ''}
                 </p>
                 <select
+                  id={`mangaRole-${index}`}
+                  name={`mangaRole-${index}`}
                   className={addPageStyles.selectedCharacterRole}
                   value={relation.typeofRelation}
                   onChange={(e) => handleRelationTypeChange(e, 'manga', index)}

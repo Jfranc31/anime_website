@@ -209,11 +209,5 @@ app.listen(8080, () => {
   console.log("Server is running at port 8080");
 });
 
-// Run updates every 6 hours
-cron.schedule('0 */6 * * *', async () => {
-  console.log('Running scheduled anime updates...');
-  await updateAnimeData();
-});
-
 // Add this after your other middleware setup
-runScheduledUpdates();
+runScheduledUpdates('*/5 * * * *');

@@ -66,6 +66,8 @@ export const AnilistCharacterSearch = ({ onCharacterSelected, onClose }) => {
                 <input
                   type="text"
                   value={searchTerm}
+                  id="searchCharacter"
+                  name="searchCharacter"
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Enter character name..."
                   className={searchStyles.searchInput}

@@ -57,6 +57,8 @@ export const AnimeSearch = ({ onAnimeSelected, onClose }) => {
               <form id="searchAnime" onSubmit={handleSearch} className={searchStyles.searchForm}>
                 <input
                   type="text"
+                  id="animeTitle"
+                  name="animeTitle"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Enter anime title..."

@@ -236,7 +236,6 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <Link to="/profile" onClick={closeMenu}>Profile</Link>
             <Link to="/settings" onClick={closeMenu}>Settings</Link>
             {userData.role === 'admin' && (
               <>
