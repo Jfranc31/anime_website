@@ -8,7 +8,7 @@ import CharacterModel from "../Models/characterModel.js";
 import MangaModel from "../Models/mangaModel.js";
 import { getReverseRelationType } from "../functions.js";
 import { fetchAnimeData } from "../services/anilistService.js";
-import { updateAnimeFromAnilist, compareAnimeData } from "../services/updateService.js";
+import { updateAnimeFromAnilist, compareAnimeData, FORMAT_MAP } from "../services/updateService.js";
 
 /**
  * @function getAllAnimes
@@ -90,7 +90,11 @@ const createAnime = async (req, res) => {
     const charactersArray = characters.map((characterInfo) => ({
       characterId: characterInfo.characterId,
       role: characterInfo.role,
-      animeName: titles
+      animeName:{
+        romaji: titles.romaji || '',
+        english: titles.english || '',
+        native: titles.native || '',
+      },
     }));
 
     const anime = await AnimeModel.create({
@@ -119,7 +123,11 @@ const createAnime = async (req, res) => {
               animes: {
                 animeId: anime._id,
                 role: characterInfo.role,
-                animeName: titles
+                animeName: {
+                  romaji: titles.romaji || '',
+                  english: titles.english || '',
+                  native: titles.native || '',
+                },
               },
             },
           },
@@ -129,34 +137,32 @@ const createAnime = async (req, res) => {
       }),
     );
 
-    // Update relations with the anime ID
+    // Update related animes with reverse relations
     const updatedAnimeRelations = await Promise.all(
       animeRelationsArray.map(async (relationInfo) => {
-        const reverseRelationType = getReverseRelationType(
-          relationInfo.typeofRelation,
-        );
-
-        if (reverseRelationType) {
-          const reverseRelationAnime = await AnimeModel.findByIdAndUpdate(
-            relationInfo.relationId,
-            {
-              $push: {
-                animeRelations: {
-                  relationId: anime._id,
-                  typeofRelation: reverseRelationType,
-                },
-              },
-            },
-            { new: true },
-          );
-          return [anime, reverseRelationAnime];
-        } else {
-          return anime;
+        const relatedAnime = await AnimeModel.findById(relationInfo.relationId);
+        if (relatedAnime) {
+          const reverseRelationType = getReverseRelationType(relationInfo.typeofRelation);
+          if (reverseRelationType) {
+            // Add the reverse relation to the related anime
+            await AnimeModel.findByIdAndUpdate(
+              relationInfo.relationId,
+              {
+                $push: {
+                  animeRelations: {
+                    relationId: anime._id,
+                    typeofRelation: reverseRelationType
+                  }
+                }
+              }
+            );
+          }
         }
-      }),
+        return relatedAnime;
+      })
     );
 
-    // Update relations with the manga ID
+    // Update related mangas with reverse relations
     const updatedMangaRelations = await Promise.all(
       mangaRelationsArray.map(async (relationInfo) => {
         const reverseRelationType = getReverseRelationType(
@@ -193,11 +199,8 @@ const createAnime = async (req, res) => {
       });
 
   } catch (error) {
-    console.error("Error during anime creation:", error);
-    res.status(500).json({
-      message: "Error during anime creation",
-      error: error.message
-    });
+    console.error("Error creating anime:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -212,7 +215,13 @@ const updateAnime = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { characters, mangaRelations, animeRelations, nextAiringEpisode, ...otherFields } = req.body;
+    const {
+      characters,
+      mangaRelations,
+      animeRelations,
+      nextAiringEpisode,
+      ...otherFields
+    } = req.body;
 
     // Filter out characters with empty characterId
     const validCharacters = characters.filter(
@@ -228,10 +237,10 @@ const updateAnime = async (req, res) => {
     // Update the anime, excluding characters with empty characterId
     const updatedAnime = await AnimeModel.findByIdAndUpdate(
       id,
-      { ...otherFields, characters: validCharacters, nextAiringEpisode },
+      { ...otherFields, characters: validCharacters },
       {
-        new: true,
-        runValidators: true,
+        new: true, // Return the modified document
+        runValidators: true, // Run validators for update operations
       },
     );
 
@@ -239,19 +248,20 @@ const updateAnime = async (req, res) => {
       return res.status(404).json({ error: "Anime not found" });
     }
 
-    // Update characters, adding new characters if they don't have the animeId already
+    // Update characters, adding new characters if they don't have the mangaId already
     const updatedCharacters = await Promise.all(
       validCharacters.map(async (characterInfo) => {
         const { characterId, role } = characterInfo;
 
-        // Find the character in the array that needs to be updated
+        // Use updateOne to atomically update the document
         var existingCharacter = await CharacterModel.findOne({
           _id: characterId,
-          "animes.animeId": id, // Ensure animeId is present
+          "animes.animeId": id, // Ensure mangaId is not already present
         });
 
+        // Check if the document was modified (i.e., updated)
         if (!existingCharacter) {
-          // If the character doesn't exist with the specified animeId, create a new entry
+          // Document was updated, return the updated character
           existingCharacter = await CharacterModel.findByIdAndUpdate(
             characterId,
             {
@@ -259,16 +269,31 @@ const updateAnime = async (req, res) => {
                 animes: {
                   animeId: id,
                   role: role,
+                  animeName: {
+                    romaji: titles.romaji || '',
+                    english: titles.english || '',
+                    native: titles.native || '',
+                  },
                 },
               },
             },
-            { new: true, upsert: true }, // Create a new document if it doesn't exist
+            { new: true, upsert: true },
           );
         } else {
-          // Update the role of the character
-          existingCharacter.animes.find(
-            (anime) => String(anime.animeId) === id,
-          ).role = role;
+          // Update both the role and animeName of the character
+          const animeEntry = existingCharacter.animes.find(
+            (anime) => String(anime.animeId) === id
+          );
+          if (animeEntry) {
+            animeEntry.role = role;
+            animeEntry.animeName = [
+              {
+                romaji: titles.romaji || '',
+                english: titles.english || '',
+                native: titles.native || '',
+              },
+            ];
+          }
           existingCharacter = await existingCharacter.save();
         }
 
@@ -302,7 +327,7 @@ const updateAnime = async (req, res) => {
             (r) => String(r.relationId) === String(relationId),
           );
         } else if (animeRelationResult.matchedCount === 0) {
-          const reverseRelationType = getReverseRelationType(typeofRelation);
+          const reverseRelationType = getReverseRelationType(typeofRelation.replace(/\s/g, ''));
           animeRelationResult = await AnimeModel.findByIdAndUpdate(
             id,
             {
@@ -330,7 +355,7 @@ const updateAnime = async (req, res) => {
             { new: true },
           );
 
-          // Return both the updated relation on the current anime and the reverse relation
+          // Return both the updated relation on the current anime and the reverse anime
           return [
             animeRelationResult,
             reverseRelationAnime
@@ -348,13 +373,13 @@ const updateAnime = async (req, res) => {
             {
               $set: {
                 "animeRelations.$.typeofRelation":
-                  getReverseRelationType(typeofRelation),
+                  getReverseRelationType(typeofRelation.replace(/\s/g, '')),
               },
             },
             { new: true },
           );
 
-          // Return both the updated relation on the current anime and the reverse relation
+          // Return both the updated relation on the current anime and the reverse relation anime
           return [
             animeRelationResult,
             reverseRelationAnime
@@ -371,7 +396,7 @@ const updateAnime = async (req, res) => {
       validMangaRelations.map(async (relationInfo) => {
         const { relationId, typeofRelation } = relationInfo;
 
-        // Update the relation on the current anime
+        // update the relation on the current anime
         let mangaRelationResult = await AnimeModel.updateOne(
           {
             _id: id,
@@ -392,7 +417,7 @@ const updateAnime = async (req, res) => {
             (r) => String(r.relationId) === String(relationId),
           );
         } else if (mangaRelationResult.matchedCount === 0) {
-          const reverseRelationType = getReverseRelationType(typeofRelation);
+          const reverseRelationType = getReverseRelationType(typeofRelation.replace(/\s/g, ''));
           mangaRelationResult = await AnimeModel.findByIdAndUpdate(
             id,
             {
@@ -420,7 +445,7 @@ const updateAnime = async (req, res) => {
             { new: true },
           );
 
-          // Return both the updated relation on the current anime and the reverse manga
+          // Return both the updated relation on the current manga and the reverse manga
           return [
             mangaRelationResult,
             reverseRelationManga
@@ -444,7 +469,7 @@ const updateAnime = async (req, res) => {
             { new: true },
           );
 
-          // Return both the updated relation on the current anime and the reverse relation for manga
+          // Return both the updated relation on the current manga and the reverse relation for manga
           return [
             mangaRelationResult,
             reverseRelationManga
@@ -465,10 +490,10 @@ const updateAnime = async (req, res) => {
         mangaRelations: updatedMangaRelations.flat(),
         animeRelations: updatedAnimeRelations.flat(),
       });
-  } catch (error) {
-    console.error("Error updating anime:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+    } catch (error) {
+      console.error("Error updating anime:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
 };
 
 /**
@@ -503,6 +528,7 @@ const createAnimeFromAnilist = async (req, res) => {
     const sourceMap = {
       'MANGA': 'Manga',
       'ORIGINAL': 'Original',
+      'MOVIE': 'Movie',
       'LIGHT_NOVEL': 'Light Novel',
       'VISUAL_NOVEL': 'Visual Novel',
       'VIDEO_GAME': 'Video Game',
@@ -542,7 +568,7 @@ const createAnimeFromAnilist = async (req, res) => {
         }
       },
       typings: {
-        Format: anilistData.format || '',
+        Format: FORMAT_MAP[anilistData.format] || '',
         Source: sourceMap[anilistData.source] || 'Original',
         CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || 'Japan'
       },

@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
 import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
@@ -33,6 +33,8 @@ const AnimeDetails = () => {
 
   const [revealedSpoilers, setRevealedSpoilers] = useState({});
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchAnimeDetails = async () => {
       try {
@@ -55,7 +57,7 @@ const AnimeDetails = () => {
             (anime) => anime.animeId === id
           );
           setIsAnimeAdded(animeAdded);
-          
+
           const existingAnimeIndex = currentUser?.animes?.findIndex(
             (anime) => anime.animeId.toString() === id.toString()
           );
@@ -80,90 +82,126 @@ const AnimeDetails = () => {
   }, [id, userData, setUserData]);
 
   useEffect(() => {
-    const fetchCharacterDetails = async () => {
-      const charactersWithDetails = await Promise.all(
-        animeDetails?.characters.map(async (character) => {
-          try {
-            const response = await axiosInstance.get(
-              `/characters/character/${character.characterId}`
-            );
-            return {
-              ...character,
-              characterDetails: response.data,
-            };
-          } catch (error) {
-            console.error(
-              `Error fetching details for character ${character.character}:`,
-              error
-            );
-            return character; // Return the character without details in case of an error
-          }
-        }) || []
-      );
+    let isMounted = true;
+    const controller = new AbortController();
 
-      setCharactersDetails(charactersWithDetails);
+    const fetchCharacterDetails = async () => {
+      try {
+        const charactersWithDetails = await Promise.all(
+          animeDetails?.characters.map(async (character) => {
+            if (!character?.characterId) return null; // Skip if no characterId
+            try {
+              const response = await axiosInstance.get(
+                `/characters/character/${character.characterId}`,
+                { signal: controller.signal }
+              );
+              if (!isMounted) return null;
+              return {
+                ...character,
+                characterDetails: response.data,
+              };
+            } catch (error) {
+              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+              console.error(
+                `Error fetching details for character ${character.characterId}:`,
+                error.message
+              );
+              return null;
+            }
+          }) || []
+        );
+
+        if (isMounted) {
+          setCharactersDetails(charactersWithDetails.filter(Boolean));
+        }
+      } catch (error) {
+        if (!isMounted || error.name === 'CanceledError') return;
+        console.error('Error fetching character details:', error.message);
+      }
     };
 
-    if (animeDetails) {
+    if (animeDetails?.characters?.length > 0) {
       fetchCharacterDetails();
     }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [animeDetails]);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchRelationDetails = async () => {
       try {
         const relationsWithDetails = await Promise.all([
           ...(animeDetails?.mangaRelations?.map(async (relation) => {
+            if (!relation?.relationId) return null; // Skip if no relationId
             try {
               const response = await axiosInstance.get(
-                `/mangas/manga/${relation.relationId}`
+                `/mangas/manga/${relation.relationId}`,
+                { signal: controller.signal }
               );
+              if (!isMounted) return null;
               return {
                 ...relation,
                 relationDetails: response.data,
                 contentType: 'manga',
               };
             } catch (error) {
+              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
               console.error(
-                `Error fetching details for manga relation ${relation.relationId}:`,
-                error
+                `Error fetching manga relation ${relation.relationId}:`,
+                error.message
               );
-              return null; // Return null instead of relation
+              return null;
             }
           }) || []),
           ...(animeDetails?.animeRelations?.map(async (relation) => {
+            if (!relation?.relationId) return null; // Skip if no relationId
             try {
               const response = await axiosInstance.get(
-                `/animes/anime/${relation.relationId}`
+                `/animes/anime/${relation.relationId}`,
+                { signal: controller.signal }
               );
+              if (!isMounted) return null;
               return {
                 ...relation,
                 relationDetails: response.data,
                 contentType: 'anime',
               };
             } catch (error) {
+              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
               console.error(
-                `Error fetching details for anime relation ${relation.relationId}:`,
-                error
+                `Error fetching anime relation ${relation.relationId}:`,
+                error.message
               );
-              return null; // Return null instead of relation
+              return null;
             }
           }) || []),
         ]);
 
-        // Filter out null values before setting state
-        setRelationsDetails(
-          relationsWithDetails.filter((relation) => relation !== null)
-        );
+        if (isMounted) {
+          setRelationsDetails(
+            relationsWithDetails.filter((relation) => relation !== null)
+          );
+        }
       } catch (error) {
-        console.error('Error fetching relation details:', error);
-        setRelationsDetails([]); // Set empty array on error
+        if (!isMounted || error.name === 'CanceledError') return;
+        console.error('Error fetching relation details:', error.message);
       }
     };
 
-    if (animeDetails) {
+    if (animeDetails && (animeDetails.mangaRelations?.length > 0 || animeDetails.animeRelations?.length > 0)) {
       fetchRelationDetails();
     }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [animeDetails]);
 
   useEffect(() => {
@@ -325,15 +363,20 @@ const AnimeDetails = () => {
     });
   };
 
-  console.log('userData: ', userData);
+  const handleRelationClick = (contentType, relationId) => {
+    // Force a full navigation to the new page
+    window.location.href = `/${contentType}/${relationId}`;
+    // Alternative approach using navigate:
+    // navigate(`/${contentType}/${relationId}`, { replace: true });
+  };
 
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
       <div className={animeDetailsStyles.animeHeader}>
         <div className={animeDetailsStyles.bannerSection}>
           <img
-            src={animeDetails.images.border || animeDetails.images.image}
-            alt={animeDetails.titles.english}
+            src={animeDetails?.images?.border || animeDetails?.images?.image || ''}
+            alt={animeDetails?.titles?.english || 'Anime'}
             className={animeDetailsStyles.bannerImage}
           />
           <div className={animeDetailsStyles.bannerOverlay} />
@@ -342,8 +385,8 @@ const AnimeDetails = () => {
         <div className={animeDetailsStyles.contentWrapper}>
           <div className={animeDetailsStyles.posterContainer}>
             <img
-              src={animeDetails.images.image}
-              alt={animeDetails.titles.english}
+              src={animeDetails?.images?.image || ''}
+              alt={animeDetails?.titles?.english || 'Anime'}
             />
             <div className={animeDetailsStyles.actionButtons}>
               {userData && (userData.role === 'admin' || userData.role === 'user') && (
@@ -374,9 +417,9 @@ const AnimeDetails = () => {
 
           <div className={animeDetailsStyles.animeInfo}>
             <h1 className={animeDetailsStyles.animeTitle}>
-              {animeDetails.titles.english}
+              {animeDetails?.titles?.english}
             </h1>
-            {animeDetails.titles.native && (
+            {animeDetails?.titles?.native && (
               <div className={animeDetailsStyles.nativeTitle}>
                 {animeDetails.titles.native}
               </div>
@@ -384,27 +427,27 @@ const AnimeDetails = () => {
 
             <div className={animeDetailsStyles.quickInfo}>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Status:</span> {animeDetails.releaseData.releaseStatus}
+                <span>Status:</span> {animeDetails?.releaseData?.releaseStatus || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Format:</span> {animeDetails.typings.Format}
+                <span>Format:</span> {animeDetails?.typings?.Format || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Episodes:</span> {animeDetails.lengths.Episodes}
+                <span>Episodes:</span> {animeDetails?.lengths?.Episodes || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Duration:</span> {animeDetails.lengths.EpisodeDuration}
+                <span>Duration:</span> {animeDetails?.lengths?.EpisodeDuration ? `${animeDetails.lengths.EpisodeDuration} mins` : 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>Season:</span> {season} {year}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>Start Date:</span>{' '}
-                {formatDate(animeDetails.releaseData.startDate)}
+                {formatDate(animeDetails?.releaseData?.startDate)}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>End Date:</span>{' '}
-                {formatDate(animeDetails.releaseData.endDate)}
+                {formatDate(animeDetails?.releaseData?.endDate)}
               </div>
             </div>
 
@@ -481,10 +524,11 @@ const AnimeDetails = () => {
           <div className={animeDetailsStyles.relationsContainer}>
             <div className={animeDetailsStyles.relationsGrid}>
               {relationsDetails.map((relation) => (
-                <Link
+                <div
                   key={relation.relationDetails._id}
-                  to={`/${relation.contentType}/${relation.relationDetails._id}`}
+                  onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
                   className={animeDetailsStyles.relationCard}
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className={animeDetailsStyles.card2}>
                     <div className={animeDetailsStyles.relationImageContainer}>
@@ -500,7 +544,7 @@ const AnimeDetails = () => {
                       <h4>{relation.relationDetails.titles.english}</h4>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>

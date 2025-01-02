@@ -28,6 +28,7 @@ router.put("/anime/:id", updateAnime);
 router.get('/search/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`Searching for anime with ID: ${id}`); // Log the ID being searched
     const animeData = await fetchAnimeDataById(id);
 
     if (!animeData) {

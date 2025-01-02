@@ -85,12 +85,9 @@ const AVAILABLE_RELATION = [
   'Source',
   'Prequel',
   'Sequel',
-  'Side Story',
-  'Character',
-  'Summary',
+  'Parent',
+  'Child',
   'Alternative',
-  'Spin Off',
-  'Other',
   'Compilations',
   'Contains',
 ];
@@ -248,7 +245,8 @@ export default function AddManga() {
   const handleSelectExistingCharacter = (selectedCharacters) => {
     const charactersWithDefaultRole = selectedCharacters.map((character) => ({
       ...character,
-      role: '', // Set the default role to an empty string
+      role: '',
+      mangaName: formData.titles
     }));
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -288,7 +286,15 @@ export default function AddManga() {
       ...prevFormData,
       characters: [
         ...prevFormData.characters,
-        { ...selectedCharacter, role: '' },
+        {
+          ...selectedCharacter,
+          role: '',
+          mangaName: selectedCharacter.mangas.map(manga => ({
+            romaji: manga.titles.romaji || '',
+            english: manga.titles.english || '',
+            native: manga.titles.native || '',
+          }))
+        },
       ],
     }));
   };
@@ -302,7 +308,7 @@ export default function AddManga() {
         // If genre is already selected, remove it
         updatedGenres = prevGenres.filter((genre) => genre !== selectedGenre);
       } else {
-        // If genre is not selected, add it 
+        // If genre is not selected, add it
         updatedGenres = [...prevGenres, selectedGenre];
       }
 
@@ -385,6 +391,7 @@ export default function AddManga() {
     const charactersArray = formData.characters.map((character) => ({
       characterId: character._id,
       role: character.role,
+      mangaName: formData.titles
     }));
 
     const animeRelationsArray = formData.animeRelations.map((relation) => ({
@@ -964,8 +971,8 @@ export default function AddManga() {
           </button>
         </div>
 
-        <button 
-          type="button" 
+        <button
+          type="button"
           className={addPageStyles.anilistButton}
           onClick={() => setActiveModal('mangaSearch')}
         >

@@ -19,27 +19,27 @@ function CharacterCard({ character }) {
 
   return (
     <div
-      className={`${cardsStyles.characterCard} ${isHovered ? cardsStyles.hovered : ''}`}
+    className={`${cardsStyles.card} ${isHovered ? cardsStyles.hovered : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={cardsStyles.card2}>
-        <div className={cardsStyles.imgContainer}>
-          {/* Character image */}
-          <img src={character.characterImage} alt={character.names.givenName} />
-          <div className={cardsStyles.titleAndProgress}>
-            {/* Link to character details page */}
-            <Link to={`/characters/${character._id}`}>
-              <div className={cardsStyles.animeTitle}>
-                {character.names.givenName} {character.names.middleName}{' '}
-                {character.names.surName}
-              </div>
-            </Link>
+      <div className={cardsStyles.characterCard}>
+        <div className={cardsStyles.card2}>
+          <div className={cardsStyles.imgContainer}>
+            <img src={character.characterImage} alt={character.names.givenName} />
+            <div className={cardsStyles.titleAndProgress}>
+              <Link className={cardsStyles.navLink} to={`/characters/${character._id}`}>
+                <div className={cardsStyles.animeTitle}>
+                  {character.names.givenName} {character.names.middleName}{' '}
+                  {character.names.surName}
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
+        {/* Conditional rendering when hovered */}
+        {isHovered}
       </div>
-      {/* Conditional rendering when hovered */}
-      {isHovered}
     </div>
   );
 }

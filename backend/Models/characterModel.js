@@ -69,19 +69,17 @@ const characterSchema = new mongoose.Schema({
         type: String,
         enum: ["Main", "Supporting", "Background"],
       },
-      animeName: [
-        {
-          romaji: {
-            type: String,
-          },
-          english: {
-            type: String,
-          },
-          native: {
-            type: String,
-          },
+      animeName: {
+        romaji: {
+          type: String,
         },
-      ],
+        english: {
+          type: String,
+        },
+        native: {
+          type: String,
+        },
+      },
     },
   ],
   mangas: [
@@ -94,19 +92,17 @@ const characterSchema = new mongoose.Schema({
         type: String,
         enum: ["Main", "Supporting", "Background"],
       },
-      mangaName: [
-        {
-          romaji: {
-            type: String,
-          },
-          english: {
-            type: String,
-          },
-          native: {
-            type: String,
-          },
+      mangaName: {
+        romaji: {
+          type: String,
         },
-      ],
+        english: {
+          type: String,
+        },
+        native: {
+          type: String,
+        },
+      },
     },
   ],
 });

@@ -151,7 +151,13 @@ const createCharacter = async (req, res) => {
       const mangaIds = mangas.map((mangaInfo) => ({
         mangaId: mangaInfo.mangaId,
         role: mangaInfo.role,
-        mangaName: mangaInfo.mangaName,
+        mangaName: [
+          {
+            romaji: mangaInfo.mangaName.romaji || '',
+            english: mangaInfo.mangaName.english || '',
+            native: mangaInfo.mangaName.native || '',
+          },
+        ],
       }));
 
       const character = await CharacterModel.create({

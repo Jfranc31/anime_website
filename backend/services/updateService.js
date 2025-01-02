@@ -13,8 +13,15 @@ const STATUS_MAP = {
 
 // Map AniList format to our format
 const FORMAT_MAP = {
+  'TV': 'TV',
+  'TV_SHORT': 'TV Short',
+  'MOVIE': 'Movie',
+  'SPECIAL': 'Special',
+  'OVA': 'OVA',
+  'ONA': 'ONA',
+  'MUSIC': 'Music',
   'MANGA': 'Manga',
-  'LIGHT NOVEL': 'Light Novel',
+  'LIGHT_NOVEL': 'Light Novel',
   'ONE_SHOT': 'One Shot'
 };
 
@@ -142,44 +149,6 @@ const compareAnimeData = async (anime) => {
       },
     };
 
-    console.log('CompareAnimeData - Detailed Differences:', {
-      titles: {
-        current: differences.titles.current,
-        anilist: differences.titles.anilist,
-        isDifferent: differences.titles.isDifferent
-      },
-      typings: {
-        current: differences.typings.current,
-        anilist: differences.typings.anilist,
-        isDifferent: differences.typings.isDifferent
-      },
-      description: {
-        current: differences.description.current,
-        anilist: differences.description.anilist,
-        isDifferent: differences.description.isDifferent
-      },
-      releaseData: {
-        current: differences.releaseData.current,
-        anilist: differences.releaseData.anilist,
-        isDifferent: differences.releaseData.isDifferent
-      },
-      lengths: {
-        current: differences.lengths.current,
-        anilist: differences.lengths.anilist,
-        isDifferent: differences.lengths.isDifferent
-      },
-      genres: {
-        current: differences.genres.current,
-        anilist: differences.genres.anilist,
-        isDifferent: differences.genres.isDifferent
-      },
-      images: {
-        current: differences.images.current,
-        anilist: differences.images.anilist,
-        isDifferent: differences.images.isDifferent
-      }
-    });
-
     return differences;
   } catch (error) {
     console.error('Error comparing anime data:', error);
@@ -196,6 +165,11 @@ const updateAnimeFromAnilist = async (anime) => {
     }
 
     const updateData = {
+      typings: {
+        Format: FORMAT_MAP[anilistData.format] || anime.typings.Format,
+        Source: SOURCE_MAP[anilistData.source] || anime.typings.Source,
+        CountryOfOrigin: COUNTRY_MAP[anilistData.countryOfOrigin] || anime.typings.CountryOfOrigin
+      },
       releaseData: {
         releaseStatus: STATUS_MAP[anilistData.status],
         startDate: {
@@ -216,11 +190,11 @@ const updateAnimeFromAnilist = async (anime) => {
       genres: anilistData.genres,
       description: anilistData.description,
       activityTimestamp: Date.now(),
-      nextAiringEpisode: {
-        airingAt: anilistData.nextAiringEpisode.airingAt,
-        episode: anilistData.nextAiringEpisode.episode,
-        timeUntilAiring: anilistData.nextAiringEpisode.timeUntilAiring
-      }
+      nextAiringEpisode: anilistData.nextAiringEpisode ? {
+        airingAt: anilistData.nextAiringEpisode.airingAt?.toString() || null,
+        episode: anilistData.nextAiringEpisode.episode?.toString() || null,
+        timeUntilAiring: anilistData.nextAiringEpisode.timeUntilAiring?.toString() || null
+      } : null
     };
 
     return await AnimeModel.findByIdAndUpdate(
@@ -347,19 +321,31 @@ const compareMangaData = async (manga) => {
 const updateMangaFromAnilist = async (manga) => {
   try {
     const anilistData = await fetchMangaDataById(manga.anilistId);
-    if (!anilistData) return null;
+    if (!anilistData) {
+      console.warn(`No data found for anime ID: ${manga.anilistId}`);
+      return null;
+    }
 
     const updateData = {
       releaseData: {
-        releaseStatus: anilistData.status,
-        startDate: anilistData.startDate,
-        endDate: anilistData.endDate
+        releaseStatus: STATUS_MAP[anilistData.status],
+        startDate: {
+          year: anilistData.startDate?.year?.toString() || '',
+          month: anilistData.startDate?.month?.toString() || '',
+          day: anilistData.startDate?.day?.toString() || ''
+        },
+        endDate: {
+          year: anilistData.endDate?.year?.toString() || '',
+          month: anilistData.endDate?.month?.toString() || '',
+          day: anilistData.endDate?.day?.toString() || ''
+        },
       },
       lengths: {
         Chapters: anilistData.chapters?.toString() || '',
-        Volumes: anilistData.volumes.toString() || ''
+        Volumes: anilistData.volumes?.toString() || ''
       },
       genres: anilistData.genres,
+      description: anilistData.description,
       activityTimestamp: Date.now()
     };
 
@@ -379,5 +365,9 @@ export {
   compareAnimeData,
   updateAnimeFromAnilist,
   compareMangaData,
-  updateMangaFromAnilist
+  updateMangaFromAnilist,
+  FORMAT_MAP,
+  SOURCE_MAP,
+  STATUS_MAP,
+  COUNTRY_MAP
 };

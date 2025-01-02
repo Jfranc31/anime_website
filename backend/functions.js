@@ -5,14 +5,11 @@ export function getReverseRelationType(relationType) {
     Adaptation: "Source",
     Prequel: "Sequel",
     Sequel: "Prequel",
-    Character: "Parent",
+    Parent: "Child",
+    Child: "Parent",
     Alternative: "Alternative",
     Contains: "Compilation",
     Compilation: "Contains",
-    SideStory: "Parent",
-    SpinOff: "Parent",
-    Summary: "Parent",
-    Other: "Parent",
   };
 
   return reverseRelationMap[relationType] || null;

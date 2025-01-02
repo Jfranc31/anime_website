@@ -84,12 +84,9 @@ const AVAILABLE_RELATION = [
   'Source',
   'Prequel',
   'Sequel',
-  'Side Story',
-  'Character',
-  'Summary',
+  'Parent',
+  'Child',
   'Alternative',
-  'Spin Off',
-  'Other',
   'Compilations',
   'Contains',
 ];
@@ -148,6 +145,12 @@ export const UpdateManga = ({ match }) => {
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
+  // #endregion ------------------------------------------------------------
+
+  // #region Modal Handlers ------------------------------------------------
+  const handleModalClose = () => {
+    setActiveModal(null);
+  };
   // #endregion ------------------------------------------------------------
 
   // #region Retrieve information ------------------------------------------
@@ -268,7 +271,6 @@ export const UpdateManga = ({ match }) => {
     };
 
     fetchData();
-    console.log("form data-", formData);
   }, [id]);
 
   useEffect(() => {
@@ -370,12 +372,6 @@ export const UpdateManga = ({ match }) => {
   };
   // #endregion ------------------------------------------------------------
 
-  // #region Modal Handlers ------------------------------------------------
-  const handleModalClose = () => {
-    setActiveModal(null);
-  };
-  // #endregion ------------------------------------------------------------
-
   // #region Relation Handlers ---------------------------------------------
   const handleAddRelation = (type) => {
     setActiveModal(`${type}RelationSearch`);
@@ -471,7 +467,12 @@ export const UpdateManga = ({ match }) => {
   const handleSelectExistingCharacter = (selectedCharacters) => {
     const charactersWithDefaultRole = selectedCharacters.map((character) => ({
       ...character,
-      role: '', // Set the default role to an empty string
+      role: '',
+      mangaName: {
+        romaji: formData.titles.romaji || '',
+        english: formData.titles.english || '',
+        native: formData.titles.native || ''
+      }
     }));
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -511,7 +512,15 @@ export const UpdateManga = ({ match }) => {
       ...prevFormData,
       characters: [
         ...prevFormData.characters,
-        { ...selectedCharacter, role: '' },
+        {
+          ...selectedCharacter,
+          role: '',
+          mangaName: {
+            romaji: formData.titles.romaji || '',
+            english: formData.titles.english || '',
+            native: formData.titles.native || ''
+          }
+        },
       ],
     }));
   };
@@ -556,6 +565,11 @@ export const UpdateManga = ({ match }) => {
     const charactersArray = formData.characters.map((character) => ({
       characterId: character._id,
       role: character.role,
+      mangaName: {
+        romaji: formData.titles.romaji || '',
+        english: formData.titles.english || '',
+        native: formData.titles.native || ''
+      }
     }));
 
     const animeRelationsArray = formData.animeRelations.map((relation) => ({

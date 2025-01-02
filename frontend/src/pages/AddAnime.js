@@ -69,15 +69,15 @@ const AVAILABLE_SOURCE = [
 ];
 
 const AVAILABLE_COUNTRY = [
-  'China', 
-  'Japan', 
-  'South Korea', 
+  'China',
+  'Japan',
+  'South Korea',
   'Taiwan',
 ];
 
 const AVAILABLE_ROLE = [
-  'Main', 
-  'Supporting', 
+  'Main',
+  'Supporting',
   'Background',
 ];
 
@@ -86,12 +86,9 @@ const AVAILABLE_RELATION = [
   'Source',
   'Prequel',
   'Sequel',
-  'Side Story',
-  'Character',
-  'Summary',
+  'Parent',
+  'Child',
   'Alternative',
-  'Spin Off',
-  'Other',
   'Compilations',
   'Contains',
 ];
@@ -294,8 +291,8 @@ export default function AddAnime() {
       ...prevFormData,
       characters: [
         ...prevFormData.characters,
-        { 
-          ...selectedCharacter, 
+        {
+          ...selectedCharacter,
           role: '',
           animeName: selectedCharacter.animes.map(anime => ({
             romaji: anime.titles.romaji || '',
@@ -333,7 +330,7 @@ export default function AddAnime() {
 
   const handleAnimeSelected = (animeData) => {
     console.log('AddAnime - Received Data:', animeData);
-    
+
     const updatedFormData = {
       anilistId: animeData.anilistId || '',
       nextEpisodeAiringAt: animeData.nextEpisodeAiringAt || '',
@@ -461,7 +458,7 @@ export default function AddAnime() {
       console.error('Error during anime addition:', error.message);
     }
   };
-  // #endregion ------------------------------------------------------------  
+  // #endregion ------------------------------------------------------------
 
   //---------------------------- Data Fields --------------------------------
 
@@ -990,9 +987,9 @@ export default function AddAnime() {
             Relations
           </button>
         </div>
-        
-        <button 
-          type="button" 
+
+        <button
+          type="button"
           className={addPageStyles.anilistButton}
           onClick={() => setActiveModal('animeSearch')}
         >

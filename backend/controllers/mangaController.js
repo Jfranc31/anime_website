@@ -90,6 +90,11 @@ const createManga = async (req, res) => {
     const charactersArray = characters.map((characterInfo) => ({
       characterId: characterInfo.characterId,
       role: characterInfo.role, // Assuming the type of character is provided in the request
+      mangaName: {
+        romaji: titles.romaji || '',
+        english: titles.english || '',
+        native: titles.native || '',
+      },
     }));
 
     const manga = await MangaModel.create({
@@ -117,6 +122,11 @@ const createManga = async (req, res) => {
               mangas: {
                 mangaId: manga._id,
                 role: characterInfo.role,
+                mangaName: {
+                  romaji: titles.romaji || '',
+                  english: titles.english || '',
+                  native: titles.native || '',
+                },
               },
             },
           },
@@ -208,8 +218,12 @@ const updateManga = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { characters, mangaRelations, animeRelations, ...otherFields } =
-      req.body;
+    const {
+      characters,
+      mangaRelations,
+      animeRelations,
+      ...otherFields
+    } = req.body;
 
     // Filter out characters with empty characterId
     const validCharacters = characters.filter(
@@ -257,15 +271,31 @@ const updateManga = async (req, res) => {
                 mangas: {
                   mangaId: id,
                   role: role,
+                  mangaName: {
+                    romaji: titles.romaji || '',
+                    english: titles.english || '',
+                    native: titles.native || '',
+                  },
                 },
               },
             },
             { new: true, upsert: true },
           );
         } else {
-          existingCharacter.mangas.find(
-            (manga) => String(manga.mangaId) === id,
-          ).role = role;
+          // Update both the role and animeName of the character
+          const mangaEntry = existingCharacter.mangas.find(
+            (manga) => String(manga.mangaId) === id
+          );
+          if (mangaEntry) {
+            mangaEntry.role = role;
+            mangaEntry.mangaName = [
+              {
+                romaji: titles.romaji || '',
+                english: titles.english || '',
+                native: titles.native || '',
+              },
+            ];
+          }
           existingCharacter = await existingCharacter.save();
         }
 

@@ -21,7 +21,7 @@
   --accent-hover: #134016;
   --danger-color: #dc3545;
   --danger-hover: #c82333;
-  --success-color: #04aa6d;
+  --success-color: #00ff75;
   --success-hover: #038857;
 
   /* Border & Shadow */
@@ -154,18 +154,4 @@
   --modal-box-shadow: rgba(0, 0, 0, 0.3);
   --cancel-button-bg: rgb(159, 159, 159);
   --cancel-button-hover: rgb(192, 192, 192);
-}
-
-/* Red theme */
-[data-theme='red'] {
-  --accent-color: #f44336;
-  --danger-color: #9a0007;
-  --danger-hover: #ba000d;
-}
-
-/* Green theme */
-[data-theme='green'] {
-  --accent-color: #4caf50;
-  --danger-color: #087f23;
-  --danger-hover: #005d16;
 }

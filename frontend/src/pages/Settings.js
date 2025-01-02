@@ -74,19 +74,6 @@ const Settings = () => {
         </section>
 
         <section className={settingsStyles.section}>
-          <h2>Profile Color</h2>
-          <div className={settingsStyles.colorGrid}>
-            {['#1DA1F2', '#9B59B6', '#2ECC71', '#E67E22', '#E74C3C', '#E91E63', '#34495E', '#795548'].map((color) => (
-              <button
-                key={color}
-                className={settingsStyles.colorButton}
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className={settingsStyles.section}>
           <h2>About</h2>
           <textarea
             className={settingsStyles.aboutTextarea}

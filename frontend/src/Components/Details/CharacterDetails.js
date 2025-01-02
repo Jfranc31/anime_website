@@ -139,18 +139,19 @@ const CharacterDetails = () => {
     const lines = description.split('\n');
 
     lines.forEach((line) => {
-      const metadataMatch = line.match(/^__(.+?):__ (.+)$/) || line.match(/^__(.+?)__: (.+)$/);
+      const metadataMatch = line.match(/^__(.+?):__ (.+)$/) || 
+                            line.match(/^__(.+?)__: (.+)$/) || 
+                            line.match(/^\*\*(.+?):\*\* (.+)$/);
       if (metadataMatch) {
         // Handle metadata with potential links
         const label = metadataMatch[1].trim();
         const value = metadataMatch[2].trim().replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, name, link) => {
           return `<a href="${link}" target="_blank" rel="noopener noreferrer">${name}</a>`;
         });
-        console.log('line: ', line);
-        console.log('value: ', value);
         metadata.push({
           label,
-          value: value.replace(/~!(.+?)!~/g, '<span className={characterDetailsStyles.markdown-spoiler}>$1</span>'), // Handle spoilers
+          value, // Store the raw value with spoiler tags intact
+          hasSpoiler: value.includes('~!') // Add flag to indicate if it contains spoilers
         });
       } else if (line.trim()) {
         currentParagraph += line + ' ';
@@ -159,7 +160,6 @@ const CharacterDetails = () => {
         currentParagraph = '';
       }
     });
-    console.log('Metadata Value: ', metadata.value);
 
     if (currentParagraph) {
       paragraphs.push(currentParagraph.trim());
@@ -176,21 +176,33 @@ const CharacterDetails = () => {
   };
 
   const renderSpoilerText = (text, index) => {
-    const parts = text.split(/~!(.+?)!~/g);
+    // First convert any non-spoiler links to HTML
+    const textWithLinks = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
+      (match, name, link) => `<a href="${link}" target="_blank" rel="noopener noreferrer">${name}</a>`
+    );
+    
+    // Then handle spoilers
+    const parts = textWithLinks.split(/~!(.+?)!~/g);
     return parts.map((part, i) => {
       if (i % 2 === 1) {
         // This is spoiler content
         return (
           <span
             key={i}
-            className={`${characterDetailsStyles.spoilerText} ${revealedSpoilers[`${index}-${i}`] ? characterDetailsStyles.revealed : ''}`}
+            className={`${characterDetailsStyles.spoilerText} ${
+              revealedSpoilers[`${index}-${i}`] ? characterDetailsStyles.revealed : ''
+            }`}
             onClick={() => toggleSpoiler(`${index}-${i}`)}
           >
-            {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
+            {revealedSpoilers[`${index}-${i}`] ? (
+              <span dangerouslySetInnerHTML={{ __html: part }} />
+            ) : (
+              'Spoiler'
+            )}
           </span>
         );
       }
-      return part;
+      return <span key={i} dangerouslySetInnerHTML={{ __html: part }} />;
     });
   };
 
@@ -243,12 +255,17 @@ const CharacterDetails = () => {
               <span className={characterDetailsStyles.metadataLabel}>
                 {item.label}
               </span>
-              <span className={characterDetailsStyles.metadataValue} dangerouslySetInnerHTML={{ __html: item.value }} />
+              <span className={characterDetailsStyles.metadataValue}>
+                {item.hasSpoiler ? 
+                  renderSpoilerText(item.value, `meta-${index}`) : 
+                  <span dangerouslySetInnerHTML={{ __html: item.value }} />
+                }
+              </span>
             </div>
           ))}
         </div>
 
-        <div className="character-description">
+        <div className={characterDetailsStyles.characterDescription}>
           {paragraphs.map((paragraph, index) => (
             <p key={index}>{renderSpoilerText(paragraph, `p-${index}`)}</p>
           ))}

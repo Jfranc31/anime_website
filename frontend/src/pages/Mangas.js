@@ -21,9 +21,16 @@ const Mangas = () => {
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedFormats, setSelectedFormats] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [gridLayout, setGridLayout] = useState('default');
 
   const handleModalClose = () => {
     setIsMangaEditorOpen(false);
+  };
+
+  // Function to change grid layout
+  const changeLayout = (layout) => {
+    console.log(`Changing layout to: ${layout}`);
+    setGridLayout(layout);
   };
 
   useEffect(() => {
@@ -60,18 +67,18 @@ const Mangas = () => {
             ));
 
         const matchesYear = !selectedYear || manga.releaseData.startDate.year === selectedYear;
-        
-        const matchesFormat = 
-          selectedFormats.length === 0 || 
+
+        const matchesFormat =
+          selectedFormats.length === 0 ||
           selectedFormats.includes(manga.typings.Format);
-        
+
         const matchesStatus = !selectedStatus || manga.releaseData.releaseStatus === selectedStatus;
 
         return (
-          matchesSearch && 
-          matchesGenres && 
-          matchesYear && 
-          matchesFormat && 
+          matchesSearch &&
+          matchesGenres &&
+          matchesYear &&
+          matchesFormat &&
           matchesStatus
         );
       })
@@ -141,6 +148,14 @@ const Mangas = () => {
   return (
     <div className={browseStyles.browseContainer}>
       <div className={browseStyles.filterContainer}>
+
+        {/* New buttons for layout selection */}
+        <div className={browseStyles.layoutButtons}>
+          <button onClick={() => changeLayout('default')} className={browseStyles.layoutButton}>Default</button>
+          <button onClick={() => changeLayout('wide')} className={browseStyles.layoutButton}>Wide</button>
+          <button onClick={() => changeLayout('compact')} className={browseStyles.layoutButton}>Compact</button>
+        </div>
+
         <div className={browseStyles.searchContainer}>
           <input
             type="text"
@@ -186,7 +201,6 @@ const Mangas = () => {
         </div>
 
         <div className={browseStyles.filterSection}>
-          <div className={browseStyles.filterTitle}>Year</div>
           <select
             id="selectedYear"
             name="selectedYear"
@@ -202,7 +216,6 @@ const Mangas = () => {
         </div>
 
         <div className={browseStyles.filterSection}>
-          <div className={browseStyles.filterTitle}>Format</div>
           <select
             id="selectedFormat"
             name="selectedFormat"
@@ -210,7 +223,7 @@ const Mangas = () => {
             onChange={(e) => handleFormatChange(e.target.value)}
             className={browseStyles.filterSelect}
           >
-            <option value="" disabled>Select a format</option>
+            <option value="" disabled>Select a Format</option>
             {MANGA_FORMATS.map(format => (
               <option key={format} value={format}>{format}</option>
             ))}
@@ -231,7 +244,6 @@ const Mangas = () => {
         </div>
 
         <div className={browseStyles.filterSection}>
-          <div className={browseStyles.filterTitle}>Status</div>
           <select
             id="selectedStatus"
             name="selectedStatus"
@@ -247,31 +259,34 @@ const Mangas = () => {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className={browseStyles.loadingContainer}>
-          <div className={browseStyles.loader}></div>
-        </div>
-      ) : (
-        <div className={browseStyles.mangaListSection}>
-          {sortedManga.length === 0 ? (
-            <div className={browseStyles.noResults}>
-              No manga found matching your criteria
-            </div>
-          ) : (
-            <ul className={browseStyles.mangaList}>
-              {sortedManga.map((manga) => (
-                <li key={manga._id} className={browseStyles.mangaListItem}>
-                  <MangaCard
-                    manga={manga}
-                    onTopRightButtonClick={onTopRightButtonClick}
-                    setMangaList={setMangaList}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      <div className={`${browseStyles.animeListSection} ${browseStyles[gridLayout]}`}>
+        {isLoading ? (
+          <div className={browseStyles.loadingContainer}>
+            <div className={browseStyles.loader}></div>
+          </div>
+        ) : (
+          <div className={`${browseStyles.animeListContainer} ${browseStyles[gridLayout]}`}>
+            {sortedManga.length === 0 ? (
+              <div className={browseStyles.noResults}>
+                No manga found matching your criteria
+              </div>
+            ) : (
+              <ul className={`${browseStyles.mangaList} ${browseStyles[gridLayout]}`}>
+                {sortedManga.map((manga) => (
+                  <li key={manga._id} className={browseStyles.mangaListItem}>
+                    <MangaCard
+                      manga={manga}
+                      layout={gridLayout}
+                      onTopRightButtonClick={onTopRightButtonClick}
+                      hideTopRightButton={!userData || !userData._id}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
       {isMangaEditorOpen && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
           <div

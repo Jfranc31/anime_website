@@ -12,8 +12,7 @@ import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
 import cookieParser from "cookie-parser";
-import cron from 'node-cron';
-import { runScheduledUpdates } from './services/scheduledUpdates.js';
+import { runScheduledAnimeUpdates, runScheduledMangaUpdates } from './services/scheduledUpdates.js';
 
 // Creating an Express application
 const app = express();
@@ -210,4 +209,5 @@ app.listen(8080, () => {
 });
 
 // Add this after your other middleware setup
-runScheduledUpdates('*/5 * * * *');
+runScheduledAnimeUpdates('*/5 * * * *');
+runScheduledMangaUpdates('* */12 * * * ');

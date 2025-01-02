@@ -23,9 +23,16 @@ const Animes = () => {
   const [selectedSeason, setSelectedSeason] = useState('');
   const [selectedFormats, setSelectedFormats] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [gridLayout, setGridLayout] = useState('default');
 
   const handleModalClose = () => {
     setIsAnimeEditorOpen(false);
+  };
+
+  // Function to change grid layout
+  const changeLayout = (layout) => {
+    console.log(`Changing layout to: ${layout}`);
+    setGridLayout(layout);
   };
 
   useEffect(() => {
@@ -80,22 +87,22 @@ const Animes = () => {
             ));
 
         const matchesYear = !selectedYear || anime.releaseData.startDate.year === selectedYear;
-        
+
         const { season } = determineSeason(anime.releaseData.startDate);
         const matchesSeason = !selectedSeason || season === selectedSeason;
 
-        const matchesFormat = 
-          selectedFormats.length === 0 || 
+        const matchesFormat =
+          selectedFormats.length === 0 ||
           selectedFormats.includes(anime.typings.Format);
-        
+
         const matchesStatus = !selectedStatus || anime.releaseData.releaseStatus === selectedStatus;
 
         return (
-          matchesSearch && 
-          matchesGenres && 
-          matchesYear && 
-          matchesSeason && 
-          matchesFormat && 
+          matchesSearch &&
+          matchesGenres &&
+          matchesYear &&
+          matchesSeason &&
+          matchesFormat &&
           matchesStatus
         );
       })
@@ -164,7 +171,14 @@ const Animes = () => {
   return (
     <div className={browseStyles.browseContainer}>
       <div className={browseStyles.filterContainer}>
-        
+
+        {/* New buttons for layout selection */}
+        <div className={browseStyles.layoutButtons}>
+          <button onClick={() => changeLayout('default')} className={browseStyles.layoutButton}>Default</button>
+          <button onClick={() => changeLayout('wide')} className={browseStyles.layoutButton}>Wide</button>
+          <button onClick={() => changeLayout('compact')} className={browseStyles.layoutButton}>Compact</button>
+        </div>
+
         <div className={browseStyles.searchContainer}>
           <input
             type="text"
@@ -210,7 +224,6 @@ const Animes = () => {
         </div>
 
         <div className={browseStyles.filterSection}>
-          <div className={browseStyles.filterTitle}>Year</div>
           <select
             id="selectedYear"
             name="selectedYear"
@@ -226,7 +239,6 @@ const Animes = () => {
         </div>
 
         <div className={browseStyles.filterSection}>
-          <div className={browseStyles.filterTitle}>Season</div>
           <select
             id="selectedSeason"
             name="selectedSeason"
@@ -242,7 +254,6 @@ const Animes = () => {
         </div>
 
         <div className={browseStyles.filterSection}>
-          <div className={browseStyles.filterTitle}>Format</div>
           <select
             id="selectedFormat"
             name="selectedFormat"
@@ -251,7 +262,7 @@ const Animes = () => {
             className={browseStyles.filterSelect}
           >
             <option value="" disabled>
-              Select a format
+              Select a Format
             </option>
             {ANIME_FORMATS.map(format => (
               <option key={format} value={format}>{format}</option>
@@ -273,7 +284,6 @@ const Animes = () => {
         </div>
 
         <div className={browseStyles.filterSection}>
-          <div className={browseStyles.filterTitle}>Airing Status</div>
           <select
             id="selectedAiring"
             name="selectedAiring"
@@ -281,7 +291,7 @@ const Animes = () => {
             onChange={(e) => setSelectedStatus(e.target.value)}
             className={browseStyles.filterSelect}
           >
-            <option value="">All Status</option>
+            <option value="">All Airing Status</option>
             {AIRING_STATUS.map(status => (
               <option key={status} value={status}>{status}</option>
             ))}
@@ -290,31 +300,34 @@ const Animes = () => {
 
       </div>
 
-      {isLoading ? (
-        <div className={browseStyles.loadingContainer}>
-          <div className={browseStyles.loader}></div>
-        </div>
-      ) : (
-        <div className={browseStyles.animeListSection}>
-          {sortedAnime.length === 0 ? (
-            <div className={browseStyles.noResults}>
-              No anime found matching your criteria
-            </div>
-          ) : (
-            <ul className={browseStyles.animeList}>
-              {sortedAnime.map((anime) => (
-                <li key={anime._id} className={browseStyles.animeListItem}>
-                  <AnimeCard
-                    anime={anime}
-                    onTopRightButtonClick={handleTopRightButtonClick}
-                    hideTopRightButton={!userData || !userData._id}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      <div className={`${browseStyles.animeListSection} ${browseStyles[gridLayout]}`}>
+        {isLoading ? (
+          <div className={browseStyles.loadingContainer}>
+            <div className={browseStyles.loader}></div>
+          </div>
+        ) : (
+          <div className={`${browseStyles.animeListContainer} ${browseStyles[gridLayout]}`}>
+            {sortedAnime.length === 0 ? (
+              <div className={browseStyles.noResults}>
+                No anime found matching your criteria
+              </div>
+            ) : (
+              <ul className={`${browseStyles.animeList} ${browseStyles[gridLayout]}`}>
+                {sortedAnime.map((anime) => (
+                  <li key={anime._id} className={browseStyles.animeListItem}>
+                    <AnimeCard
+                      anime={anime}
+                      layout={gridLayout}
+                      onTopRightButtonClick={handleTopRightButtonClick}
+                      hideTopRightButton={!userData || !userData._id}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
 
       {isAnimeEditorOpen && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>

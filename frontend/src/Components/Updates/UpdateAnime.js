@@ -85,12 +85,9 @@ const AVAILABLE_RELATION = [
   'Source',
   'Prequel',
   'Sequel',
-  'Side Story',
-  'Character',
-  'Summary',
+  'Parent',
+  'Child',
   'Alternative',
-  'Spin Off',
-  'Other',
   'Compilations',
   'Contains',
 ];
@@ -155,6 +152,12 @@ export const UpdateAnime = ({ match }) => {
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
+  // #endregion ------------------------------------------------------------
+
+  // #region Modal Handlers ------------------------------------------------
+  const handleModalClose = () => {
+    setActiveModal(null);
+  };
   // #endregion ------------------------------------------------------------
 
   // #region Retrieve information ------------------------------------------
@@ -382,12 +385,6 @@ export const UpdateAnime = ({ match }) => {
   };
   // #endregion ------------------------------------------------------------
 
-  // #region Modal Handlers ------------------------------------------------
-  const handleModalClose = () => {
-    setActiveModal(null);
-  };
-  // #endregion ------------------------------------------------------------
-
   // #region Relation Handlers ---------------------------------------------
   const handleAddRelation = (type) => {
     setActiveModal(`${type}RelationSearch`);
@@ -480,7 +477,11 @@ export const UpdateAnime = ({ match }) => {
     const charactersWithDefaultRole = selectedCharacters.map((character) => ({
       ...character,
       role: '',
-      animeName: formData.titles
+      animeName: {
+        romaji: formData.titles.romaji || '',
+        english: formData.titles.english || '',
+        native: formData.titles.native || ''
+      }
     }));
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -523,11 +524,11 @@ export const UpdateAnime = ({ match }) => {
         {
           ...selectedCharacter,
           role: '',
-          animeName: selectedCharacter.animes.map(anime => ({
-            romaji: anime.titles.romaji || '',
-            english: anime.titles.english || '',
-            native: anime.titles.native || '',
-          })),
+          animeName: {
+            romaji: formData.titles.romaji || '',
+            english: formData.titles.english || '',
+            native: formData.titles.native || ''
+          }
         },
       ],
     }));
@@ -573,7 +574,11 @@ export const UpdateAnime = ({ match }) => {
     const charactersArray = formData.characters.map((character) => ({
       characterId: character._id,
       role: character.role,
-      animeName: formData.titles
+      animeName: {
+        romaji: formData.titles.romaji || '',
+        english: formData.titles.english || '',
+        native: formData.titles.native || ''
+      }
     }));
 
     const animeRelationsArray = formData.animeRelations.map((relation) => ({
@@ -593,6 +598,8 @@ export const UpdateAnime = ({ match }) => {
       animeRelations: animeRelationsArray,
       mangaRelations: mangaRelationsArray,
     };
+
+    console.log("Updated Anime: ", updatedFormData);
 
     try {
       const res = await axiosInstance.put(

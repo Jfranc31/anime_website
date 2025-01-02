@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import MangaEditor from '../ListEditors/MangaEditor';
 import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
@@ -34,6 +34,8 @@ const MangaDetails = () => {
 
   const [revealedSpoilers, setRevealedSpoilers] = useState({});
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchMangaDetails = async () => {
       try {
@@ -54,12 +56,13 @@ const MangaDetails = () => {
           const mangaAdded = currentUser?.mangas?.some(
             (manga) => manga.mangaId === id
           );
+          setIsMangaAdded(mangaAdded);
+
           const existingMangaIndex = currentUser?.mangas?.findIndex(
             (manga) => manga.mangaId.toString() === id.toString()
           );
 
           setMangaDetails(mangaResponse.data);
-          setIsMangaAdded(mangaAdded);
 
           if (currentUser && existingMangaIndex !== -1) {
             setUserProgress({
@@ -81,89 +84,126 @@ const MangaDetails = () => {
   }, [id, setUserData, userData._id, setIsMangaAdded]);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchCharacterDetails = async () => {
-      const charactersWithDetails = await Promise.all(
-        mangaDetails?.characters.map(async (character) => {
-          try {
-            const response = await axiosInstance.get(
-              `/characters/character/${character.characterId}`
-            );
-            return {
-              ...character,
-              characterDetails: response.data,
-            };
-          } catch (error) {
-            console.error(
-              `Error fetching details for character ${character.character}:`,
-              error
-            );
-            return character; // Return the character without details in case of an error
-          }
-        }) || []
-      );
-
-      setCharactersDetails(charactersWithDetails);
-    };
-
-    if (mangaDetails) {
-      fetchCharacterDetails();
-    }
-  }, [mangaDetails]);
-
-  useEffect(() => {
-    const fetchRelationDetails = async () => {
-      try{
-      const relationsWithDetails = await Promise.all([
-        ...(mangaDetails?.mangaRelations.map(async (relation) => {
-          try {
-            const response = await axiosInstance.get(
-              `/mangas/manga/${relation.relationId}`
-            );
-            return {
-              ...relation,
-              relationDetails: response.data,
-              contentType: 'manga',
-            };
-          } catch (error) {
-            console.error(
-              `Error fetching details for manga relation ${relation.relationId}`,
-              error
-            );
-            return null;
-          }
-        }) || []),
-        ...(mangaDetails?.animeRelations.map(async (relation) => {
-          try {
-            const response = await axiosInstance.get(
-              `/animes/anime/${relation.relationId}`
-            );
-            return {
-              ...relation,
-              relationDetails: response.data,
-              contentType: 'anime',
-            };
-          } catch (error) {
-            console.error(
-              `Error fetching details for anime relation ${relation.relationId}`,
-              error
-            );
-            return null;
-          }
-        }) || []),
-      ]);
-
-      setRelationsDetails(
-        relationsWithDetails.filter((relation) => relation !== null)
+      try {
+        const charactersWithDetails = await Promise.all(
+          mangaDetails?.characters.map(async (character) => {
+            if (!character?.characterId) return null; // Skip if no characterId
+            try {
+              const response = await axiosInstance.get(
+                `/characters/character/${character.characterId}`,
+                { signal: controller.signal }
+              );
+              if (!isMounted) return null;
+              return {
+                ...character,
+                characterDetails: response.data,
+              };
+            } catch (error) {
+              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+              console.error(
+                `Error fetching details for character ${character.characterId}:`,
+                error.message
+              );
+              return null;
+            }
+          }) || []
         );
+
+        if (isMounted) {
+          setCharactersDetails(charactersWithDetails.filter(Boolean));
+        }
       } catch (error) {
-        console.error('Error fetching relation details:', error);
-        setRelationsDetails([]);
+        if (!isMounted || error.name === 'CanceledError') return;
+        console.error('Error fetching character details:', error.message);
       }
     };
 
-    if (mangaDetails) {
+    if (mangaDetails?.characters?.length > 0) {
+      fetchCharacterDetails();
+    }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [mangaDetails]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    const fetchRelationDetails = async () => {
+      try {
+        const relationsWithDetails = await Promise.all([
+          ...(mangaDetails?.mangaRelations?.map(async (relation) => {
+            if (!relation?.relationId) return null; // Skip if no relationId
+            try {
+              const response = await axiosInstance.get(
+                `/mangas/manga/${relation.relationId}`,
+                { signal: controller.signal }
+              );
+              if (!isMounted) return null;
+              return {
+                ...relation,
+                relationDetails: response.data,
+                contentType: 'manga',
+              };
+            } catch (error) {
+              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+              console.error(
+                `Error fetching manga relation ${relation.relationId}:`,
+                error.message
+              );
+              return null;
+            }
+          }) || []),
+          ...(mangaDetails?.animeRelations?.map(async (relation) => {
+            if (!relation?.relationId) return null; // Skip if no relationId
+            try {
+              const response = await axiosInstance.get(
+                `/animes/anime/${relation.relationId}`,
+                { signal: controller.signal }
+              );
+              if (!isMounted) return null;
+              return {
+                ...relation,
+                relationDetails: response.data,
+                contentType: 'anime',
+              };
+            } catch (error) {
+              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+              console.error(
+                `Error fetching anime relation ${relation.relationId}:`,
+                error.message
+              );
+              return null;
+            }
+          }) || []),
+        ]);
+
+        if (isMounted) {
+          setRelationsDetails(
+            relationsWithDetails.filter((relation) => relation !== null)
+          );
+        }
+      } catch (error) {
+        if (!isMounted || error.name === 'CanceledError') return;
+        console.error('Error fetching relation details:', error.message);
+      }
+    };
+
+    if (mangaDetails && (mangaDetails.mangaRelations?.length > 0 || mangaDetails.animeRelations?.length > 0)) {
       fetchRelationDetails();
     }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [mangaDetails]);
 
   useEffect(() => {
@@ -299,13 +339,18 @@ const MangaDetails = () => {
     }).filter(p => p);
   };
 
+  const handleRelationClick = (contentType, relationId) => {
+    // Force a full navigation to the new page
+    window.location.href = `/${contentType}/${relationId}`;
+  };
+
   return (
     <div className={mangaDetailsStyles.mangaDetailsPage}>
       <div className={mangaDetailsStyles.mangaHeader}>
         <div className={mangaDetailsStyles.bannerSection}>
           <img
-            src={mangaDetails.images.border || mangaDetails.images.image}
-            alt={mangaDetails.titles.english}
+            src={mangaDetails?.images?.border || mangaDetails?.images?.image || ''}
+            alt={mangaDetails?.titles?.english || 'Manga'}
             className={mangaDetailsStyles.bannerImage}
           />
           <div className={mangaDetailsStyles.bannerOverlay} />
@@ -356,27 +401,27 @@ const MangaDetails = () => {
 
             <div className={mangaDetailsStyles.quickInfo}>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Status:</span> {mangaDetails.releaseData.releaseStatus}
+                <span>Status:</span> {mangaDetails?.releaseData?.releaseStatus || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Format:</span> {mangaDetails.typings.Format}
+                <span>Format:</span> {mangaDetails?.typings?.Format || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Chapters:</span> {mangaDetails.lengths.chapters}
+                <span>Chapters:</span> {mangaDetails?.lengths?.chapters || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Volumes:</span> {mangaDetails.lengths.volumes}
+                <span>Volumes:</span> {mangaDetails?.lengths?.volumes || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
                 <span>Season:</span> {season} {year}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
                 <span>Start Date:</span>{' '}
-                {formatDate(mangaDetails.releaseData.startDate)}
+                {formatDate(mangaDetails?.releaseData?.startDate)}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
                 <span>End Date:</span>{' '}
-                {formatDate(mangaDetails.releaseData.endDate)}
+                {formatDate(mangaDetails?.releaseData?.endDate)}
               </div>
             </div>
 
@@ -453,10 +498,11 @@ const MangaDetails = () => {
           <div className={mangaDetailsStyles.relationsContainer}>
             <div className={mangaDetailsStyles.relationsGrid}>
               {relationsDetails.map((relation) => (
-                <Link
+                <div
                   key={relation.relationDetails._id}
-                  to={`/${relation.contentType}/${relation.relationDetails._id}`}
+                  onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
                   className={mangaDetailsStyles.relationCard}
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className={mangaDetailsStyles.card2}>
                     <div className={mangaDetailsStyles.relationImageContainer}>
@@ -472,7 +518,7 @@ const MangaDetails = () => {
                       <h4>{relation.relationDetails.titles.english}</h4>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
