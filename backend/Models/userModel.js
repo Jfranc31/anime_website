@@ -42,18 +42,26 @@ const userSchema = new mongoose.Schema({
       mangaId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "MangaModel",
+        required: true
       },
       status: {
         type: String,
         enum: ["Reading", "Completed", "Planning"],
+        default: "Planning"
       },
-      currentChapter: Number,
-      currentVolume: Number,
+      currentChapter: {
+        type: Number,
+        default: 0
+      },
+      currentVolume: {
+        type: Number,
+        default: 0
+      },
       activityTimestamp: {
         type: Date,
-        default: Date.now,
-      },
-    },
+        default: Date.now
+      }
+    }
   ],
   username: {
     type: String,

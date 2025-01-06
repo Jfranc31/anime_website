@@ -321,12 +321,18 @@ const compareMangaData = async (manga) => {
 const updateMangaFromAnilist = async (manga) => {
   try {
     const anilistData = await fetchMangaDataById(manga.anilistId);
+    console.log("updateMangaFromAnilist - AniList Data: ", anilistData);
     if (!anilistData) {
-      console.warn(`No data found for anime ID: ${manga.anilistId}`);
+      console.warn(`No data found for manga ID: ${manga.anilistId}`);
       return null;
     }
 
     const updateData = {
+      typings: {
+        Format: FORMAT_MAP[anilistData.format] || manga.typings.Format,
+        Source: SOURCE_MAP[anilistData.source] || manga.typings.Source,
+        CountryOfOrigin: COUNTRY_MAP[anilistData.countryOfOrigin] || manga.typings.CountryOfOrigin
+      },
       releaseData: {
         releaseStatus: STATUS_MAP[anilistData.status],
         startDate: {
@@ -341,13 +347,15 @@ const updateMangaFromAnilist = async (manga) => {
         },
       },
       lengths: {
-        Chapters: anilistData.chapters?.toString() || '',
-        Volumes: anilistData.volumes?.toString() || ''
+        chapters: anilistData.chapters === null ? '' : anilistData.chapters.toString(),
+        volumes: anilistData.volumes === null ? '' : anilistData.volumes.toString()
       },
       genres: anilistData.genres,
       description: anilistData.description,
       activityTimestamp: Date.now()
     };
+
+    console.log("Manga update data:", updateData);
 
     return await MangaModel.findByIdAndUpdate(
       manga._id,

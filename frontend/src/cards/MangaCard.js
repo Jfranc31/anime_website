@@ -3,7 +3,7 @@
  * Description: React component for rendering a manga card.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import cardsStyles from '../styles/components/cards.module.css';
 
@@ -12,27 +12,49 @@ import cardsStyles from '../styles/components/cards.module.css';
  * @param {Object} props - Props passed to the component.
  * @param {Object} props.manga - Manga object containing details like titles, images, etc.
  * @param {Function} props.onTopRightButtonClick - Callback function for top-right button click.
+ * @param {Function} props.handleGenreClick - Callback function for genre click.
  * @returns {JSX.Element} - Rendered manga card component.
  */
 function MangaCard({
   manga,
   onTopRightButtonClick,
   hideTopRightButton = false,
-  layout
+  layout,
+  handleGenreClick
 }) {
-  // State to track hover state
   const [isHovered, setIsHovered] = useState(false);
+  const [titleHeight, setTitleHeight] = useState('auto');
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    if (titleRef.current) {
+      const height = titleRef.current.scrollHeight;
+      setTitleHeight(height);
+    }
+  }, [manga.titles.english]);
+
+  // Add this helper function to determine season
+  const getSeason = (month) => {
+    if (!month) return '';
+    const monthNum = parseInt(month);
+    if (monthNum >= 3 && monthNum <= 5) return 'Spring';
+    if (monthNum >= 6 && monthNum <= 8) return 'Summer';
+    if (monthNum >= 9 && monthNum <= 11) return 'Fall';
+    return 'Winter';
+  };
 
   const getHeaderInfo = () => {
     const currentYear = new Date().getFullYear();
     const startYear = manga.releaseData.startDate.year;
+    const startMonth = manga.releaseData.startDate.month;
     const endYear = manga.releaseData.endDate.year;
+    const season = getSeason(startMonth);
 
     if (manga.releaseData.releaseStatus === 'Finished Releasing') {
       if (startYear !== endYear) {
         return `${startYear}-${endYear}`;
       }
-      return `${startYear}`;
+      return `${season} ${startYear}`;
     }
 
     if (startYear !== currentYear) {
@@ -68,66 +90,123 @@ function MangaCard({
     }).filter(p => p);
   };
 
+  const formatLength = (manga) => {
+    const chapters = manga.lengths.chapters;
+    if (!chapters) return '';
+
+    return chapters === '1' ? '1 chapter' : `${chapters} chapters`;
+  };
+
   return (
     <div
-      className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${isHovered ? cardsStyles.hovered : ''}`}
+      className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${layout === 'compact' ? cardsStyles.compact : ''} ${isHovered ? cardsStyles.hovered : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={cardsStyles.mangaCard}>
-        <div className={cardsStyles.card2}>
-          <div className={cardsStyles.imgContainer}>
-            <img src={manga.images.image} alt={manga.titles.english} />
-            <div className={cardsStyles.titleAndProgress}>
-              <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
-                <div className={cardsStyles.animeTitle}>
-                  {manga.titles.english}
-                </div>
-              </Link>
+      {layout === 'compact' ? (
+        <>
+          <div className={cardsStyles.card2}>
+            <div className={cardsStyles.imgContainer}>
+              <img src={manga.images.image} alt={manga.titles.english} />
             </div>
           </div>
-        </div>
-        {layout === 'wide' && (
-          <div className={cardsStyles.extendedInfo}>
-            <div className={cardsStyles.header}>
-              <div className={cardsStyles.date}>
-                {getHeaderInfo()}
+          <div className={cardsStyles.titleAndProgress} style={{ minHeight: titleHeight }}>
+            <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
+              <div className={cardsStyles.mangaTitle} ref={titleRef}>
+                {manga.titles.english}
               </div>
-              <div className={cardsStyles.typings}>
-                <span>{manga.typings.Format}</span>
-                {manga.lengths.chapters !== '' && (
-                  <><span className={cardsStyles.separator}>•</span><span>{manga.lengths.chapters} chapters</span></>
-                )}
-              </div>
+            </Link>
+            <div className={cardsStyles.genres}>
+              {manga.genres.map((genre) => (
+                <button
+                  key={genre}
+                  className={cardsStyles.genre}
+                  onClick={() => handleGenreClick(genre)}
+                >
+                  {genre}
+                </button>
+              ))}
             </div>
-            <div className={cardsStyles.scrollWrap}>
-              <div className={cardsStyles.description}>
-                {parseDescription(manga.description).map((paragraph, index) => (
-                  <p key={index} className={cardsStyles.paragraph} dangerouslySetInnerHTML={{ __html: paragraph }} />
-                ))}
-              </div>
+          </div>
+          <div className={cardsStyles.formatInfo}>
+            <div className={cardsStyles.format}>
+              {manga.typings.Format}
             </div>
-            <div className={cardsStyles.footer}>
-              <div className={cardsStyles.genres}>
-                {manga.genres.map((genre) => (
-                  <div key={genre} className={cardsStyles.genre}>
-                    {genre}
+            {formatLength(manga) && (
+              <div className={cardsStyles.episodes}>
+                {formatLength(manga)}
+              </div>
+            )}
+          </div>
+          <div className={cardsStyles.airingInfo}>
+            <div className={cardsStyles.airingDate}>{getHeaderInfo()}</div>
+            <div className={cardsStyles.releaseStatus}>
+              {manga.releaseData.releaseStatus === 'Currently Releasing'
+                ? 'Releasing'
+                : manga.releaseData.releaseStatus}
+            </div>
+          </div>
+        </>
+      ): (
+        <div className={cardsStyles.mangaCard}>
+          <div className={cardsStyles.card2}>
+            <div className={cardsStyles.imgContainer}>
+              <img src={manga.images.image} alt={manga.titles.english} />
+              <div className={cardsStyles.titleAndProgress} style={{ height: titleHeight }}>
+                <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
+                  <div className={cardsStyles.mangaTitle} ref={titleRef}>
+                    {manga.titles.english}
                   </div>
-                ))}
+                </Link>
               </div>
             </div>
           </div>
-        )}
-        {/* Button for top-right action (Edit) */}
-        {isHovered && !hideTopRightButton && (
-          <button
-            className={cardsStyles.topRightButton}
-            onClick={() => onTopRightButtonClick(manga)}
-          >
-            Edit
-          </button>
-        )}
-      </div>
+          {layout === 'wide' && (
+            <div className={cardsStyles.extendedInfo}>
+              <div className={cardsStyles.header}>
+                <div className={cardsStyles.date}>
+                  {getHeaderInfo()}
+                </div>
+                <div className={cardsStyles.typings}>
+                  <span>{manga.typings.Format}</span>
+                  {manga?.lengths?.chapters !== '' && (
+                    <><span className={cardsStyles.separator}>•</span><span>{manga?.lengths?.chapters} chapters</span></>
+                  )}
+                </div>
+              </div>
+              <div className={cardsStyles.scrollWrap}>
+                <div className={cardsStyles.description}>
+                  {parseDescription(manga.description).map((paragraph, index) => (
+                    <p key={index} className={cardsStyles.paragraph} dangerouslySetInnerHTML={{ __html: paragraph }} />
+                  ))}
+                </div>
+              </div>
+              <div className={cardsStyles.footer}>
+                <div className={cardsStyles.genres}>
+                  {manga.genres.map((genre) => (
+                    <button
+                      key={genre}
+                      className={cardsStyles.genre}
+                      onClick={() => handleGenreClick(genre)}
+                    >
+                      {genre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Button for top-right action (Edit) */}
+          {isHovered && !hideTopRightButton && (
+            <button
+              className={cardsStyles.topRightButton}
+              onClick={() => onTopRightButtonClick(manga)}
+            >
+              Edit
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

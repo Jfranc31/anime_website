@@ -23,7 +23,6 @@ import Navbar from './Components/Navbars/Navbar';
 import { AnimeProvider } from './Context/AnimeContext';
 import { MangaProvider } from './Context/MangaContext';
 import { CharacterProvider } from './Context/CharacterContext';
-import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ThemeProvider } from './Context/ThemeContext';
 import './themes.module.css';

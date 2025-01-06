@@ -139,8 +139,8 @@ const CharacterDetails = () => {
     const lines = description.split('\n');
 
     lines.forEach((line) => {
-      const metadataMatch = line.match(/^__(.+?):__ (.+)$/) || 
-                            line.match(/^__(.+?)__: (.+)$/) || 
+      const metadataMatch = line.match(/^__(.+?):__ (.+)$/) ||
+                            line.match(/^__(.+?)__: (.+)$/) ||
                             line.match(/^\*\*(.+?):\*\* (.+)$/);
       if (metadataMatch) {
         // Handle metadata with potential links
@@ -177,10 +177,10 @@ const CharacterDetails = () => {
 
   const renderSpoilerText = (text, index) => {
     // First convert any non-spoiler links to HTML
-    const textWithLinks = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
+    const textWithLinks = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
       (match, name, link) => `<a href="${link}" target="_blank" rel="noopener noreferrer">${name}</a>`
     );
-    
+
     // Then handle spoilers
     const parts = textWithLinks.split(/~!(.+?)!~/g);
     return parts.map((part, i) => {
@@ -204,13 +204,6 @@ const CharacterDetails = () => {
       }
       return <span key={i} dangerouslySetInnerHTML={{ __html: part }} />;
     });
-  };
-
-  const renderMetadataValue = (value, index) => {
-    if (value.includes('~!')) {
-      return renderSpoilerText(value, index);
-    }
-    return value;
   };
 
   const renderAboutSection = () => {
@@ -256,8 +249,8 @@ const CharacterDetails = () => {
                 {item.label}
               </span>
               <span className={characterDetailsStyles.metadataValue}>
-                {item.hasSpoiler ? 
-                  renderSpoilerText(item.value, `meta-${index}`) : 
+                {item.hasSpoiler ?
+                  renderSpoilerText(item.value, `meta-${index}`) :
                   <span dangerouslySetInnerHTML={{ __html: item.value }} />
                 }
               </span>

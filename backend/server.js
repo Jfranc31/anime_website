@@ -38,6 +38,17 @@ app.use(
 // Add this before your routes
 app.use(cookieParser());
 
+// // Add this logging middleware to debug routes
+// app.use((req, res, next) => {
+//   console.log(`${req.method} ${req.url}`);
+//   next();
+// });
+
+// // Add detailed request logging
+// app.use((req, res, next) => {
+//   next();
+// });
+
 // Using defined routes for different entities
 app.use("/animes", animeRoutes);
 app.use("/mangas", mangaRoutes);

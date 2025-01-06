@@ -25,9 +25,9 @@ const MangaEditor = ({
 }) => {
   const [mangaDetails, setMangaDetails] = useState(null);
   const [userProgress, setUserProgress] = useState({
-    status: '',
+    status: 'Planning',
     currentChapter: 0,
-    currentVolume: 0,
+    currentVolume: 0
   });
   const [isInUserList, setIsInUserList] = useState(false);
   const availableStatus = ['Planning', 'Reading', 'Completed'];
@@ -35,7 +35,7 @@ const MangaEditor = ({
   useEffect(() => {
     const fetchMangaDetails = async () => {
       if (!manga?._id || !userId) return;
-
+      
       try {
         const mangaResponse = await axiosInstance.get(
           `/mangas/manga/${manga._id}`
@@ -53,19 +53,18 @@ const MangaEditor = ({
         setMangaDetails(mangaResponse.data);
 
         if (currentUser && existingMangaIndex !== -1) {
+          const userManga = currentUser.mangas[existingMangaIndex];
           setUserProgress({
-            status:
-              currentUser.mangas[existingMangaIndex].status,
-            currentChapter:
-              currentUser.mangas[existingMangaIndex].currentChapter,
-            currentVolume:
-              currentUser.mangas[existingMangaIndex].currentVolume,
+            status: userManga.status || 'Planning',
+            currentChapter: typeof userManga.currentChapter === 'number' ? userManga.currentChapter : 0,
+            currentVolume: typeof userManga.currentVolume === 'number' ? userManga.currentVolume : 0
           });
         }
       } catch (error) {
         console.error('Error fetching manga details:', error);
       }
     };
+
     fetchMangaDetails();
   }, [manga?._id, userId]);
 
@@ -74,65 +73,74 @@ const MangaEditor = ({
   }
 
   const handleStatusChange = (e) => {
-    setUserProgress({
-      ...userProgress,
+    setUserProgress((prev) => ({
+      ...prev,
       status: e.target.value,
-    });
+    }));
   };
 
   const handleChapterChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      currentChapter: parseInt(e.target.value) || '',
-    });
+    setUserProgress((prev) => ({
+      ...prev,
+      currentChapter: parseInt(e.target.value) || 0,
+    }));
   };
 
   const handleVolumeChange = (e) => {
-    setUserProgress({
-      ...userProgress,
-      currentVolume: parseInt(e.target.value) || '',
-    });
+    setUserProgress((prev) => ({
+      ...prev,
+      currentVolume: parseInt(e.target.value) || 0,
+    }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     try {
       const endpoint = isInUserList ? 'updateManga' : 'addManga';
-      const response = await axiosInstance.post(
-        `/users/${userId}/${endpoint}`,
-        {
-          mangaId: manga._id,
-          status: userProgress.status || 'Planning',
-          currentChapter: userProgress.currentChapter || 0,
-          currentVolume: userProgress.currentVolume || 0,
-        }
-      );
+      const url = `/users/${userId}/${endpoint}`;
+      
+      const response = await axiosInstance.post(url, {
+        mangaId: manga._id,
+        status: userProgress.status || 'Planning',
+        currentChapter: userProgress.currentChapter || 0,
+        currentVolume: userProgress.currentVolume || 0
+      });
 
       if (response.data) {
-        const userResponse = await axiosInstance.get(
-          `/users/${userId}/current`
-        );
+        const userResponse = await axiosInstance.get(`/users/${userId}/current`);
         setUserData(userResponse.data);
         setIsInUserList(true);
         closeModal();
       }
     } catch (error) {
       console.error('Error updating user progress:', error);
+      console.error('Error response:', error.response);
+      console.error('Request details:', {
+        endpoint: `/users/${userId}/${isInUserList ? 'updateManga' : 'addManga'}`,
+        userId,
+        mangaId: manga._id,
+        status: userProgress.status,
+        currentChapter: userProgress.currentChapter,
+        currentVolume: userProgress.currentVolume
+      });
     }
   };
 
   const handleDelete = async () => {
     try {
-      console.log('Starting delete process...');
+      console.log('Starting delete process...', {
+        userId,
+        mangaId: manga._id
+      });
 
       const response = await axiosInstance.post(
         `/users/${userId}/removeManga`,
         {
-          mangaId: manga._id,
+          mangaId: manga._id.toString()
         }
       );
 
-      console.log('API Response:', response);
+      console.log('Delete response:', response);
 
       if (response.data && response.data.user) {
         setUserData(response.data.user);
@@ -140,10 +148,12 @@ const MangaEditor = ({
         closeModal();
       }
     } catch (error) {
-      console.error('Error details:', {
+      console.error('Delete error:', {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
+        url: `/users/${userId}/removeManga`,
+        mangaId: manga._id
       });
     }
   };
@@ -154,13 +164,13 @@ const MangaEditor = ({
       onClick={(e) => e.stopPropagation()}
     >
       <div className={editModalStyles.modalHeader}>
-        <img src={manga?.images?.border} alt={manga?.titles?.english} />
+        <img src={manga?.images?.border || manga?.images?.image} alt={manga?.titles?.english} />
         <h2>{mangaDetails?.titles?.english || ''}</h2>
         <button
           className={editModalStyles.characterModalClose}
           onClick={closeModal}
         >
-          x
+          ×
         </button>
       </div>
       <div className={editModalStyles.modalBody}>
@@ -191,7 +201,7 @@ const MangaEditor = ({
               value={userProgress.currentChapter}
               onChange={handleChapterChange}
               min="0"
-              max={mangaDetails?.chapters || 9999}
+              max={mangaDetails?.lengths?.chapters || 9999}
               className={editModalStyles.input}
             />
           </div>
@@ -203,7 +213,7 @@ const MangaEditor = ({
               value={userProgress.currentVolume}
               onChange={handleVolumeChange}
               min="0"
-              max={mangaDetails?.volumes || 9999}
+              max={mangaDetails?.lengths?.volumes || 9999}
               className={editModalStyles.input}
             />
           </div>

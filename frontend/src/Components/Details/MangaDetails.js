@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import MangaEditor from '../ListEditors/MangaEditor';
 import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
@@ -31,10 +31,6 @@ const MangaDetails = () => {
   });
 
   const [activeTab, setActiveTab] = useState('about');
-
-  const [revealedSpoilers, setRevealedSpoilers] = useState({});
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMangaDetails = async () => {
@@ -81,7 +77,7 @@ const MangaDetails = () => {
     };
 
     fetchMangaDetails();
-  }, [id, setUserData, userData._id, setIsMangaAdded]);
+  }, [id, userData, setUserData]);
 
   useEffect(() => {
     let isMounted = true;
@@ -281,38 +277,6 @@ const MangaDetails = () => {
 
   const { season, year } = determineSeason(mangaDetails.releaseData.startDate);
 
-  const toggleSpoiler = (index) => {
-    setRevealedSpoilers((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
-
-  const renderSpoilerText = (text, index) => {
-    if (typeof text !== 'string') {
-      text = String(text);
-    }
-
-    const parts = text.split(/~!(.+?)!~/g);
-    return parts.map((part, i) => {
-      if (i % 2 === 1) {
-        // This is spoiler content
-        return (
-          <span
-            key={i}
-            className={`${mangaDetailsStyles.spoilerText} ${
-              revealedSpoilers[`${index}-${i}`] ? mangaDetailsStyles.revealed : ''
-            }`}
-            onClick={() => toggleSpoiler(`${index}-${i}`)}
-          >
-            {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
-          </span>
-        );
-      }
-      return part;
-    });
-  };
-
   const parseDescription = (description) => {
     if (!description) return [];
 
@@ -343,6 +307,8 @@ const MangaDetails = () => {
     // Force a full navigation to the new page
     window.location.href = `/${contentType}/${relationId}`;
   };
+
+  console.log("is manga added: ", isMangaAdded);
 
   return (
     <div className={mangaDetailsStyles.mangaDetailsPage}>

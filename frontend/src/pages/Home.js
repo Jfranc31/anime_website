@@ -77,8 +77,11 @@ const Home = () => {
   };
 
   const handleIncrementWatchCount = async (id, type) => {
+    console.log('Incrementing count:', { id, type });
+    
     if (type === 'anime') {
       const currentAnime = userAnimeList.find(anime => anime.animeId === id);
+      console.log('Current anime:', currentAnime);
 
       if (currentAnime) {
         const newEpisodeCount = currentAnime.currentEpisode + 1;
@@ -96,7 +99,7 @@ const Home = () => {
           // Make an API call to update the current episode on the backend
           const response = await axiosInstance.post(`/users/${userData._id}/updateAnime`, {
             animeId: id,
-            status: userData.status || 'Planning',
+            status: userData.status || 'Watching',
             currentEpisode: newEpisodeCount,
           });
       
@@ -112,7 +115,7 @@ const Home = () => {
     }
     if (type === 'manga') {
       const currentManga = userMangaList.find(manga => manga.mangaId === id);
-      console.log('currentManga: ', currentManga);
+      console.log('Current manga:', currentManga);
 
       if (currentManga) {
         const newChapterCount = currentManga.currentChapter + 1;
@@ -133,7 +136,7 @@ const Home = () => {
           // Make an API call to update the current chapter on the backend
           const response = await axiosInstance.post(`/users/${userData._id}/updateManga`, {
             mangaId: id,
-            status: userData.status || 'Planning',
+            status: userData.status || 'Reading',
             currentChapter: newChapterCount,
             currentVolume: volumeCount
           });

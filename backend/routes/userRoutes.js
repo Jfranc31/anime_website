@@ -4,33 +4,44 @@
  */
 
 import express from "express";
-import userController from "../controllers/userController.js";
+import {
+  registerUser,
+  loginUser,
+  updateUserAnime,
+  updateUserManga,
+  addAnime,
+  addManga,
+  getUserInfo,
+  removeAnime,
+  removeManga,
+  makeAdmin,
+  updateTheme,
+  getAllUsers
+} from "../controllers/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get('/', authMiddleware, userController.getAllUsers);
+router.get('/', authMiddleware, getAllUsers);
 
-router.post("/register", userController.registerUser);
+router.post("/register", registerUser);
 
-router.post("/login", userController.loginUser);
+router.post("/login", loginUser);
 
-router.post("/:userId/updateAnime", userController.updateUserAnime);
+router.get("/:userId/current", getUserInfo);
 
-router.post("/:userId/updateManga", userController.updateUserManga);
+// Manga routes
+router.post("/:userId/addManga", addManga);
+router.post("/:userId/updateManga", updateUserManga);
+router.post("/:userId/removeManga", removeManga);
 
-router.post("/:userId/addAnime", userController.addAnime);
+// Anime routes
+router.post("/:userId/addAnime", addAnime);
+router.post("/:userId/updateAnime", updateUserAnime);
+router.post("/:userId/removeAnime", removeAnime);
 
-router.post("/:userId/addManga", userController.addManga);
-
-router.get("/:userId/current", userController.getUserInfo);
-
-router.post("/:userId/removeAnime", userController.removeAnime);
-
-router.post("/:userId/removeManga", userController.removeManga);
-
-router.put("/:userId/make-admin", authMiddleware, userController.makeAdmin);
-
-router.put("/:userId/theme", authMiddleware, userController.updateTheme);
+// Admin routes
+router.put("/:userId/make-admin", authMiddleware, makeAdmin);
+router.put("/:userId/theme", authMiddleware, updateTheme);
 
 export default router;

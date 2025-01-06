@@ -63,10 +63,15 @@
 }
 
 .animeListSection.compact .animeList,
-.animeListSection.compact .mangaList,
-.animeListSection.compact .animeList li,
-.animeListSection.compact .mangaList li {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+.animeListSection.compact .mangaList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.animeListSection.compact .animeListItem,
+.animeListSection.compact .mangaListItem {
+  width: 100%;
 }
 
 .filterContainer {

@@ -30,8 +30,7 @@ const Animes = () => {
   };
 
   // Function to change grid layout
-  const changeLayout = (layout) => {
-    console.log(`Changing layout to: ${layout}`);
+  const changeLayout = async (layout) => {
     setGridLayout(layout);
   };
 
@@ -166,6 +165,15 @@ const Animes = () => {
     setSelectedFormats((prevFormats) =>
       prevFormats.filter((format) => format !== removedFormat)
     );
+  };
+
+  const handleGenreClick = (genre) => {
+    setSelectedGenres((prevGenres) => {
+      if (!prevGenres.includes(genre)) {
+        return [...prevGenres, genre];
+      }
+      return prevGenres;
+    });
   };
 
   return (
@@ -320,6 +328,7 @@ const Animes = () => {
                       layout={gridLayout}
                       onTopRightButtonClick={handleTopRightButtonClick}
                       hideTopRightButton={!userData || !userData._id}
+                      handleGenreClick={handleGenreClick}
                     />
                   </li>
                 ))}

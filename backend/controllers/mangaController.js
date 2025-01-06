@@ -222,8 +222,33 @@ const updateManga = async (req, res) => {
       characters,
       mangaRelations,
       animeRelations,
+      titles,
       ...otherFields
     } = req.body;
+
+    // Validate required data
+    if (!titles) {
+      console.error('Titles object is missing from request body');
+      return res.status(400).json({
+        error: "Missing required field: titles",
+        receivedBody: req.body
+      });
+    }
+
+    // Log the character updates being attempted
+    console.log('Processing character updates:', {
+      characterCount: characters?.length || 0,
+      characters: characters
+    });
+
+    // Validate characters array
+    if (!Array.isArray(characters)) {
+      console.error('Characters is not an array:', characters);
+      return res.status(400).json({
+        error: "Characters must be an array",
+        received: typeof characters
+      });
+    }
 
     // Filter out characters with empty characterId
     const validCharacters = characters.filter(
@@ -493,8 +518,20 @@ const updateManga = async (req, res) => {
         animeRelations: updatedAnimeRelations.flat(),
       });
   } catch (error) {
-    console.error("Error updating manga:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    // Enhanced error logging
+    console.error("Error updating anime:", {
+      error: error.message,
+      stack: error.stack,
+      mangaId: id,
+      requestBody: req.body
+    });
+
+    // More specific error response
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 

@@ -132,8 +132,6 @@ const addAnime = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log(status, currentEpisode);
-
     if (currentEpisode > 0) {
       status = "Watching";
     }
@@ -209,73 +207,50 @@ const updateUserAnime = async (req, res) => {
   const { animeId, status, currentEpisode } = req.body;
 
   try {
-    // Find the user
     const user = await UserModel.findById(userId);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the anime is already in the user's list
     const existingAnimeIndex = user.animes.findIndex(
-      (anime) => anime.animeId.toString() === animeId.toString(),
+      (anime) => anime.animeId?.toString() === animeId?.toString()
     );
 
     if (existingAnimeIndex !== -1) {
-      const anime =
-        await AnimeModel.findById(animeId).select("lengths.Episodes");
-
-      // Check if max episodes is 0 (indicating no limit)
-      const maxEpisodes =
-        anime.lengths.Episodes === null ? null : anime.lengths.Episodes;
-
-      // Update the existing show
-      if (status === "Completed") {
-        user.animes[existingAnimeIndex].status = status;
-        user.animes[existingAnimeIndex].currentEpisode = maxEpisodes;
-      } else if (status === "Planning") {
-        if (
-          currentEpisode > 0 &&
-          (currentEpisode < maxEpisodes || maxEpisodes === null)
-        ) {
-          user.animes[existingAnimeIndex].status = "Watching";
-          user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
-        } else if (currentEpisode >= maxEpisodes) {
-          if (maxEpisodes !== null) {
-            user.animes[existingAnimeIndex].status = "Completed";
-            user.animes[existingAnimeIndex].currentEpisode = maxEpisodes;
-          } else {
-            user.animes[existingAnimeIndex].status = status;
-            user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
-          }
-        } else {
-          user.animes[existingAnimeIndex].status = status;
-          user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
-        }
-      } else {
-        user.animes[existingAnimeIndex].status = status;
-        if (currentEpisode >= maxEpisodes) {
-          if (maxEpisodes !== null) {
-            user.animes[existingAnimeIndex].status = "Completed";
-            user.animes[existingAnimeIndex].currentEpisode = maxEpisodes;
-          } else {
-            user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
-          }
-        } else {
-          user.animes[existingAnimeIndex].currentEpisode = currentEpisode;
-        }
+      const anime = await AnimeModel.findById(animeId);
+      if (!anime) {
+        return res.status(404).json({ message: "Anime not found" });
       }
 
-      const activity = new Date();
+      const isOngoing = anime.releaseData.releaseStatus === "Currently Releasing";
+      const maxEpisodes = anime.lengths.Episodes ? parseInt(anime.lengths.Episodes) : null;
 
-      user.animes[existingAnimeIndex].activityTimestamp =
-        activity.toLocaleString("en-US");
-      console.log(activity, user.animes[existingAnimeIndex].activityTimestamp);
+      // Determine the status based on progress
+      let updatedStatus = status;
+      if (currentEpisode > 0) {
+        updatedStatus = 'Watching';
+      }
+      if (status === 'Planning') {
+        updatedStatus = 'Planning';
+      }
+      if (status === 'Completed') {
+        updatedStatus = 'Completed';
+      }
 
-      // Save the updated user
+      // Only auto-complete if the series is finished and all episodes are watched
+      if (!isOngoing && maxEpisodes && currentEpisode >= maxEpisodes) {
+        updatedStatus = 'Completed';
+      }
+
+      // Update the anime entry while preserving the animeId
+      user.animes[existingAnimeIndex] = {
+        animeId: user.animes[existingAnimeIndex].animeId, // Keep the existing animeId
+        status: updatedStatus,
+        currentEpisode: parseInt(currentEpisode) || 0,
+        activityTimestamp: new Date()
+      };
+
       await user.save();
-
-      // Fetch the updated user with populated anime details
       const updatedUser = await UserModel.findById(userId);
 
       return res.json({
@@ -283,13 +258,25 @@ const updateUserAnime = async (req, res) => {
         user: updatedUser,
       });
     } else {
-      return res
-        .status(404)
-        .json({ message: "Anime not found in user's list" });
+      return res.status(404).json({ 
+        message: "Anime not found in user's list",
+        details: {
+          userId,
+          animeId,
+          userAnimes: user.animes.map(a => ({
+            id: a.animeId?.toString(),
+            status: a.status
+          }))
+        }
+      });
     }
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error updating anime:", error);
+    return res.status(500).json({ 
+      message: "Internal Server Error",
+      error: error.message,
+      stack: error.stack
+    });
   }
 };
 
@@ -306,76 +293,59 @@ const updateUserManga = async (req, res) => {
 
   try {
     const user = await UserModel.findById(userId);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     const existingMangaIndex = user.mangas.findIndex(
-      (manga) => manga.mangaId.toString() === mangaId.toString(),
+      (manga) => manga.mangaId?.toString() === mangaId?.toString()
     );
 
     if (existingMangaIndex !== -1) {
-      const mangaChapters =
-        await MangaModel.findById(mangaId).select("lengths.chapters");
-      const mangaVolumes =
-        await MangaModel.findById(mangaId).select("lengths.volumes");
+      const manga = await MangaModel.findById(mangaId);
+      if (!manga) {
+        return res.status(404).json({ message: "Manga not found" });
+      }
+      
+      const isOngoing = manga.releaseData.releaseStatus === "Currently Releasing";
+      const maxChapters = manga.lengths.chapters ? parseInt(manga.lengths.chapters) : null;
+      const maxVolumes = manga.lengths.volumes ? parseInt(manga.lengths.volumes) : null;
 
-      const maxChapters =
-        mangaChapters.lengths.chapters === null
-          ? currentChapter
-          : mangaChapters.lengths.chapters;
-      const maxVolumes =
-        mangaVolumes.lengths.volumes === null
-          ? currentVolume
-          : mangaVolumes.lengths.volumes;
+      // Determine the status based on progress
+      let updatedStatus = status;
+      if (currentChapter > 0 || currentVolume > 0) {
+        updatedStatus = 'Reading';
+      }
+      if (status === 'Planning') {
+        updatedStatus = 'Planning';
+      }
+      if (status === 'Completed') {
+        updatedStatus = 'Completed';
+      }
 
-      console.log("Current Chapter:", currentChapter);
-      console.log("Current Volume:", currentVolume);
-      console.log("Manga Volume:", mangaVolumes.lengths.volumes);
-      console.log("Max Chapters:", maxChapters);
-      console.log("Max Volumes:", maxVolumes);
-
-      if (status === "Completed") {
-        user.mangas[existingMangaIndex].status = status;
-        user.mangas[existingMangaIndex].currentChapter = maxChapters;
-        user.mangas[existingMangaIndex].currentVolume = maxVolumes;
-      } else if (status === "Planning") {
-        if (
-          (currentChapter > 0 || currentVolume > 0) &&
-          (currentChapter <= maxChapters || maxChapters === null) &&
-          (currentVolume <= maxVolumes || maxVolumes === null)
-        ) {
-          user.mangas[existingMangaIndex].status = "Reading";
-          user.mangas[existingMangaIndex].currentChapter = currentChapter;
-          user.mangas[existingMangaIndex].currentVolume = currentVolume;
-        } else {
-          user.mangas[existingMangaIndex].status = status;
-          user.mangas[existingMangaIndex].currentChapter = 0;
-          user.mangas[existingMangaIndex].currentVolume = 0;
-        }
-      } else {
-        user.mangas[existingMangaIndex].status = status;
-        if (currentChapter <= maxChapters || maxChapters === null) {
-          user.mangas[existingMangaIndex].currentChapter = currentChapter;
-        } else {
-          user.mangas[existingMangaIndex].status = "Completed";
-          user.mangas[existingMangaIndex].currentChapter = maxChapters;
-        }
-        if (currentVolume <= maxVolumes || maxVolumes === null) {
-          user.mangas[existingMangaIndex].currentVolume = currentVolume;
-        } else {
-          user.mangas[existingMangaIndex].status = "Completed";
-          user.mangas[existingMangaIndex].currentVolume = maxVolumes;
+      // Only auto-complete if the series is finished and all chapters/volumes are read
+      if (!isOngoing) {
+        if (maxChapters && maxVolumes) {
+          if (currentChapter >= maxChapters && currentVolume >= maxVolumes) {
+            updatedStatus = 'Completed';
+          }
+        } else if (maxChapters && !maxVolumes) {
+          if (currentChapter >= maxChapters) {
+            updatedStatus = 'Completed';
+          }
         }
       }
 
-      const activity = new Date();
-      user.mangas[existingMangaIndex].activityTimestamp =
-        activity.toLocaleString("en-US");
+      // Update the manga entry while preserving the mangaId
+      user.mangas[existingMangaIndex] = {
+        mangaId: user.mangas[existingMangaIndex].mangaId, // Keep the existing mangaId
+        status: updatedStatus,
+        currentChapter: parseInt(currentChapter) || 0,
+        currentVolume: parseInt(currentVolume) || 0,
+        activityTimestamp: new Date()
+      };
 
       await user.save();
-
       const updatedUser = await UserModel.findById(userId);
 
       return res.json({
@@ -383,13 +353,25 @@ const updateUserManga = async (req, res) => {
         user: updatedUser,
       });
     } else {
-      return res
-        .status(404)
-        .json({ message: "Manga not found in user's list" });
+      return res.status(404).json({ 
+        message: "Manga not found in user's list",
+        details: {
+          userId,
+          mangaId,
+          userMangas: user.mangas.map(m => ({
+            id: m.mangaId?.toString(),
+            status: m.status
+          }))
+        }
+      });
     }
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error updating manga:", error);
+    return res.status(500).json({ 
+      message: "Internal Server Error",
+      error: error.message,
+      stack: error.stack
+    });
   }
 };
 
@@ -410,7 +392,6 @@ const removeAnime = async (req, res) => {
     const animeIndex = user.animes.findIndex(
       (userAnime) => userAnime.animeId.toString() === animeId,
     );
-    console.log(animeIndex);
 
     if (animeIndex !== -1) {
       user.animes.splice(animeIndex, 1);
@@ -447,31 +428,51 @@ const removeManga = async (req, res) => {
 
   try {
     const user = await UserModel.findById(userId);
+    if (!user) {
+      console.log('User not found:', userId);
+      return res.status(404).json({ message: "User not found" });
+    }
 
+    // Ensure both IDs are strings for comparison
     const mangaIndex = user.mangas.findIndex(
-      (userManga) => userManga.mangaId.toString() === mangaId,
+      (userManga) => {
+        if (!userManga || !userManga.mangaId) {
+          console.log('Invalid manga entry:', userManga);
+          return false;
+        }
+        return userManga.mangaId.toString() === mangaId;
+      }
     );
-    console.log(mangaIndex);
 
     if (mangaIndex !== -1) {
       user.mangas.splice(mangaIndex, 1);
       await user.save();
 
-      // Fetch updated user data
       const updatedUser = await UserModel.findById(userId);
-      res.json({
+      return res.json({
         success: true,
         message: "Manga removed successfully",
         user: updatedUser,
       });
     } else {
-      res
-        .status(404)
-        .json({ success: false, message: "Manga not found in user list" });
+      return res.status(404).json({ 
+        success: false, 
+        message: "Manga not found in user list",
+        mangaId,
+        userMangas: user.mangas.map(m => ({
+          id: m.mangaId?.toString(),
+          status: m.status
+        }))
+      });
     }
   } catch (error) {
-    console.error("Error removing manga from user list:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Error removing manga:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error",
+      error: error.message,
+      stack: error.stack
+    });
   }
 };
 
@@ -557,7 +558,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-export default {
+export {
   registerUser,
   loginUser,
   updateUserAnime,

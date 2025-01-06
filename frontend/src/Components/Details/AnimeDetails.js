@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
 import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
@@ -30,10 +30,6 @@ const AnimeDetails = () => {
   });
 
   const [activeTab, setActiveTab] = useState('about');
-
-  const [revealedSpoilers, setRevealedSpoilers] = useState({});
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAnimeDetails = async () => {
@@ -281,38 +277,6 @@ const AnimeDetails = () => {
 
   const { season, year } = determineSeason(animeDetails.releaseData.startDate);
 
-  const toggleSpoiler = (index) => {
-    setRevealedSpoilers((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
-
-  const renderSpoilerText = (text, index) => {
-    if (typeof text !== 'string') {
-      text = String(text);
-    }
-
-    const parts = text.split(/~!(.+?)!~/g);
-    return parts.map((part, i) => {
-      if (i % 2 === 1) {
-        // This is spoiler content
-        return (
-          <span
-            key={i}
-            className={`${animeDetailsStyles.spoilerText} ${
-              revealedSpoilers[`${index}-${i}`] ? animeDetailsStyles.revealed : ''
-            }`}
-            onClick={() => toggleSpoiler(`${index}-${i}`)}
-          >
-            {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
-          </span>
-        );
-      }
-      return part;
-    });
-  };
-
   const parseDescription = (description) => {
     if (!description) return [];
 
@@ -339,36 +303,14 @@ const AnimeDetails = () => {
     }).filter(p => p);
   };
 
-  const renderParagraphContent = (text, index) => {
-    const parts = text.split(/~!(.+?)!~/g);
-
-    return parts.map((part, i) => {
-      if (i % 2 === 1) {
-        return (
-          <span
-            key={`spoiler-${i}`}
-            className={`${animeDetailsStyles.spoilerText} ${
-              revealedSpoilers[`${index}-${i}`] ? animeDetailsStyles.revealed : ''
-            }`}
-            onClick={() => toggleSpoiler(`${index}-${i}`)}
-          >
-            {revealedSpoilers[`${index}-${i}`] ? part : 'Spoiler'}
-          </span>
-        );
-      }
-
-      return (
-        <p key={index} className={animeDetailsStyles.paragraph} dangerouslySetInnerHTML={{ __html: part }} />
-      );
-    });
-  };
-
   const handleRelationClick = (contentType, relationId) => {
     // Force a full navigation to the new page
     window.location.href = `/${contentType}/${relationId}`;
     // Alternative approach using navigate:
     // navigate(`/${contentType}/${relationId}`, { replace: true });
   };
+
+  console.log("is anime added: ", isAnimeAdded);
 
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>

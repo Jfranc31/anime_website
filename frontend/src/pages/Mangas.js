@@ -29,7 +29,6 @@ const Mangas = () => {
 
   // Function to change grid layout
   const changeLayout = (layout) => {
-    console.log(`Changing layout to: ${layout}`);
     setGridLayout(layout);
   };
 
@@ -90,13 +89,12 @@ const Mangas = () => {
     return titleA.localeCompare(titleB);
   });
 
-  const handleGenreChange = (selectedGenre) => {
+  const handleGenreClick = (genre) => {
     setSelectedGenres((prevGenres) => {
-      if (!prevGenres.includes(selectedGenre)) {
-        return [...prevGenres, selectedGenre];
-      } else {
-        return prevGenres;
+      if (!prevGenres.includes(genre)) {
+        return [...prevGenres, genre];
       }
+      return prevGenres;
     });
   };
 
@@ -173,7 +171,7 @@ const Mangas = () => {
             value=""
             id="genreSearchInput"
             name="genreSearchInput"
-            onChange={(e) => handleGenreChange(e.target.value)}
+            onChange={(e) => handleGenreClick(e.target.value)}
             className={browseStyles.genreSelect}
           >
             <option value="" disabled>
@@ -279,6 +277,7 @@ const Mangas = () => {
                       layout={gridLayout}
                       onTopRightButtonClick={onTopRightButtonClick}
                       hideTopRightButton={!userData || !userData._id}
+                      handleGenreClick={handleGenreClick}
                     />
                   </li>
                 ))}
