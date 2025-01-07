@@ -16,26 +16,26 @@ const Settings = () => {
         throw new Error('No authentication token found');
       }
 
-      await axios.put(`/users/${userData._id}/theme`, 
-        { theme: newTheme }, 
+      await axios.put(`/users/${userData._id}/theme`,
+        { theme: newTheme },
         {
           headers: {
             'Authorization': `Bearer ${JSON.parse(userInfo)._id}`
           }
         }
       );
-      
+
       // Update theme in context
       setTheme(newTheme);
-      
+
       // Update theme in cookie
       const parsedUserInfo = JSON.parse(userInfo);
       parsedUserInfo.theme = newTheme;
       Cookies.set('userInfo', JSON.stringify(parsedUserInfo));
-      
+
       // Update theme in userData context
       setUserData({...userData, theme: newTheme});
-      
+
     } catch (error) {
       console.error('Error updating theme:', error);
     }
@@ -53,7 +53,7 @@ const Settings = () => {
           </ul>
         </nav>
       </div>
-      
+
       <div className={settingsStyles.content}>
         <section className={settingsStyles.section}>
           <h2>Site Theme</h2>
@@ -72,17 +72,9 @@ const Settings = () => {
             </button>
           </div>
         </section>
-
-        <section className={settingsStyles.section}>
-          <h2>About</h2>
-          <textarea
-            className={settingsStyles.aboutTextarea}
-            placeholder="A little about yourself..."
-          />
-        </section>
       </div>
     </div>
   );
 };
 
-export default Settings; 
+export default Settings;

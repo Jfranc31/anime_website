@@ -157,6 +157,7 @@
   border-radius: 8px;
   overflow: hidden;
   transition: transform 0.3s ease;
+  text-decoration: none;
 }
 
 .appearanceCard:hover {
@@ -177,6 +178,16 @@
   color: var(--text-primary);
   font-size: 1rem;
   margin-bottom: 0.5rem;
+}
+
+.appearanceTitle a {
+  text-decoration: none;
+  color: var(--accent-color);
+  transition: color 0.2s ease;
+}
+
+.appearanceTitle a:hover {
+  color: var(--accent-hover);
 }
 
 .appearanceRole {
@@ -298,6 +309,7 @@
   text-decoration: none;
   transition: all 0.3s; /* Smooth transition */
   background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
+  text-decoration: none;
 }
 
 .card2 {
@@ -349,6 +361,16 @@
   font-size: 1rem;
 }
 
+.referenceInfo a {
+  text-decoration: none;
+  color: var(--accent-color);
+  transition: color 0.2s ease;
+}
+
+.referenceInfo a:hover {
+  color: var(--accent-hover);
+}
+
 @media (max-width: 768px) {
   .characterHeader {
     flex-direction: column;
@@ -365,4 +387,45 @@
   .referencesGrid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+}
+
+/* Add styles for links within character details */
+.characterDetailsPage a {
+  text-decoration: none;
+  color: var(--accent-color);
+  transition: color 0.2s ease;
+}
+
+.characterDetailsPage a:hover {
+  color: var(--accent-hover);
+}
+
+/* Specifically for appearance links */
+.appearanceCard {
+  text-decoration: none;
+}
+
+.appearanceTitle a {
+  text-decoration: none;
+  color: var(--accent-color);
+  transition: color 0.2s ease;
+}
+
+.appearanceTitle a:hover {
+  color: var(--accent-hover);
+}
+
+/* For reference links */
+.referenceCard {
+  text-decoration: none;
+}
+
+.referenceInfo a {
+  text-decoration: none;
+  color: var(--accent-color);
+  transition: color 0.2s ease;
+}
+
+.referenceInfo a:hover {
+  color: var(--accent-hover);
 }
