@@ -310,8 +310,6 @@ const AnimeDetails = () => {
     // navigate(`/${contentType}/${relationId}`, { replace: true });
   };
 
-  console.log("is anime added: ", isAnimeAdded);
-
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
       <div className={animeDetailsStyles.animeHeader}>

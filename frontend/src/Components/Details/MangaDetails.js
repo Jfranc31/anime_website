@@ -41,7 +41,7 @@ const MangaDetails = () => {
         );
         setMangaDetails(mangaResponse.data);
 
-        if (userData?.id) {
+        if (userData?._id) {
           const userResponse = await axiosInstance.get(
             `/users/${userData._id}/current`
           );
@@ -307,8 +307,6 @@ const MangaDetails = () => {
     // Force a full navigation to the new page
     window.location.href = `/${contentType}/${relationId}`;
   };
-
-  console.log("is manga added: ", isMangaAdded);
 
   return (
     <div className={mangaDetailsStyles.mangaDetailsPage}>
