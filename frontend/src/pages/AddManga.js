@@ -359,7 +359,7 @@ export default function AddManga() {
       description: mangaData.description || '',
       images: {
         image: mangaData.images?.image || '',
-        border: DEFAULT_BORDER,
+        border: mangaData.images?.border || DEFAULT_BORDER,
       },
       characters: mangaData.characters || [],
       mangaRelations: mangaData.mangaRelations || [],

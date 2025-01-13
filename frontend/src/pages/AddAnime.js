@@ -365,7 +365,7 @@ export default function AddAnime() {
       description: animeData.description || '',
       images: {
         image: animeData.images?.image || '',
-        border: DEFAULT_BORDER
+        border: animeData.images?.border || DEFAULT_BORDER,
       },
       nextAiringEpisode: {
         airingAt: animeData.nextAiringEpisode?.airingAt || '',

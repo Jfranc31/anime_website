@@ -13,7 +13,7 @@ import characterDetailsStyles from '../../styles/pages/character_details.module.
  */
 const CharacterDetails = () => {
   const { id } = useParams();
-  const { userData, setUserData } = useContext(data);
+  const userData = useContext(data);
   const [characterDetails, setCharacterDetails] = useState(null);
   const [referencesDetails, setReferencesDetails] = useState([]);
   const [activeTab, setActiveTab] = useState('about');

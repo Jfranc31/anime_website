@@ -625,7 +625,7 @@ const createMangaFromAnilist = async (req, res) => {
       description: anilistData.description || '',
       images: {
         image: anilistData.coverImage?.large || '',
-        border: 'DEFAULT_BORDER'
+        border: anilistData?.bannerImage
       },
       characters: [],
       mangaRelations: [],

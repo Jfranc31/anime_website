@@ -33,6 +33,7 @@ const fetchAnimeDataById = async (id) => {
         coverImage {
           large
         }
+        bannerImage
         nextAiringEpisode {
           airingAt
           timeUntilAiring
@@ -87,6 +88,7 @@ const fetchAnimeData = async (title) => {
           coverImage {
             large
           }
+          bannerImage
           nextAiringEpisode {
             airingAt
             timeUntilAiring
@@ -162,6 +164,7 @@ const fetchMangaDataById = async (id) => {
         coverImage {
           large
         }
+        bannerImage
       }
     }
   `;
@@ -211,6 +214,7 @@ const fetchMangaData = async (title) => {
           coverImage {
             large
           }
+          bannerImage
         }
       }
     }
@@ -275,6 +279,7 @@ const fetchCharacterData = async (search) => {
           image {
             large
           }
+          bannerImage
         }
       }
     }

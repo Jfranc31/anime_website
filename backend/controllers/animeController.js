@@ -617,7 +617,7 @@ const createAnimeFromAnilist = async (req, res) => {
       description: anilistData.description || '',
       images: {
         image: anilistData.coverImage?.large || '',
-        border: 'DEFAULT_BORDER'
+        border: anilistData?.bannerImage
       },
       characters: [],
       animeRelations: [],

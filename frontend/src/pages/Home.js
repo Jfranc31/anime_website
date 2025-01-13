@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from './../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
@@ -17,7 +17,7 @@ const Home = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ left: '100%', top: '0' });
 
-  const fetchLatestActivities = async () => {
+  const fetchLatestActivities = useCallback(async () => {
     try {
       const data = await fetchWithErrorHandling(`/latest-activities/${userData._id}`);
       const sortedActivities = data.sort(
@@ -27,9 +27,9 @@ const Home = () => {
     } catch (error) {
       setLatestActivities([]);
     }
-  };
+  }, [userData._id]);
 
-  const fetchUserList = async () => {
+  const fetchUserList = useCallback(async () => {
     try {
       const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
       setUserAnimeList(data.animes);
@@ -38,12 +38,12 @@ const Home = () => {
       setUserAnimeList([]);
       setUserMangaList([]);
     }
-  };
+  }, [userData._id]);
 
   useEffect(() => {
     fetchLatestActivities();
     fetchUserList();
-  }, [userData._id]);
+  }, [userData._id, fetchLatestActivities, fetchUserList]);
 
   const getAnimeById = (animeId) => {
     return animeList.find((anime) => anime._id === animeId);
