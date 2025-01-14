@@ -11,6 +11,7 @@ import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
 import { MONTHS } from '../../constants/filterOptions';
 import axiosInstance from '../../utils/axiosConfig';
+import Loader from '../../constants/Loader';
 
 /**
  * Functional component representing details of an anime.
@@ -30,6 +31,7 @@ const AnimeDetails = () => {
   });
 
   const [activeTab, setActiveTab] = useState('about');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchAnimeDetails = async () => {
@@ -77,54 +79,99 @@ const AnimeDetails = () => {
     fetchAnimeDetails();
   }, [id, userData, setUserData]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
+  const fetchCharacterDetails = async () => {
+    setLoading(true);
+    try {
+      const charactersWithDetails = await Promise.all(
+        animeDetails?.characters.map(async (character) => {
+          try {
+            const response = await axiosInstance.get(
+              `/characters/character/${character.characterId}`,
+            );
+            return {
+              ...character,
+              characterDetails: response.data,
+            };
+          } catch (error) {
+            if (error.name === 'CanceledError') return null;
+            console.error(
+              `Error fetching details for character ${character.characterId}:`,
+              error.message
+            );
+            return null;
+          }
+        }) || []
+      );
 
-    const fetchCharacterDetails = async () => {
-      try {
-        const charactersWithDetails = await Promise.all(
-          animeDetails?.characters.map(async (character) => {
-            if (!character?.characterId) return null; // Skip if no characterId
-            try {
-              const response = await axiosInstance.get(
-                `/characters/character/${character.characterId}`,
-                { signal: controller.signal }
-              );
-              if (!isMounted) return null;
-              return {
-                ...character,
-                characterDetails: response.data,
-              };
-            } catch (error) {
-              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
-              console.error(
-                `Error fetching details for character ${character.characterId}:`,
-                error.message
-              );
-              return null;
-            }
-          }) || []
-        );
-
-        if (isMounted) {
-          setCharactersDetails(charactersWithDetails.filter(Boolean));
-        }
-      } catch (error) {
-        if (!isMounted || error.name === 'CanceledError') return;
-        console.error('Error fetching character details:', error.message);
-      }
-    };
-
-    if (animeDetails?.characters?.length > 0) {
-      fetchCharacterDetails();
+      setCharactersDetails(charactersWithDetails);
+    } catch (error) {
+      console.error('Error fetching characters:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [animeDetails]);
+  const fetchRelationDetails = async () => {
+    setLoading(true);
+    try {
+      const relationsWithDetails = await Promise.all([
+        ...(animeDetails?.mangaRelations.map(async (relation) => {
+          try {
+            const response = await axiosInstance.get(
+              `/mangas/manga/${relation.relationId}`,
+            );
+            return {
+              ...relation,
+              relationDetails: response.data,
+              contentType: 'manga',
+            };
+          } catch (error) {
+            if (error.name === 'CanceledError') return null;
+            console.error(
+              `Error fetching manga relation ${relation.relationId}`,
+              error.message
+            );
+            return null;
+          }
+        }) || []),
+        ...(animeDetails?.animeRelations.map(async (relation) => {
+          try {
+            const response = await axiosInstance.get(
+              `/animes/anime/${relation.relationId}`,
+            );
+            return {
+              ...relation,
+              relationDetails: response.data,
+              contentType: 'anime',
+            };
+          } catch (error) {
+            if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+            console.error(
+              `Error fetching anime relation ${relation.relationId}:`,
+              error.message
+            );
+            return null;
+          }
+        }) || []),
+      ]);
+
+      setRelationsDetails(relationsWithDetails);
+    } catch (error) {
+      console.error('Error fetching relations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'characters') {
+      fetchCharacterDetails(); // Fetch characters only when the tab is 'characters'
+    }
+    if (tab === 'relations') {
+      fetchRelationDetails();
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -400,7 +447,7 @@ const AnimeDetails = () => {
               </button>
               <button
                 className={`${animeDetailsStyles.tabButton} ${activeTab === 'characters' ? animeDetailsStyles.active : ''}`}
-                onClick={() => setActiveTab('characters')}
+                onClick={() => handleTabChange('characters')}
               >
                 Characters
               </button>
@@ -434,28 +481,32 @@ const AnimeDetails = () => {
         {activeTab === 'characters' && (
           <div className={animeDetailsStyles.charactersContainer}>
             <div className={animeDetailsStyles.charactersGrid}>
-              {charactersDetails.map((character) => (
-                <Link
-                  to={`/characters/${character.characterDetails._id}`}
-                  key={character.characterDetails._id}
-                  className={animeDetailsStyles.characterCard}
-                >
-                  <div className={animeDetailsStyles.card2}>
-                    <div className={animeDetailsStyles.characterImageContainer}>
-                      <img
-                        src={character.characterDetails.characterImage}
-                        alt={character.characterDetails.names.givenName}
-                      />
-                      <div className={animeDetailsStyles.characterRole}>
-                        {character.role}
+              {loading ? (
+                <Loader />
+              ) : (
+                charactersDetails.map((character) => (
+                  <Link
+                    to={`/characters/${character.characterDetails._id}`}
+                    key={character.characterDetails._id}
+                    className={animeDetailsStyles.characterCard}
+                  >
+                    <div className={animeDetailsStyles.card2}>
+                      <div className={animeDetailsStyles.characterImageContainer}>
+                        <img
+                          src={character.characterDetails.characterImage}
+                          alt={character.characterDetails.names.givenName}
+                        />
+                        <div className={animeDetailsStyles.characterRole}>
+                          {character.role}
+                        </div>
+                      </div>
+                      <div className={animeDetailsStyles.characterInfo}>
+                        <h4>{getFullName(character.characterDetails.names)}</h4>
                       </div>
                     </div>
-                    <div className={animeDetailsStyles.characterInfo}>
-                      <h4>{getFullName(character.characterDetails.names)}</h4>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         )}

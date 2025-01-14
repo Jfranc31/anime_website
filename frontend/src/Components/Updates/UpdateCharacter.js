@@ -111,8 +111,8 @@ export const UpdateCharacter = ({ match }) => {
             <h3>Names</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                className={createCharacterStyles.label} 
+                <label
+                className={createCharacterStyles.label}
                 htmlFor="names.givenName"
                 >
                   Given Name:
@@ -124,12 +124,11 @@ export const UpdateCharacter = ({ match }) => {
                   name="names.givenName"
                   value={characterData.names.givenName}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="names.middleName"
                 >
                   Middle Name:
@@ -144,8 +143,8 @@ export const UpdateCharacter = ({ match }) => {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="names.surName"
                 >
                   Sur Name:
@@ -160,8 +159,8 @@ export const UpdateCharacter = ({ match }) => {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="names.alterNames"
                 >
                   Alternative Name:
@@ -197,8 +196,8 @@ export const UpdateCharacter = ({ match }) => {
             <h3>Gender and Age</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="gender"
                 >
                   Gender:
@@ -222,8 +221,8 @@ export const UpdateCharacter = ({ match }) => {
                 </select>
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="age"
                 >
                   Age:
@@ -244,8 +243,8 @@ export const UpdateCharacter = ({ match }) => {
             <h3>Date of Birth</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="DOB.year"
                 >
                   Year:
@@ -260,8 +259,8 @@ export const UpdateCharacter = ({ match }) => {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="DOB.month"
                 >
                   Month:
@@ -276,8 +275,8 @@ export const UpdateCharacter = ({ match }) => {
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="DOB.day"
                   >
                     Day:
@@ -298,8 +297,8 @@ export const UpdateCharacter = ({ match }) => {
             <h3>Image</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="characterImage"
                   >
                     Character Image URL:
@@ -325,8 +324,8 @@ export const UpdateCharacter = ({ match }) => {
           </div>
 
           <div className={createCharacterStyles.buttonContainer}>
-            <button 
-              className={createCharacterStyles.button} 
+            <button
+              className={createCharacterStyles.button}
               type="submit"
               >
                 Update Character

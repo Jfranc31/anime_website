@@ -32,6 +32,7 @@ const MangaDetails = () => {
   });
 
   const [activeTab, setActiveTab] = useState('about');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchMangaDetails = async () => {
@@ -80,128 +81,99 @@ const MangaDetails = () => {
     fetchMangaDetails();
   }, [id, userData, setUserData]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
+  const fetchCharacterDetails = async () => {
+    setLoading(true);
+    try {
+      const charactersWithDetails = await Promise.all(
+        mangaDetails?.characters.map(async (character) => {
+          try {
+            const response = await axiosInstance.get(
+              `/characters/character/${character.characterId}`,
+            );
+            return {
+              ...character,
+              characterDetails: response.data,
+            };
+          } catch (error) {
+            if (error.name === 'CanceledError') return null;
+            console.error(
+              `Error fetching details for character ${character.characterId}:`,
+              error.message
+            );
+            return null;
+          }
+        }) || []
+      );
 
-    const fetchCharacterDetails = async () => {
-      try {
-        const charactersWithDetails = await Promise.all(
-          mangaDetails?.characters.map(async (character) => {
-            if (!character?.characterId) return null; // Skip if no characterId
-            try {
-              const response = await axiosInstance.get(
-                `/characters/character/${character.characterId}`,
-                { signal: controller.signal }
-              );
-              if (!isMounted) return null;
-              return {
-                ...character,
-                characterDetails: response.data,
-              };
-            } catch (error) {
-              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
-              console.error(
-                `Error fetching details for character ${character.characterId}:`,
-                error.message
-              );
-              return null;
-            }
-          }) || []
-        );
-
-        if (isMounted) {
-          setCharactersDetails(charactersWithDetails.filter(Boolean));
-        }
-      } catch (error) {
-        if (!isMounted || error.name === 'CanceledError') return;
-        console.error('Error fetching character details:', error.message);
-      }
-    };
-
-    if (mangaDetails?.characters?.length > 0) {
-      fetchCharacterDetails();
+      setCharactersDetails(charactersWithDetails);
+    } catch (error) {
+      console.error('Error fetching characters:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [mangaDetails]);
+  const fetchRelationDetails = async () => {
+    setLoading(true);
+    try {
+      const relationsWithDetails = await Promise.all([
+        ...(mangaDetails?.mangaRelations.map(async (relation) => {
+          try {
+            const response = await axiosInstance.get(
+              `/mangas/manga/${relation.relationId}`,
+            );
+            return {
+              ...relation,
+              relationDetails: response.data,
+              contentType: 'manga',
+            };
+          } catch (error) {
+            if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+            console.error(
+              `Error fetching manga relation ${relation.relationId}:`,
+              error.message
+            );
+            return null;
+          }
+        }) || []),
+        ...(mangaDetails?.animeRelations.map(async (relation) => {
+          try {
+            const response = await axiosInstance.get(
+              `/animes/anime/${relation.relationId}`,
+            );
+            return {
+              ...relation,
+              relationDetails: response.data,
+              contentType: 'anime',
+            };
+          } catch (error) {
+            if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+            console.error(
+              `Error fetching anime relation ${relation.relationId}:`,
+              error.message
+            );
+            return null;
+          }
+        }) || []),
+      ]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
+      setRelationsDetails(relationsWithDetails);
+    } catch (error) {
+      console.error('Error fetching relations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchRelationDetails = async () => {
-      try {
-        const relationsWithDetails = await Promise.all([
-          ...(mangaDetails?.mangaRelations?.map(async (relation) => {
-            if (!relation?.relationId) return null; // Skip if no relationId
-            try {
-              const response = await axiosInstance.get(
-                `/mangas/manga/${relation.relationId}`,
-                { signal: controller.signal }
-              );
-              if (!isMounted) return null;
-              return {
-                ...relation,
-                relationDetails: response.data,
-                contentType: 'manga',
-              };
-            } catch (error) {
-              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
-              console.error(
-                `Error fetching manga relation ${relation.relationId}:`,
-                error.message
-              );
-              return null;
-            }
-          }) || []),
-          ...(mangaDetails?.animeRelations?.map(async (relation) => {
-            if (!relation?.relationId) return null; // Skip if no relationId
-            try {
-              const response = await axiosInstance.get(
-                `/animes/anime/${relation.relationId}`,
-                { signal: controller.signal }
-              );
-              if (!isMounted) return null;
-              return {
-                ...relation,
-                relationDetails: response.data,
-                contentType: 'anime',
-              };
-            } catch (error) {
-              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
-              console.error(
-                `Error fetching anime relation ${relation.relationId}:`,
-                error.message
-              );
-              return null;
-            }
-          }) || []),
-        ]);
-
-        if (isMounted) {
-          setRelationsDetails(
-            relationsWithDetails.filter((relation) => relation !== null)
-          );
-        }
-      } catch (error) {
-        if (!isMounted || error.name === 'CanceledError') return;
-        console.error('Error fetching relation details:', error.message);
-      }
-    };
-
-    if (mangaDetails && (mangaDetails.mangaRelations?.length > 0 || mangaDetails.animeRelations?.length > 0)) {
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'characters') {
+      fetchCharacterDetails(); // Fetch characters only when the tab is 'characters'
+    }
+    if (tab === 'relations') {
       fetchRelationDetails();
     }
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [mangaDetails]);
+  };
 
   useEffect(() => {
     if (userData?._id && mangaDetails?._id) {
@@ -213,11 +185,6 @@ const MangaDetails = () => {
   }, [userData, mangaDetails]);
 
   if (!mangaDetails) {
-    return <div>Loading...</div>;
-  }
-
-  if (!charactersDetails) {
-    console.log("no characters");
     return <div>Loading...</div>;
   }
 
@@ -404,13 +371,13 @@ const MangaDetails = () => {
               </button>
               <button
                 className={`${mangaDetailsStyles.tabButton} ${activeTab === 'characters' ? mangaDetailsStyles.active : ''}`}
-                onClick={() => setActiveTab('characters')}
+                onClick={() => handleTabChange('characters')}
               >
                 Characters
               </button>
               <button
                 className={`${mangaDetailsStyles.tabButton} ${activeTab === 'relations' ? mangaDetailsStyles.active : ''}`}
-                onClick={() => setActiveTab('relations')}
+                onClick={() => handleTabChange('relations')}
               >
                 Relations
               </button>
@@ -438,28 +405,32 @@ const MangaDetails = () => {
         {activeTab === 'characters' && (
           <div className={mangaDetailsStyles.charactersContainer}>
             <div className={mangaDetailsStyles.charactersGrid}>
-              {charactersDetails.map((character) => (
-                <Link
-                  to={`/characters/${character.characterDetails._id}`}
-                  key={character.characterDetails._id}
-                  className={mangaDetailsStyles.characterCard}
-                >
-                  <div className={mangaDetailsStyles.card2}>
-                    <div className={mangaDetailsStyles.characterImageContainer}>
-                      <img
-                        src={character.characterDetails.characterImage}
-                        alt={character.characterDetails.names.givenName}
-                      />
-                      <div className={mangaDetailsStyles.characterRole}>
-                        {character.role}
+              {loading ? (
+                <Loader />
+              ) : (
+                charactersDetails.map((character) => (
+                  <Link
+                    to={`/characters/${character.characterDetails._id}`}
+                    key={character.characterDetails._id}
+                    className={mangaDetailsStyles.characterCard}
+                  >
+                    <div className={mangaDetailsStyles.card2}>
+                      <div className={mangaDetailsStyles.characterImageContainer}>
+                        <img
+                          src={character.characterDetails.characterImage}
+                          alt={character.characterDetails.names.givenName}
+                        />
+                        <div className={mangaDetailsStyles.characterRole}>
+                          {character.role}
+                        </div>
+                      </div>
+                      <div className={mangaDetailsStyles.characterInfo}>
+                        <h4>{getFullName(character.characterDetails.names)}</h4>
                       </div>
                     </div>
-                    <div className={mangaDetailsStyles.characterInfo}>
-                      <h4>{getFullName(character.characterDetails.names)}</h4>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -467,29 +438,33 @@ const MangaDetails = () => {
         {activeTab === 'relations' && (
           <div className={mangaDetailsStyles.relationsContainer}>
             <div className={mangaDetailsStyles.relationsGrid}>
-              {relationsDetails.map((relation) => (
-                <div
-                  key={relation.relationDetails._id}
-                  onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
-                  className={mangaDetailsStyles.relationCard}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={mangaDetailsStyles.card2}>
-                    <div className={mangaDetailsStyles.relationImageContainer}>
-                      <img
-                        src={relation.relationDetails.images.image}
-                        alt={relation.relationDetails.titles.english}
-                      />
-                      <div className={mangaDetailsStyles.relationType}>
-                        {relation.typeofRelation}
+              {loading ? (
+                <Loader />
+              ) : (
+                relationsDetails.map((relation) => (
+                  <div
+                    key={relation.relationDetails._id}
+                    onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
+                    className={mangaDetailsStyles.relationCard}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className={mangaDetailsStyles.card2}>
+                      <div className={mangaDetailsStyles.relationImageContainer}>
+                        <img
+                          src={relation.relationDetails.images.image}
+                          alt={relation.relationDetails.titles.english}
+                        />
+                        <div className={mangaDetailsStyles.relationType}>
+                          {relation.typeofRelation}
+                        </div>
+                      </div>
+                      <div className={mangaDetailsStyles.relationInfo}>
+                        <h4>{relation.relationDetails.titles.english}</h4>
                       </div>
                     </div>
-                    <div className={mangaDetailsStyles.relationInfo}>
-                      <h4>{relation.relationDetails.titles.english}</h4>
-                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}

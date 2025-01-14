@@ -3,9 +3,9 @@ import loaderStyles from '../styles/components/loader.module.css';
 
 const Loader = () => {
   return (
-    <div class={loaderStyles.loader}>
-      <span class={loaderStyles.loaderText}>loading</span>
-        <span class={loaderStyles.load}></span>
+    <div className={loaderStyles.loader}>
+      <span className={loaderStyles.loaderText}>loading</span>
+        <span className={loaderStyles.load}></span>
     </div>
   );
 };

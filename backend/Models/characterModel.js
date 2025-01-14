@@ -14,7 +14,6 @@ const characterSchema = new mongoose.Schema({
   names: {
     givenName: {
       type: String,
-      required: true,
     },
     middleName: {
       type: String,

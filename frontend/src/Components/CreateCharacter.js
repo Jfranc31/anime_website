@@ -82,7 +82,7 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
 
     setCharacterData(updatedFormData);
     // Ensure at least one input box, either with selected names or an empty one
-    const initialAltNames = updatedFormData.names.alterNames.length > 0 
+    const initialAltNames = updatedFormData.names.alterNames.length > 0
       ? [...updatedFormData.names.alterNames, '']
       : [''];
     setAltNames(initialAltNames);
@@ -98,19 +98,19 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
   const handleAltNameChange = (value, index) => {
     const newAltNames = [...altNames];
     newAltNames[index] = value;
-  
+
     // Automatically add a new empty input if the last one is filled
     if (index === newAltNames.length - 1 && value.trim() !== '') {
       newAltNames.push('');
     }
-  
+
     // Remove empty inputs except the last one
-    const filteredAltNames = newAltNames.filter((name, i) => 
+    const filteredAltNames = newAltNames.filter((name, i) =>
       name.trim() !== '' || i === newAltNames.length - 1
     );
-  
+
     setAltNames(filteredAltNames);
-    
+
     // Update the characterData state to reflect alternative names
     setCharacterData(prev => ({
       ...prev,
@@ -129,14 +129,14 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
     if (index === newAltSpoilerNames.length - 1 && value.trim() !== '') {
       newAltSpoilerNames.push('');
     }
-  
+
     // Remove empty inputs except the last one
-    const filteredAltSpoilerNames = newAltSpoilerNames.filter((name, i) => 
+    const filteredAltSpoilerNames = newAltSpoilerNames.filter((name, i) =>
       name.trim() !== '' || i === newAltSpoilerNames.length - 1
     );
-  
+
     setAltSpoilerNames(filteredAltSpoilerNames);
-    
+
     // Update the characterData state to reflect alternative names
     setCharacterData(prev => ({
       ...prev,
@@ -223,7 +223,6 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                   placeholder={`Given Name...`}
                   value={characterData.names.givenName}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
@@ -319,8 +318,8 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
             <h3>Gender and Age</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="gender"
                 >
                   Gender:
@@ -344,8 +343,8 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
                 </select>
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label 
-                  className={createCharacterStyles.label} 
+                <label
+                  className={createCharacterStyles.label}
                   htmlFor="age"
                 >
                   Age:
@@ -450,8 +449,8 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
             <button className={createCharacterStyles.button} type="button" onClick={() => setShowCharacterSearch(true)}>
               Search Anilist Characters
             </button>
-            <button 
-              className={createCharacterStyles.button} 
+            <button
+              className={createCharacterStyles.button}
               type="submit"
             >
               Create Character

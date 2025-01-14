@@ -13,7 +13,7 @@ import characterDetailsStyles from '../../styles/pages/character_details.module.
  */
 const CharacterDetails = () => {
   const { id } = useParams();
-  const userData = useContext(data);
+  const { userData, setUserData } = useContext(data);
   const [characterDetails, setCharacterDetails] = useState(null);
   const [referencesDetails, setReferencesDetails] = useState([]);
   const [activeTab, setActiveTab] = useState('about');
@@ -27,13 +27,22 @@ const CharacterDetails = () => {
           `/characters/character/${id}`
         );
         setCharacterDetails(response.data);
+
+        if (userData?._id) {
+          const userResponse = await axiosInstance.get(
+            `/users/${userData._id}/current`
+          );
+          const currentUser = userResponse.data;
+
+          setUserData(currentUser);
+        }
       } catch (error) {
         console.error('Error fetching character details:', error);
       }
     };
 
     fetchCharacterDetails();
-  }, [id]);
+  }, [id, userData, setUserData]);
 
   useEffect(() => {
     const fetchReferenceDetails = async () => {
@@ -139,9 +148,13 @@ const CharacterDetails = () => {
     const lines = description.split('\n');
 
     lines.forEach((line) => {
-      const metadataMatch = line.match(/^__(.+?):__ (.+)$/) ||
-                            line.match(/^__(.+?)__: (.+)$/) ||
-                            line.match(/^\*\*(.+?):\*\* (.+)$/);
+      const trimmedLine = line.trim();
+      const metadataMatch = trimmedLine.match(/^__\s*(.+?)\s*:\s*__\s*(.+?)\s*$/) ||
+                            trimmedLine.match(/^__\s*(.+?)\s*__\s*:\s*(.+?)\s*$/) ||
+                            trimmedLine.match(/^\*\*\s*(.+?)\s*:\*\*\s*(.+?)\s*$/) ||
+                            trimmedLine.match(/^__\s*(.+?)\s*:\s*(.+?)\s*$/) ||
+                            trimmedLine.match(/^__\s*(.+?)\s*:\s*__\s*(.+?)\s*$/) ||
+                            trimmedLine.match(/^__\s*(.+?)\s*:\s*(.+?)\s*$/);
       if (metadataMatch) {
         // Handle metadata with potential links
         const label = metadataMatch[1].trim();
