@@ -279,7 +279,6 @@ const fetchCharacterData = async (search) => {
           image {
             large
           }
-          bannerImage
         }
       }
     }
