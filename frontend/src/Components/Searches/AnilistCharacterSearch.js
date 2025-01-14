@@ -15,13 +15,15 @@ export const AnilistCharacterSearch = ({ onCharacterSelected, onClose }) => {
     setError(null);
 
     try {
-      const response = await axiosInstance.post(`/characters/create-from-anilist`, {
-        name: searchTerm
-      });
+      const isIdSearch = !isNaN(searchTerm) && searchTerm.trim() !== '';
+      const response = isIdSearch
+        ? await axiosInstance.get(`/characters/search/${searchTerm}`)
+        : await axiosInstance.post(`/characters/create-from-anilist`, { name: searchTerm });
 
       console.log('AnilistCharacterSearch - API Response:', response.data);
 
-      setSearchResults(response.data);
+      const results = Array.isArray(response.data) ? response.data : [response.data];
+      setSearchResults(results);
 
     } catch (error) {
       console.error('Search error:', error);

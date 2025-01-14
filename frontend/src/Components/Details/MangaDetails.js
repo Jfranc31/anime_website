@@ -11,6 +11,7 @@ import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
 import { MONTHS } from '../../constants/filterOptions';
 import axiosInstance from '../../utils/axiosConfig';
+import Loader from '../../constants/Loader';
 
 /**
  * Functional component representing details of a manga.
@@ -212,6 +213,11 @@ const MangaDetails = () => {
   }, [userData, mangaDetails]);
 
   if (!mangaDetails) {
+    return <div>Loading...</div>;
+  }
+
+  if (!charactersDetails) {
+    console.log("no characters");
     return <div>Loading...</div>;
   }
 

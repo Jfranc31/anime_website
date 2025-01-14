@@ -254,6 +254,54 @@ const fetchMangaData = async (title) => {
   }
 };
 
+const fetchCharacterDataById = async (id) => {
+  const query = `
+    query ($id: Int) {
+      Character(id: $id) {
+        id
+        name {
+          first
+          middle
+          last
+          native
+          alternative
+          alternativeSpoiler
+        }
+        gender
+        age
+        dateOfBirth {
+          year
+          month
+          day
+        }
+        description
+        image {
+          large
+        }
+      }
+    }
+  `;
+
+  try {
+    console.log('Sending request to AniList API with ID:', id);
+    console.log('Query:', query);
+    console.log('Variables:', { id: parseInt(id, 10) });
+
+    const response = await axios.post(ANILIST_API, {
+      query,
+      variables: { id: parseInt(id, 10) }
+    });
+
+    return response.data.data.Character;
+  } catch (error) {
+    console.error('Error fetching character data from AniList:', error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+    }
+    return null;
+  }
+};
+
 const fetchCharacterData = async (search) => {
   const query = `
     query ($search: String) {
@@ -318,4 +366,4 @@ const fetchCharacterData = async (search) => {
   }
 };
 
-export { fetchAnimeData, fetchAnimeDataById, fetchMangaDataById, fetchMangaData, fetchCharacterData };
+export { fetchAnimeData, fetchAnimeDataById, fetchMangaDataById, fetchMangaData, fetchCharacterDataById, fetchCharacterData };
