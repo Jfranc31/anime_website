@@ -47,9 +47,9 @@ const Characters = () => {
     : [];
 
   const sortedCharacter = [...filteredCharacter].sort((a, b) => {
-    const aName = a.names && a.names.givenName ? a.names.givenName : '';
-    const bName = b.names && b.names.givenName ? b.names.givenName : '';
-    return aName.localeCompare(bName);
+    const aFullName = `${(a.names && a.names.givenName) ? a.names.givenName : ''} ${(a.names && a.names.surName) ? a.names.surName : ''}`.trim();
+    const bFullName = `${(b.names && b.names.givenName) ? b.names.givenName : ''} ${(b.names && b.names.surName) ? b.names.surName : ''}`.trim();
+    return aFullName.localeCompare(bFullName);
   });
 
   return (

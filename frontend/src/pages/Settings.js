@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import settingsStyles from '../styles/pages/Settings.module.css';
 import data from '../Context/ContextApi';
 import { useTheme } from '../Context/ThemeContext';
+import AvatarUpload from '../Context/AvatarUpload';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
@@ -71,6 +72,10 @@ const Settings = () => {
               Dark Theme
             </button>
           </div>
+        </section>
+        <section className={settingsStyles.section}>
+          <h2>Avatar Upload</h2>
+          <AvatarUpload userId={userData._id} />
         </section>
       </div>
     </div>
