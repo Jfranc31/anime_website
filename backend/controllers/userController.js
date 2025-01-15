@@ -7,6 +7,8 @@ import UserModel from "../Models/userModel.js";
 import AnimeModel from "../Models/animeModel.js";
 import MangaModel from "../Models/mangaModel.js";
 import bcrypt from "bcrypt";
+import multer from 'multer';
+import path from 'path';
 
 /**
  * @function registerUser
@@ -558,6 +560,50 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Ensure this directory exists
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+// Endpoint to upload avatar
+const uploadAvatar = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Log the uploaded file
+    console.log('Uploaded file:', req.file);
+
+    // Ensure the file exists
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    user.avatar = `/public/${req.file.filename}`; // Save the path to the avatar
+    console.log('Avatar path set to:', user.avatar); // Log the avatar path
+
+    // Attempt to save the updated user
+    await user.save(); // Save the updated user
+
+    console.log('After save:', user); // Log after saving
+    res.status(200).json({ message: 'Avatar updated successfully', avatar: user.avatar });
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -570,5 +616,6 @@ export {
   removeManga,
   makeAdmin,
   updateTheme,
-  getAllUsers
+  getAllUsers,
+  uploadAvatar
 };

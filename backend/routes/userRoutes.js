@@ -4,6 +4,14 @@
  */
 
 import express from "express";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Define __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import {
   registerUser,
   loginUser,
@@ -16,9 +24,22 @@ import {
   removeManga,
   makeAdmin,
   updateTheme,
-  getAllUsers
+  getAllUsers,
+  uploadAvatar
 } from "../controllers/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../frontend/public')); // Save to public directory
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`); // Use a unique filename
+  },
+});
+
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -43,5 +64,8 @@ router.post("/:userId/removeAnime", removeAnime);
 // Admin routes
 router.put("/:userId/make-admin", authMiddleware, makeAdmin);
 router.put("/:userId/theme", authMiddleware, updateTheme);
+
+// Avatar routes
+router.post('/:userId/upload-avatar', upload.single('avatar'), uploadAvatar);
 
 export default router;

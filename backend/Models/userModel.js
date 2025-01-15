@@ -73,6 +73,10 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  avatar: {
+    type: String,
+    default: '/public/default-avatar.png',
+  },
 });
 
 // Creating the 'UserModel' using the schema

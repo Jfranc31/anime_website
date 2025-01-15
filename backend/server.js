@@ -4,6 +4,8 @@
  */
 
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import animeRoutes from "./routes/animeRoutes.js";
 import mangaRoutes from "./routes/mangaRoutes.js";
 import characterRoutes from "./routes/characterRoutes.js";
@@ -210,6 +212,13 @@ app.delete("/anime/:id/notes", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+// Get the directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from the frontend's public directory
+app.use('/public', express.static(path.join(__dirname, '../frontend/public')));
 
 /*============================
         listen
