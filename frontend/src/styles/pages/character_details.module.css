@@ -108,6 +108,11 @@
   min-width: 120px;
 }
 
+.metadataValue {
+  color: var(--text-primary);
+  min-width: 120px;
+}
+
 .spoilerText {
   background-color: var(--spoiler-bg);
   border: 1px solid var(--spoiler-border);

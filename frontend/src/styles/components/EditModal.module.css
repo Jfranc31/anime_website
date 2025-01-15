@@ -19,8 +19,7 @@
 .characterModal {
   position: relative;
   background: var(--modal-bg);
-  width: 80%;
-  max-width: 1000px;
+  width: 600px;
   max-height: 90vh;
   border-radius: 12px;
   box-shadow: 0 8px 32px var(--modal-box-shadow);
@@ -39,7 +38,7 @@
 }
 
 .modalHeader img {
-  width: 100%;
+  width: 600px;
   height: 100%;
   object-fit: cover;
   filter: brightness(40%);
@@ -83,6 +82,7 @@
 .modalBody {
   padding: 24px;
   background: var(--modal-bg);
+  flex-grow: 1;
 }
 
 .grid {
