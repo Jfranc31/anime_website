@@ -32,6 +32,7 @@ import ThemeInitializer from './Components/ThemeInitializer';
 
 function App() {
   const [userData, setUserData] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Configure axios defaults
@@ -50,7 +51,12 @@ function App() {
         Cookies.remove('userInfo');
       }
     }
+    setLoading(false);
   }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Router>
