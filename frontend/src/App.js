@@ -29,6 +29,7 @@ import './themes.module.css';
 import UserManagement from './Components/Admin/UserManagement';
 import Settings from './pages/Settings';
 import ThemeInitializer from './Components/ThemeInitializer';
+import Loader from './constants/Loader';
 
 function App() {
   const [userData, setUserData] = useState({});
@@ -55,7 +56,7 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div><Loader/></div>;
   }
 
   return (
