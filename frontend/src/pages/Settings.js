@@ -79,36 +79,36 @@ const Settings = () => {
 
   const renderProfileSection = () => (
     <div className={settingsStyles.content}>
-        <section className={settingsStyles.section}>
-          <h2>Site Theme</h2>
-          <div className={settingsStyles.themeButtons}>
-            <button
-              className={`${settingsStyles.themeButton} ${theme === 'light' ? settingsStyles.active : ''}`}
-              onClick={() => handleThemeChange('light')}
-            >
-              Default Theme
-            </button>
-            <button
-              className={`${settingsStyles.themeButton} ${theme === 'dark' ? settingsStyles.active : ''}`}
-              onClick={() => handleThemeChange('dark')}
-            >
-              Dark Theme
-            </button>
-          </div>
-        </section>
-        <section className={settingsStyles.section}>
-          <h2>Avatar Upload</h2>
-          <AvatarUpload userId={userData._id} />
-        </section>
-      </div>
+      <section className={settingsStyles.section}>
+        <h2>Site Theme</h2>
+        <div className={settingsStyles.themeButtons}>
+          <button
+            className={`${settingsStyles.themeButton} ${theme === 'light' ? settingsStyles.active : ''}`}
+            onClick={() => handleThemeChange('light')}
+          >
+            Default Theme
+          </button>
+          <button
+            className={`${settingsStyles.themeButton} ${theme === 'dark' ? settingsStyles.active : ''}`}
+            onClick={() => handleThemeChange('dark')}
+          >
+            Dark Theme
+          </button>
+        </div>
+      </section>
+      <section className={settingsStyles.section}>
+        <h2>Avatar Upload</h2>
+        <AvatarUpload userId={userData._id} />
+      </section>
+    </div>
   );
 
   const renderAnimeMangaSection = () => (
     <div className={settingsStyles.content}>
       <section className={settingsStyles.section}>
         <h2>Titles</h2>
-        <select 
-          value={userData.title} 
+        <select
+          value={userData.title}
           onChange={(e) => handleLanguageChange('title', e.target.value)}
         >
           <option value="romaji">Romaji (Shingeki no Kyojin)</option>
@@ -118,8 +118,8 @@ const Settings = () => {
       </section>
       <section className={settingsStyles.section}>
         <h2>Character Names</h2>
-        <select 
-          value={userData.characterName} 
+        <select
+          value={userData.characterName}
           onChange={(e) => handleLanguageChange('characterName', e.target.value)}
         >
           <option value="romaji-western">Romaji, Western Order (Killua Zoldyck)</option>
