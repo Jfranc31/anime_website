@@ -4,6 +4,58 @@ body {
   background-color: var(--page-bg);
   min-height: 100vh;
   overflow-x: hidden;
+
+  width: 100%;
+  height: 100%;
+  --main-color: var(--success-color);
+  --s-color: var(--page-bg);
+  --t-color: var();
+  background: radial-gradient(
+        circle farthest-side at 0% 50%,
+        var(--s-color) 23.5%,
+        rgba(255, 170, 0, 0) 0
+      )
+      21px 30px,
+    radial-gradient(
+        circle farthest-side at 0% 50%,
+        var(--main-color) 24%,
+        rgba(240, 166, 17, 0) 0
+      )
+      19px 30px,
+    linear-gradient(
+      var(--s-color) 14%,
+        rgba(240, 166, 17, 0) 0,
+        rgba(240, 166, 17, 0) 85%,
+        var(--s-color) 0
+      )
+      0 0,
+    linear-gradient(
+        150deg,
+        var(--s-color) 24%,
+        var(--main-color) 0,
+        var(--main-color) 26%,
+        rgba(240, 166, 17, 0) 0,
+        rgba(240, 166, 17, 0) 74%,
+        var(--main-color) 0,
+        var(--main-color) 76%,
+        var(--s-color) 0
+      )
+      0 0,
+    linear-gradient(
+        30deg,
+        var(--s-color) 24%,
+        var(--main-color) 0,
+        var(--main-color) 26%,
+        rgba(240, 166, 17, 0) 0,
+        rgba(240, 166, 17, 0) 74%,
+        var(--main-color) 0,
+        var(--main-color) 76%,
+        var(--s-color) 0
+      )
+      0 0,
+    linear-gradient(90deg, var(--main-color) 2%, var(--s-color) 0, var(--s-color) 98%, var(--main-color) 0%) 0 0
+    var(--s-color);
+  background-size: 40px 60px;
 }
 
 .App {
