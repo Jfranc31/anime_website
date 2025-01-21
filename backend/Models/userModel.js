@@ -77,6 +77,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '/public/default-avatar.png',
   },
+  title: {
+    type: String,
+    enum: ['romaji', 'english', 'native'],
+    default: 'english', // Set a default value
+  },
+  characterName: {
+    type: String,
+    enum: ['romaji-western', 'romaji', 'native'],
+    default: 'romaji-western', // Set a default value
+  },
 });
 
 // Creating the 'UserModel' using the schema

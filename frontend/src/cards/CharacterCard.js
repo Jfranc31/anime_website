@@ -13,7 +13,7 @@ import cardsStyles from '../styles/components/cards.module.css';
  * @param {Object} props.character - Character object containing details like names, images, etc.
  * @returns {JSX.Element} - Rendered character card component.
  */
-function CharacterCard({ character }) {
+function CharacterCard({ character, name }) {
   // State to track hover state
   const [isHovered, setIsHovered] = useState(false);
 
@@ -30,8 +30,7 @@ function CharacterCard({ character }) {
             <div className={cardsStyles.titleAndProgress}>
               <Link className={cardsStyles.navLink} to={`/characters/${character._id}`}>
                 <div className={cardsStyles.animeTitle}>
-                  {character.names.givenName} {character.names.middleName}{' '}
-                  {character.names.surName}
+                  {name}
                 </div>
               </Link>
             </div>

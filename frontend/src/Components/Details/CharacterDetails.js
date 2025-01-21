@@ -219,6 +219,19 @@ const CharacterDetails = () => {
     });
   };
 
+  const getFullName = (names) => {
+    switch (userData.characterName) {
+      case 'romaji':
+        return `${names.givenName} ${names.surName}`;
+      case 'romaji-western':
+        return `${names.surName} ${names.givenName}`;
+      case 'native':
+        return `${names.nativeName || ''}`;
+      default:
+        return `${names.givenName} ${names.surName}`;
+    }
+  };
+
   const renderAboutSection = () => {
     const { metadata, paragraphs } = parseDescription(
       characterDetails.about || ''
@@ -348,8 +361,7 @@ const CharacterDetails = () => {
         </div>
         <div className={characterDetailsStyles.characterInfoSection}>
           <h1 className={characterDetailsStyles.characterName}>
-            {characterDetails.names.givenName}{' '}
-            {characterDetails.names.middleName} {characterDetails.names.surName}
+            {getFullName(characterDetails.names)}
           </h1>
           {characterDetails.names.alterNames && (
             <div className={characterDetailsStyles.characterAltNames}>

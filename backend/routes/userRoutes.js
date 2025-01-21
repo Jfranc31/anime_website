@@ -25,7 +25,9 @@ import {
   makeAdmin,
   updateTheme,
   getAllUsers,
-  uploadAvatar
+  uploadAvatar,
+  updateTitle,
+  updateCharacterName
 } from "../controllers/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -64,6 +66,8 @@ router.post("/:userId/removeAnime", removeAnime);
 // Admin routes
 router.put("/:userId/make-admin", authMiddleware, makeAdmin);
 router.put("/:userId/theme", authMiddleware, updateTheme);
+router.put("/:userId/title", authMiddleware, updateTitle);
+router.put("/:userId/characterName", authMiddleware, updateCharacterName);
 
 // Avatar routes
 router.post('/:userId/upload-avatar', upload.single('avatar'), uploadAvatar);

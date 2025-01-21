@@ -560,6 +560,64 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+/**
+ * @function updateTitle
+ * @description Change the title name the user wants to use.
+ * @param {Object} req - Express request object with user ID and and new title name.
+ * @param {Object} res - Express response object.
+ * @returns {Object} - Success or error message.
+*/
+const updateTitle = async (req, res) => {
+  const { userId } = req.params;
+  const { title } = req.body;
+
+  try {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { title },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error('Error updating title name:', error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
+ * @function updateCharacterName
+ * @description Change the character name the user wants to use.
+ * @param {Object} req - Express request object with user ID and and new character name.
+ * @param {Object} res - Express response object.
+ * @returns {Object} - Success or error message.
+*/
+const updateCharacterName = async (req, res) => {
+  const { userId } = req.params;
+  const { characterName } = req.body;
+
+  try {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { characterName },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error('Error updating character name:', error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 // Set up multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -617,5 +675,7 @@ export {
   makeAdmin,
   updateTheme,
   getAllUsers,
-  uploadAvatar
+  uploadAvatar,
+  updateTitle,
+  updateCharacterName
 };

@@ -209,11 +209,16 @@ const MangaDetails = () => {
   };
 
   const getFullName = (names) => {
-    const nameParts = [];
-    if (names.givenName) nameParts.push(names.givenName);
-    if (names.middleName) nameParts.push(names.middleName);
-    if (names.surName) nameParts.push(names.surName);
-    return nameParts.join(' ');
+    switch (userData.characterName) {
+      case 'romaji':
+        return `${names.givenName} ${names.surName}`;
+      case 'romaji-western':
+        return `${names.surName} ${names.givenName}`;
+      case 'native':
+        return `${names.nativeName || ''}`;
+      default:
+        return `${names.givenName} ${names.surName}`;
+    }
   };
 
   const formatDate = (dateObj) => {
