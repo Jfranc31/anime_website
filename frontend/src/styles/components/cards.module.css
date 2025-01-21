@@ -22,7 +22,7 @@
   margin-top: 20px;
   width: 100%;
   padding: 2%;
-  background-color: var(--page-bg);
+  /* background-color: var(--page-bg); */
 }
 
 .card.wide {

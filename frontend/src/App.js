@@ -28,7 +28,6 @@ import { ThemeProvider } from './Context/ThemeContext';
 import './themes.module.css';
 import UserManagement from './Components/Admin/UserManagement';
 import Settings from './pages/Settings';
-import ThemeInitializer from './Components/ThemeInitializer';
 import Loader from './constants/Loader';
 
 function App() {
@@ -63,7 +62,6 @@ function App() {
     <Router>
       <data.Provider value={{ userData, setUserData }}>
         <ThemeProvider>
-          <ThemeInitializer />
           <div className="App">
             <Navbar />
             <AnimeProvider>
