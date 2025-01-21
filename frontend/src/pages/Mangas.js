@@ -83,10 +83,23 @@ const Mangas = () => {
       })
     : [];
 
+  const mangaTitle = (titles) => {
+    switch (userData.title) {
+      case 'english':
+        return titles.english || titles.romaji
+      case 'romaji':
+        return titles.romaji || titles.english
+      case 'native':
+        return titles.native
+      default:
+        return titles.english || titles.romaji || titles.native || 'Unknown Title';
+    }
+  };
+
   const sortedManga = [...filteredManga].sort((a, b) => {
-    const titleA = (a.titles && a.titles.english) || ''; // handle undefined
-    const titleB = (b.titles && b.titles.english) || ''; // handle undefined
-    return titleA.localeCompare(titleB);
+    const titleA = mangaTitle(a.titles)
+    const titleB = mangaTitle(b.titles)
+    return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
   });
 
   const handleGenreClick = (genre) => {
@@ -274,6 +287,7 @@ const Mangas = () => {
                   <li key={manga._id} className={browseStyles.mangaListItem}>
                     <MangaCard
                       manga={manga}
+                      name={mangaTitle(manga.titles)}
                       layout={gridLayout}
                       onTopRightButtonClick={onTopRightButtonClick}
                       hideTopRightButton={!userData || !userData._id}

@@ -107,10 +107,23 @@ const Animes = () => {
       })
     : [];
 
+  const animeTitle = (titles) => {
+    switch (userData.title) {
+      case 'english':
+        return titles.english || titles.romaji
+      case 'romaji':
+        return titles.romaji || titles.english
+      case 'native':
+        return titles.native
+      default:
+        return titles.english || titles.romaji || titles.native || 'Unknown Title';
+    }
+  };
+
   const sortedAnime = [...filteredAnime].sort((a, b) => {
-    const titleA = (a.titles && a.titles.english) || ''; // handle undefined
-    const titleB = (b.titles && b.titles.english) || ''; // handle undefined
-    return titleA.localeCompare(titleB);
+    const titleA = animeTitle(a.titles)
+    const titleB = animeTitle(b.titles)
+    return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
   });
 
   const handleGenreChange = (selectedGenre) => {
@@ -325,6 +338,7 @@ const Animes = () => {
                   <li key={anime._id} className={browseStyles.animeListItem}>
                     <AnimeCard
                       anime={anime}
+                      name={animeTitle(anime.titles)}
                       layout={gridLayout}
                       onTopRightButtonClick={handleTopRightButtonClick}
                       hideTopRightButton={!userData || !userData._id}

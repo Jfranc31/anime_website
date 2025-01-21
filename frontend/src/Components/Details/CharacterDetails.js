@@ -232,6 +232,19 @@ const CharacterDetails = () => {
     }
   };
 
+  const seriesTitle = (titles) => {
+    switch (userData.title) {
+      case 'english':
+        return titles.english || titles.romaji
+      case 'romaji':
+        return titles.romaji || titles.english
+      case 'native':
+        return titles.native
+      default:
+        return titles.english || titles.romaji || titles.native || 'Unknown Title';
+    }
+  };
+
   const renderAboutSection = () => {
     const { metadata, paragraphs } = parseDescription(
       characterDetails.about || ''
@@ -330,7 +343,7 @@ const CharacterDetails = () => {
                   </div>
                 </div>
                 <div className={characterDetailsStyles.referenceInfo}>
-                  <h4>{reference.referenceDetails?.titles.english}</h4>
+                  <h4>{seriesTitle(reference.referenceDetails?.titles)}</h4>
                 </div>
               </div>
             </Link>

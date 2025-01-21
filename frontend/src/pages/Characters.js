@@ -62,8 +62,6 @@ const Characters = () => {
       }
     };
 
-    console.log("user: ", userData.characterName);
-
   const sortedCharacter = [...filteredCharacter].sort((a, b) => {
     const aFullName = getFullName(a.names);
     const bFullName = getFullName(b.names);

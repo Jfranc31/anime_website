@@ -221,6 +221,19 @@ const MangaDetails = () => {
     }
   };
 
+  const seriesTitle = (titles) => {
+    switch (userData.title) {
+      case 'english':
+        return titles.english || titles.romaji
+      case 'romaji':
+        return titles.romaji || titles.english
+      case 'native':
+        return titles.native
+      default:
+        return titles.english || titles.romaji || titles.native || 'Unknown Title';
+    }
+  };
+
   const formatDate = (dateObj) => {
     if (!dateObj) return 'TBA';
     const { year, month, day } = dateObj;
@@ -333,13 +346,8 @@ const MangaDetails = () => {
 
           <div className={mangaDetailsStyles.mangaInfo}>
             <h1 className={mangaDetailsStyles.mangaTitle}>
-              {mangaDetails.titles.english}
+              {seriesTitle(mangaDetails.titles)}
             </h1>
-            {mangaDetails.titles.native && (
-              <div className={mangaDetailsStyles.nativeTitle}>
-                {mangaDetails.titles.native}
-              </div>
-            )}
 
             <div className={mangaDetailsStyles.quickInfo}>
               <div className={mangaDetailsStyles.quickInfoItem}>
@@ -464,7 +472,7 @@ const MangaDetails = () => {
                         </div>
                       </div>
                       <div className={mangaDetailsStyles.relationInfo}>
-                        <h4>{relation.relationDetails.titles.english}</h4>
+                        <h4>{seriesTitle(relation.relationDetails.titles)}</h4>
                       </div>
                     </div>
                   </div>

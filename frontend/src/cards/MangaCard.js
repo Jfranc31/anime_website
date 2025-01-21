@@ -17,6 +17,7 @@ import cardsStyles from '../styles/components/cards.module.css';
  */
 function MangaCard({
   manga,
+  name,
   onTopRightButtonClick,
   hideTopRightButton = false,
   layout,
@@ -113,7 +114,7 @@ function MangaCard({
           <div className={cardsStyles.titleAndProgress} style={{ minHeight: titleHeight }}>
             <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
               <div className={cardsStyles.mangaTitle} ref={titleRef}>
-                {manga.titles.english}
+                {name}
               </div>
             </Link>
             <div className={cardsStyles.genres}>
@@ -155,7 +156,7 @@ function MangaCard({
               <div className={cardsStyles.titleAndProgress} style={{ height: titleHeight }}>
                 <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
                   <div className={cardsStyles.mangaTitle} ref={titleRef}>
-                    {manga.titles.english}
+                    {name}
                   </div>
                 </Link>
               </div>

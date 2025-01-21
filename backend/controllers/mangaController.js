@@ -71,11 +71,6 @@ const createManga = async (req, res) => {
       anilistId,
     } = req.body;
 
-    // Check if English title is provided
-    if (!titles.english.trim()) {
-      return res.status(400).json({ message: "English title is required" });
-    }
-
     const mangaRelationsArray = mangaRelations.map((relationInfo) => ({
       relationId: relationInfo.relationId,
       typeofRelation: relationInfo.typeofRelation,

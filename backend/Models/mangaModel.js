@@ -13,7 +13,6 @@ const mangaSchema = new mongoose.Schema({
     },
     english: {
       type: String,
-      required: true,
     },
     native: {
       type: String,

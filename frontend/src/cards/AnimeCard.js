@@ -17,6 +17,7 @@ import cardsStyles from '../styles/components/cards.module.css';
  */
 function AnimeCard({
   anime,
+  name,
   onTopRightButtonClick,
   hideTopRightButton = false,
   layout,
@@ -144,7 +145,7 @@ function AnimeCard({
           <div className={cardsStyles.titleAndProgress} style={{ minHeight: titleHeight }}>
             <Link className={cardsStyles.navLink} to={`/anime/${anime._id}`}>
               <div className={cardsStyles.animeTitle} ref={titleRef}>
-                {anime.titles.english}
+                {name}
               </div>
             </Link>
             <div className={cardsStyles.genres}>
@@ -187,7 +188,7 @@ function AnimeCard({
               <div className={cardsStyles.titleAndProgress} style={{ height: titleHeight }}>
                 <Link className={cardsStyles.navLink} to={`/anime/${anime._id}`}>
                   <div className={cardsStyles.animeTitle} ref={titleRef}>
-                    {anime.titles.english}
+                    {name}
                   </div>
                 </Link>
               </div>

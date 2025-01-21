@@ -281,11 +281,29 @@ const AnimeDetails = () => {
   };
 
   const getFullName = (names) => {
-    const nameParts = [];
-    if (names.givenName) nameParts.push(names.givenName);
-    if (names.middleName) nameParts.push(names.middleName);
-    if (names.surName) nameParts.push(names.surName);
-    return nameParts.join(' ');
+    switch (userData.characterName) {
+      case 'romaji':
+        return `${names.givenName} ${names.surName}`;
+      case 'romaji-western':
+        return `${names.surName} ${names.givenName}`;
+      case 'native':
+        return `${names.nativeName || ''}`;
+      default:
+        return `${names.givenName} ${names.surName}`;
+    }
+  };
+
+  const seriesTitle = (titles) => {
+    switch (userData.title) {
+      case 'english':
+        return titles.english || titles.romaji
+      case 'romaji':
+        return titles.romaji || titles.english
+      case 'native':
+        return titles.native
+      default:
+        return titles.english || titles.romaji || titles.native || 'Unknown Title';
+    }
   };
 
   // Add this helper function to format the date
@@ -404,13 +422,8 @@ const AnimeDetails = () => {
 
           <div className={animeDetailsStyles.animeInfo}>
             <h1 className={animeDetailsStyles.animeTitle}>
-              {animeDetails?.titles?.english}
+              {seriesTitle(animeDetails?.titles)}
             </h1>
-            {animeDetails?.titles?.native && (
-              <div className={animeDetailsStyles.nativeTitle}>
-                {animeDetails.titles.native}
-              </div>
-            )}
 
             <div className={animeDetailsStyles.quickInfo}>
               <div className={animeDetailsStyles.quickInfoItem}>
@@ -532,7 +545,7 @@ const AnimeDetails = () => {
                       </div>
                     </div>
                     <div className={animeDetailsStyles.relationInfo}>
-                      <h4>{relation.relationDetails.titles.english}</h4>
+                      <h4>{seriesTitle(relation.relationDetails.titles)}</h4>
                     </div>
                   </div>
                 </div>

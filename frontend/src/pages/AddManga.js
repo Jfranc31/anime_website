@@ -474,7 +474,6 @@ export default function AddManga() {
               name="titles.english"
               value={formData.titles.english}
               onChange={handleChange}
-              required
             />
           </div>
           <div>
