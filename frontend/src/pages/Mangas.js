@@ -270,21 +270,21 @@ const Mangas = () => {
         </div>
       </div>
 
-      <div className={`${browseStyles.animeListSection} ${browseStyles[gridLayout]}`}>
+      <div className={`${browseStyles.listSection} ${browseStyles[gridLayout]}`}>
         {isLoading ? (
           <div className={browseStyles.loadingContainer}>
             <div className={browseStyles.loader}></div>
           </div>
         ) : (
-          <div className={`${browseStyles.animeListContainer} ${browseStyles[gridLayout]}`}>
+          <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
             {sortedManga.length === 0 ? (
               <div className={browseStyles.noResults}>
                 No manga found matching your criteria
               </div>
             ) : (
-              <ul className={`${browseStyles.mangaList} ${browseStyles[gridLayout]}`}>
+              <ul className={`${browseStyles.list} ${browseStyles[gridLayout]}`}>
                 {sortedManga.map((manga) => (
-                  <li key={manga._id} className={browseStyles.mangaListItem}>
+                  <li key={manga._id} className={browseStyles.listItem}>
                     <MangaCard
                       manga={manga}
                       name={mangaTitle(manga.titles)}

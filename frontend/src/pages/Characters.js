@@ -89,15 +89,15 @@ const Characters = () => {
           <div className={browseStyles.loader}></div>
         </div>
       ) : (
-        <div className={browseStyles.characterListSection}>
+        <div className={browseStyles.listSection}>
           {sortedCharacter.length === 0 ? (
             <div className={browseStyles.noResults}>
               No characters found matching your criteria
             </div>
           ) : (
-            <ul className={browseStyles.characterList}>
+            <ul className={browseStyles.list}>
               {sortedCharacter.map((character) => (
-                <li key={character._id} className={browseStyles.characterListItem}>
+                <li key={character._id} className={browseStyles.listItem}>
                   <CharacterCard
                     character={character}
                     name={getFullName(character.names)}

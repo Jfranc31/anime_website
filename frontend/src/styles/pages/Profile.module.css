@@ -14,59 +14,5 @@
   text-align: center;
 }
 
-.themeSelector {
-  margin-bottom: var(--spacing-md);
-  padding: var(--spacing-sm);
-  background: var(--bg-tertiary);
-  border-radius: var(--border-radius-md);
-}
 
-.themeSelector label {
-  display: block;
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-xs);
-}
-
-.themeButton {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  margin-right: var(--spacing-xs);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-speed);
-}
-
-.themeButton.active {
-  background: var(--accent-color);
-  color: white;
-  border-color: var(--accent-color);
-}
-
-.themeButtons {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
-.themeButton {
-  flex: 1;
-  padding: var(--spacing-sm);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-speed);
-}
-
-.themeButton.active {
-  background: var(--accent-color);
-  color: white;
-  border-color: var(--accent-color);
-}
-
-.themeButton:hover:not(.active) {
-  background: var(--bg-tertiary);
-}
 /*============================================*/

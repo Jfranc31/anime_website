@@ -204,7 +204,7 @@
 }
 
 .characterInfo h4 {
-  color: var(--text-primary);
+  color: var(--cancel-button-bg);
   margin: 0;
   font-size: 1rem;
 }
@@ -303,7 +303,7 @@
 }
 
 .relationInfo h4 {
-  color: var(--text-primary);
+  color: var(--cancel-button-bg);
   margin: 0;
   font-size: 1rem;
 }

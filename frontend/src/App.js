@@ -20,6 +20,7 @@ import { UpdateAnime } from './Components/Updates/UpdateAnime';
 import { UpdateManga } from './Components/Updates/UpdateManga';
 import { UpdateCharacter } from './Components/Updates/UpdateCharacter';
 import Navbar from './Components/Navbars/Navbar';
+import Footer from './Components/Navbars/Footer';
 import { AnimeProvider } from './Context/AnimeContext';
 import { MangaProvider } from './Context/MangaContext';
 import { CharacterProvider } from './Context/CharacterContext';
@@ -141,6 +142,7 @@ function App() {
                 </CharacterProvider>
               </MangaProvider>
             </AnimeProvider>
+            <Footer />
           </div>
         </ThemeProvider>
       </data.Provider>

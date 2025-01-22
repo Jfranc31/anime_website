@@ -1,0 +1,80 @@
+.footer {
+  background-color: #222; /* Dark background */
+  color: #fff; /* White text */
+  padding: 20px 0; /* Padding around content */
+  text-align: center; /* Center-align text */
+}
+
+.footerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.footer p {
+  margin: 0 0 10px; /* Space below text */
+  font-size: 14px;
+}
+
+.footerLinks {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* Space between links */
+}
+
+.footerLinks a {
+  color: #0d6efd; /* Link color */
+  text-decoration: none; /* Remove underline */
+  font-size: 14px;
+}
+
+.footerLinks a:hover {
+  text-decoration: underline; /* Add underline on hover */
+}
+
+.logOutButton {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  margin: 5px 0;
+  color: #E74C3C;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.logOutButton:hover {
+  color: #E74C3C;
+  text-decoration: underline;
+  text-underline-position: under;
+}
+
+.themeButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.themeButton {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(25, 30, 39, 0.5);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 16px;
+}
+
+.themeButton:hover {
+  border-color: #04aa6d;
+  background: rgba(4, 170, 109, 0.1);
+}
+
+.themeButton.active {
+  background: #04aa6d;
+  border-color: #04aa6d;
+  color: white;
+}
