@@ -7,6 +7,7 @@ import express from "express";
 import {
   getAllCharacters,
   searchForCharacters,
+  checkForCharacter,
   getCharacterInfo,
   createCharacter,
   updateCharacter,
@@ -19,6 +20,8 @@ const router = express.Router();
 router.get("/characters", getAllCharacters);
 
 router.get("/searchcharacters", searchForCharacters);
+
+router.post("/check-by-database", checkForCharacter);
 
 router.get('/search/:id', async (req, res) => {
   console.log('Starting character search in characterRoute');

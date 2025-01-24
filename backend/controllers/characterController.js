@@ -71,6 +71,28 @@ const searchForCharacters = async (req, res) => {
   }
 };
 
+const checkForCharacter = async (req, res) => {
+  try {
+    const { anilistId } = req.body;
+    console.log("Received anilistId: ", anilistId);
+
+    // Validate that anilistId is a number
+    if (!anilistId || isNaN(Number(anilistId))) {
+      return res.status(400).json({ message: "Invalid anilistId" });
+    }
+
+    const character = await CharacterModel.findOne({ anilistId: Number(anilistId) });
+
+    if (!character) {
+      return res.status(200).json(false);
+    }
+    res.status(200).json(true);
+  } catch (error) {
+    console.error("Error checking if character exists: ", error.message);
+    res.status(500).json({ message: "internal Server Error" });
+  }
+};
+
 /**
  * @function getCharacterInfo
  * @description Get information about a specific character.
@@ -300,6 +322,7 @@ const createCharacterFromAnilist = async (req, res) => {
 export {
   getAllCharacters,
   searchForCharacters,
+  checkForCharacter,
   getCharacterInfo,
   createCharacter,
   updateCharacter,

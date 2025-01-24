@@ -286,6 +286,8 @@ export const UpdateAnime = ({ match }) => {
     fetchData();
   }, [id]);
 
+  console.log('Form Data: ', formData);
+
   useEffect(() => {
     const fetchComparisonData = async () => {
       try {

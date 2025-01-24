@@ -13,7 +13,7 @@ import {
   compareAnimeWithAnilist,
   updateAnimeAnilist
 } from "../controllers/animeController.js";
-import { fetchAnimeDataById } from '../services/anilistService.js';
+import { fetchAnimeDataById, fetchCharactersBySeriesId } from '../services/anilistService.js';
 
 const router = express.Router();
 
@@ -25,7 +25,7 @@ router.post("/addanime", createAnime);
 
 router.put("/anime/:id", updateAnime);
 
-router.get('/search/:id', async (req, res) => {
+router.get('/search/:id/', async (req, res) => {
   try {
     const { id } = req.params;
     console.log(`Searching for anime with ID: ${id}`); // Log the ID being searched
@@ -36,6 +36,23 @@ router.get('/search/:id', async (req, res) => {
     }
 
     res.json(animeData);
+  } catch (error) {
+    console.error('Error searching anime:', error);
+    res.status(500).json({ message: 'Error searching anime' });
+  }
+});
+
+router.get('/searchCharacters/:id/:type', async (req, res) => {
+  try {
+    const { id, type } = req.params;
+    console.log(`Searching for anime with ID: ${id}`);
+    const charactersData = await fetchCharactersBySeriesId(id, type);
+
+    if (!charactersData) {
+      return res.status(404).json({ message: 'Anime not found' });
+    }
+
+    res.json(charactersData);
   } catch (error) {
     console.error('Error searching anime:', error);
     res.status(500).json({ message: 'Error searching anime' });

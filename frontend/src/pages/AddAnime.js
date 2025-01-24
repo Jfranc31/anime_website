@@ -328,8 +328,42 @@ export default function AddAnime() {
   };
   // #endregion ------------------------------------------------------------
 
-  const handleAnimeSelected = (animeData) => {
+  const handleAddingAniListCharacters = async (anilistId) => {
+    const response = await axiosInstance.get(`animes/searchCharacters/${anilistId}/ANIME`);
+
+    const characters = response.data;
+    const existingCharacters = [];
+    const charactersToCreate = [];
+
+    console.log("characters: ", characters);
+
+    // Separate characters into existing and new
+    for (const character of characters) {
+      const characterId = character.node.id;
+
+      // Check if character exists in database
+      const existingCharacterResponse = await axiosInstance.post('/characters/check-by-database', { anilistId: characterId });
+
+      if (existingCharacterResponse.data === true) {
+        // Character exists, add to existing characters
+        existingCharacters.push({
+          ...existingCharacterResponse.data,
+          role: '' // Initialize with empty role
+        });
+      } else {
+        // Character doesn't exist, add to characters to create
+        charactersToCreate.push(character);
+      }
+    };
+
+    console.log(existingCharacters);
+    console.log(charactersToCreate);
+  };
+
+  const handleAnimeSelected = async (animeData) => {
     console.log('AddAnime - Received Data:', animeData);
+
+    handleAddingAniListCharacters(animeData.anilistId);
 
     const updatedFormData = {
       anilistId: animeData.anilistId || '',

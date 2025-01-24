@@ -2,6 +2,65 @@ import axios from 'axios';
 
 const ANILIST_API = 'https://graphql.anilist.co';
 
+async function fetchCharactersBySeriesId(seriesId, mediaType = "ANIME") {
+  const baseUrl = "https://graphql.anilist.co";
+  let allCharacters = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+      try {
+          const query = `
+          query ($id: Int!, $type: MediaType, $page: Int!) {
+              Media(id: $id, type: $type) {
+                  characters(page: $page, sort: [ROLE]) {
+                      pageInfo {
+                          hasNextPage
+                          currentPage
+                      }
+                      edges {
+                          node {
+                              id
+                              name {
+                                  first
+                                  last
+                              }
+                          }
+                          role
+                      }
+                  }
+              }
+          }`;
+
+          const variables = {
+              id: seriesId,
+              type: mediaType,
+              page: currentPage,
+          };
+
+          const response = await axios.post(baseUrl, {
+              query,
+              variables,
+          });
+
+          const data = response.data.data.Media.characters;
+
+          // Append the current page's characters to the list
+          allCharacters.push(...data.edges);
+
+          // Check if there are more pages
+          hasNextPage = data.pageInfo.hasNextPage;
+          currentPage = data.pageInfo.currentPage + 1;
+
+      } catch (error) {
+          console.error(`Error fetching characters data from AniList: ${error}`);
+          throw error;
+      }
+  }
+
+  return allCharacters;
+}
+
 const fetchAnimeDataById = async (id) => {
   const query = `
     query ($id: Int) {
@@ -366,4 +425,4 @@ const fetchCharacterData = async (search) => {
   }
 };
 
-export { fetchAnimeData, fetchAnimeDataById, fetchMangaDataById, fetchMangaData, fetchCharacterDataById, fetchCharacterData };
+export { fetchCharactersBySeriesId, fetchAnimeData, fetchAnimeDataById, fetchMangaDataById, fetchMangaData, fetchCharacterDataById, fetchCharacterData };
