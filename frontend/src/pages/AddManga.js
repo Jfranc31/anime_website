@@ -10,6 +10,7 @@ import RelationSearch from '../Components/Searches/RelationSearch';
 import addPageStyles from '../styles/pages/add_page.module.css';
 import { MangaSearch } from '../Components/Searches/MangaSearch';
 import { DEFAULT_BORDER } from '../constants/assets';
+import Loader from '../constants/Loader';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -90,6 +91,7 @@ const AVAILABLE_RELATION = [
   'Alternative',
   'Compilations',
   'Contains',
+  'Other',
 ];
 // #endregion --------------------------------------------------------------
 
@@ -136,6 +138,8 @@ const INITIAL_FORM_STATE = {
 };
 // #endregion --------------------------------------------------------------
 
+let track = 0;
+
 export default function AddManga() {
   // #region State Management ----------------------------------------------
   const navigate = useNavigate();
@@ -144,6 +148,7 @@ export default function AddManga() {
   const [formErrors, setFormErrors] = useState({});
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
+  const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
   // #endregion ------------------------------------------------------------
 
   // #region Modal Handlers ------------------------------------------------
@@ -245,7 +250,7 @@ export default function AddManga() {
   const handleSelectExistingCharacter = (selectedCharacters) => {
     const charactersWithDefaultRole = selectedCharacters.map((character) => ({
       ...character,
-      role: '',
+      role: character.role || '',
       mangaName: formData.titles
     }));
     setFormData((prevFormData) => ({
@@ -288,7 +293,7 @@ export default function AddManga() {
         ...prevFormData.characters,
         {
           ...selectedCharacter,
-          role: '',
+          role: selectedCharacter.role || '',
           mangaName: selectedCharacter.mangas.map(manga => ({
             romaji: manga.titles.romaji || '',
             english: manga.titles.english || '',
@@ -323,8 +328,95 @@ export default function AddManga() {
   };
   // #endregion ------------------------------------------------------------
 
+  const handleAddingAniListCharacters = async (anilistId) => {
+    setIsLoadingCharacters(true);
+    try {
+      const response = await axiosInstance.get(`mangas/searchCharacters/${anilistId}/MANGA`);
+
+      const characters = response.data;
+      const existingCharacters = [];
+      const charactersToCreate = [];
+      track = characters.length;
+
+      console.log("characters: ", characters);
+
+      // Separate characters into existing and new
+      await Promise.all(characters.map(async (character) => {
+        const characterId = character.node.id;
+
+        // Check if character exists in database
+        const existingCharacterResponse = await axiosInstance.post('/characters/check-by-database', { anilistId: characterId });
+
+        if (existingCharacterResponse.data === true) {
+          // Fetch full character details
+          const characterInfoResponse = await axiosInstance.get(`/characters/find-character/${characterId}`);
+
+          // Capitalize first letter of role
+          const formattedRole = character.role.charAt(0) + character.role.slice(1).toLowerCase();
+
+          existingCharacters.push({
+            ...characterInfoResponse.data,
+            role: formattedRole
+          });
+
+        } else {
+          // Characters not in database will be created
+          charactersToCreate.push(character);
+        }
+      }));
+
+      // Use existing handleSelectExistingCharacter method
+      if (existingCharacters.length > 0) {
+        handleSelectExistingCharacter(existingCharacters);
+        track -= existingCharacters.length;
+      }
+
+      // Create new characters
+      for (const characterToCreate of charactersToCreate) {
+
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Longer delay for new characters
+
+        // Fetch full character details from AniList
+        const characterDetailsResponse = await axiosInstance.get(`/characters/search/${characterToCreate.node.id}`);
+
+        // Capitalize first letter of role
+        const formattedRole = characterToCreate.role.charAt(0) + characterToCreate.role.slice(1).toLowerCase();
+
+        const characterToAdd = {
+          ...characterDetailsResponse.data,
+          role: formattedRole,
+          animes: [],
+          mangas: []
+        };
+
+        const res = await axiosInstance.post(
+          '/characters/addcharacter',
+          characterToAdd
+        );
+
+        const addCharacter = {
+          ...res.data,
+          role: formattedRole
+        };
+
+        track -= 1;
+        // Use handleAddingCharacter for each new character
+        handleAddingCharacter(addCharacter);
+
+        console.log('Number of characters left to add: ', track);
+      }
+
+    } catch (error) {
+      console.error('Error adding characters: ', error);
+    } finally {
+      setIsLoadingCharacters(false);
+    }
+  };
+
   const handleMangaSelected = (mangaData) => {
     console.log('AddManga - Received Data:', mangaData);
+
+    handleAddingAniListCharacters(mangaData.anilistId);
 
     const updatedFormData = {
       anilistId: mangaData.anilistId || '',
@@ -791,6 +883,14 @@ export default function AddManga() {
             Create Character
           </button>
         </div>
+
+        {/* Add loader here */}
+        {isLoadingCharacters && (
+          <div>
+            <Loader text={`Adding characters... ${track} left to add`} />
+          </div>
+        )}
+
         <div className={addPageStyles.characters}>
           {formData.characters.map((character, index) => (
             <div key={index} className={addPageStyles.selectedCharacter}>

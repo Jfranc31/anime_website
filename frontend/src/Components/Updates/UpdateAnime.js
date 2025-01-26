@@ -90,6 +90,7 @@ const AVAILABLE_RELATION = [
   'Alternative',
   'Compilations',
   'Contains',
+  'Other',
 ];
 // #endregion --------------------------------------------------------------
 

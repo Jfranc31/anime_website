@@ -114,6 +114,20 @@ const getCharacterInfo = async (req, res) => {
   }
 };
 
+const findCharacterInfo = async (req, res) => {
+  try {
+    const anilistId = req.params.id;
+    const character = await CharacterModel.findOne({ anilistId });
+    if (!character) {
+      return res.status(404).json({ message: "Character not found" });
+    }
+    res.json(character);
+  } catch (error) {
+    console.error("Error fetching character for page: ", error);
+    res.status(500).json({ message: "internal Server Error" });
+  }
+};
+
 /**
  * @function createCharacter
  * @description Create a new character document in the database.
@@ -324,6 +338,7 @@ export {
   searchForCharacters,
   checkForCharacter,
   getCharacterInfo,
+  findCharacterInfo,
   createCharacter,
   updateCharacter,
   createCharacterFromAnilist

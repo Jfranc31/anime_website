@@ -76,8 +76,12 @@ function AnimeCard({
       }
     }
 
-    if (startYear !== currentYear) {
+    if ( startYear < currentYear && anime.releaseData.releaseStatus === 'Currently Releasing') {
       return `Airing Since ${startYear}`;
+    }
+
+    if ( anime.releaseData.releaseStatus === 'Not Yet Released') {
+      return `${season} ${startYear}`
     }
 
     return 'Airing';

@@ -86,7 +86,6 @@ const animeSchema = new mongoose.Schema({
     },
     EpisodeDuration: {
       type: String,
-      required: true,
     },
   },
   genres: [String],
@@ -132,6 +131,7 @@ const animeSchema = new mongoose.Schema({
           "Alternative",
           "Compilations",
           "Contains",
+          "Other"
         ],
       },
     },
@@ -153,7 +153,8 @@ const animeSchema = new mongoose.Schema({
           "Child",
           "Alternative",
           "Contains",
-          "Compilation"
+          "Compilation",
+          "Other",
         ],
       },
     },

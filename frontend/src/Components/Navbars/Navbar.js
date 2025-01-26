@@ -1,5 +1,5 @@
 // Navbar.js
-import React, { useContext, useState, useRef, useEffect } from 'react';
+import React, { useContext, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import navbarStyles from '../../styles/components/navbar.module.css';
 import data from '../../Context/ContextApi';

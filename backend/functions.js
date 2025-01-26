@@ -10,6 +10,7 @@ export function getReverseRelationType(relationType) {
     Alternative: "Alternative",
     Contains: "Compilation",
     Compilation: "Contains",
+    Other: "Other",
   };
 
   return reverseRelationMap[relationType] || null;

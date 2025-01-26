@@ -1,7 +1,7 @@
 // Footer.js
 
-import React, { useContext, useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useContext } from 'react';
+// import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../Context/ThemeContext';
 import footerStyles from '../../styles/components/footer.module.css';

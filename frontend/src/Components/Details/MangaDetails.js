@@ -83,19 +83,56 @@ const MangaDetails = () => {
 
   const fetchCharacterDetails = async () => {
     setLoading(true);
+    setCharactersDetails([]); // Clear previous characters
+
     try {
-      const charactersWithDetails = await Promise.all(
-        mangaDetails?.characters.map(async (character) => {
+      const sortedCharacters = await Promise.all(
+        (mangaDetails?.characters || []).map(async (character) => {
           try {
             const response = await axiosInstance.get(
               `/characters/character/${character.characterId}`,
             );
+
+            // Immediately update state with the new character
+            setCharactersDetails(prev => {
+              // Check if character already exists to prevent duplicates
+              const existingCharacter = prev.find(
+                c => c.characterDetails._id === response.data._id
+              );
+
+              if (!existingCharacter) {
+                const newCharacter = {
+                  ...character,
+                  characterDetails: response.data,
+                };
+
+                // Sort the characters as they are added
+                const updatedCharacters = [...prev, newCharacter]
+                  .sort((a, b) => {
+                    const rolePriority = ['Main', 'Supporting', 'Background'];
+                    const priorityA = rolePriority.indexOf(a.role);
+                    const priorityB = rolePriority.indexOf(b.role);
+
+                    if (priorityA === priorityB) {
+                      const nameA = getFullName(a.characterDetails.names);
+                      const nameB = getFullName(b.characterDetails.names);
+                      return nameA.localeCompare(nameB);
+                    }
+
+                    return priorityA - priorityB;
+                  });
+
+                return updatedCharacters;
+              }
+
+              return prev;
+            });
+
             return {
               ...character,
               characterDetails: response.data,
             };
           } catch (error) {
-            if (error.name === 'CanceledError') return null;
             console.error(
               `Error fetching details for character ${character.characterId}:`,
               error.message
@@ -105,7 +142,6 @@ const MangaDetails = () => {
         }) || []
       );
 
-      setCharactersDetails(charactersWithDetails);
     } catch (error) {
       console.error('Error fetching characters:', error);
     } finally {

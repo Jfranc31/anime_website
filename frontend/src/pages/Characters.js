@@ -6,6 +6,7 @@ import { useCharacterContext } from '../Context/CharacterContext';
 import data from '../Context/ContextApi';
 import CharacterCard from '../cards/CharacterCard';
 import browseStyles from '../styles/pages/Browse.module.css';
+import Loader from '../constants/Loader';
 
 const Characters = () => {
   const { characterList, setCharacterList } = useCharacterContext();
@@ -86,7 +87,7 @@ const Characters = () => {
 
       {isLoading ? (
         <div className={browseStyles.loadingContainer}>
-          <div className={browseStyles.loader}></div>
+          <Loader/>
         </div>
       ) : (
         <div className={browseStyles.listSection}>

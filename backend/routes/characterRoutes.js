@@ -9,6 +9,7 @@ import {
   searchForCharacters,
   checkForCharacter,
   getCharacterInfo,
+  findCharacterInfo,
   createCharacter,
   updateCharacter,
   createCharacterFromAnilist
@@ -62,6 +63,8 @@ router.get('/search/:id', async (req, res) => {
 });
 
 router.get("/character/:id", getCharacterInfo);
+
+router.get("/find-character/:id", findCharacterInfo);
 
 router.post("/addcharacter", createCharacter);
 

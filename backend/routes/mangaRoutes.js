@@ -13,7 +13,7 @@ import {
   compareMangaWithAnilist,
   updateMangaAnilist
 } from "../controllers/mangaController.js";
-import { fetchMangaDataById } from '../services/anilistService.js';
+import { fetchMangaDataById, fetchCharactersBySeriesId } from '../services/anilistService.js';
 
 const router = express.Router();
 
@@ -35,6 +35,23 @@ router.get('/search/:id', async (req, res) => {
     }
 
     res.json(mangaData);
+  } catch (error) {
+    console.error('Error searching manga:', error);
+    res.status(500).json({ message: 'Error searching manga' });
+  }
+});
+
+router.get('/searchCharacters/:id/:type', async (req, res) => {
+  try {
+    const { id, type } = req.params;
+    console.log(`Searching for manga with ID: ${id}`);
+    const charactersData = await fetchCharactersBySeriesId(id, type);
+
+    if (!charactersData) {
+      return res.status(404).json({ message: 'Manga not found' });
+    }
+
+    res.json(charactersData);
   } catch (error) {
     console.error('Error searching manga:', error);
     res.status(500).json({ message: 'Error searching manga' });
