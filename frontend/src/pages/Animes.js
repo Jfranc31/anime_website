@@ -1,7 +1,7 @@
 // /src/Component/Animes.js
 
 // Importing React and other dependencies
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useAnimeContext } from '../Context/AnimeContext';
 import AnimeCard from '../cards/AnimeCard';
@@ -10,6 +10,10 @@ import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
 import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
+import Loader from '../constants/Loader';
+
+const ANIMES_PER_PAGE = 20;
+const LOAD_DELAY = 500;
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
@@ -18,12 +22,18 @@ const Animes = () => {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
   const [selectedAnimeForEdit, setSelectedAnimeForEdit] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedSeason, setSelectedSeason] = useState('');
   const [selectedFormats, setSelectedFormats] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [gridLayout, setGridLayout] = useState('default');
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [displayedAnimes, setDisplayedAnimes] = useState([]);
+  const observer = useRef();
+  const timeoutRef = useRef();
 
   const handleModalClose = () => {
     setIsAnimeEditorOpen(false);
@@ -35,17 +45,23 @@ const Animes = () => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    setIsInitialLoading(true);
     axios
       .get('http://localhost:8080/animes/animes')
       .then((response) => {
         setAnimeList(response.data);
-        setIsLoading(false);
+        setIsInitialLoading(false);
       })
       .catch((error) => {
         console.error(error);
-        setIsLoading(false);
+        setIsInitialLoading(false);
       });
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [setAnimeList]);
 
   const determineSeason = (startDate) => {
@@ -66,48 +82,50 @@ const Animes = () => {
     };
   };
 
-  const filteredAnime = Array.isArray(animeList)
-    ? animeList.filter((anime) => {
-        const matchesSearch =
+  const filterAnimes = useCallback((animes) => {
+    if (!Array.isArray(animes)) return [];
+
+    return animes.filter((anime) => {
+      const matchesSearch =
           anime.titles?.romaji?.toLowerCase().includes(searchInput.toLowerCase()) ||
           anime.titles?.english?.toLowerCase().includes(searchInput.toLowerCase()) ||
           anime.titles?.Native?.toLowerCase().includes(searchInput.toLowerCase());
 
-        const matchesGenres =
-          selectedGenres.length === 0 ||
-          (anime.genres &&
-            Array.isArray(anime.genres) &&
-            selectedGenres.every((genre) =>
-              anime.genres.some(
-                (animeGenre) =>
-                  genre &&
-                  animeGenre.toLowerCase().includes(genre.toLowerCase())
-              )
-            ));
+      const matchesGenres =
+        selectedGenres.length === 0 ||
+        (anime.genres &&
+          Array.isArray(anime.genres) &&
+          selectedGenres.every((genre) =>
+            anime.genres.some(
+              (animeGenre) =>
+                genre &&
+                animeGenre.toLowerCase().includes(genre.toLowerCase())
+            )
+          ));
 
-        const matchesYear = !selectedYear || anime.releaseData.startDate.year === selectedYear;
+      const matchesYear = !selectedYear || anime.releaseData.startDate.year === selectedYear;
 
-        const { season } = determineSeason(anime.releaseData.startDate);
-        const matchesSeason = !selectedSeason || season === selectedSeason;
+      const { season } = determineSeason(anime.releaseData.startDate);
+      const matchesSeason = !selectedSeason || season === selectedSeason;
 
-        const matchesFormat =
-          selectedFormats.length === 0 ||
-          selectedFormats.includes(anime.typings.Format);
+      const matchesFormat =
+        selectedFormats.length === 0 ||
+        selectedFormats.includes(anime.typings.Format);
 
-        const matchesStatus = !selectedStatus || anime.releaseData.releaseStatus === selectedStatus;
+      const matchesStatus = !selectedStatus || anime.releaseData.releaseStatus === selectedStatus;
 
-        return (
-          matchesSearch &&
-          matchesGenres &&
-          matchesYear &&
-          matchesSeason &&
-          matchesFormat &&
-          matchesStatus
-        );
-      })
-    : [];
+      return (
+        matchesSearch &&
+        matchesGenres &&
+        matchesYear &&
+        matchesSeason &&
+        matchesFormat &&
+        matchesStatus
+      );
+    });
+  }, [searchInput, selectedGenres, selectedSeason, selectedYear, selectedFormats, selectedStatus]);
 
-  const animeTitle = (titles) => {
+  const animeTitle = useCallback((titles) => {
     switch (userData.title) {
       case 'english':
         return titles.english || titles.romaji
@@ -118,21 +136,54 @@ const Animes = () => {
       default:
         return titles.english || titles.romaji || titles.native || 'Unknown Title';
     }
-  };
+  }, [userData.title]);
 
-  const sortedAnime = [...filteredAnime].sort((a, b) => {
-    const titleA = animeTitle(a.titles)
-    const titleB = animeTitle(b.titles)
-    return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-  });
+  useEffect(() => {
+    const loadMoreAnimes = () => {
+      const filtered = filterAnimes(animeList);
+      const sorted = [...filtered].sort((a, b) => {
+        const titleA = animeTitle(a.titles);
+        const titleB = animeTitle(b.titles);
+        return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
+      });
 
-  const handleGenreChange = (selectedGenre) => {
-    setSelectedGenres((prevGenres) => {
-      if (!prevGenres.includes(selectedGenre)) {
-        return [...prevGenres, selectedGenre];
-      } else {
-        return prevGenres;
+      setDisplayedAnimes(sorted.slice(0, page * ANIMES_PER_PAGE));
+      setHasMore(sorted.length > page * ANIMES_PER_PAGE);
+
+      timeoutRef.current = setTimeout(() => {
+        setIsLoadingMore(false);
+      }, LOAD_DELAY);
+    };
+
+    setIsLoadingMore(true);
+    loadMoreAnimes();
+  }, [animeList, page, searchInput, selectedGenres, selectedSeason, selectedYear, selectedFormats, selectedStatus, filterAnimes, animeTitle]);
+
+  const lastAnimeElementRef = useCallback(node => {
+    if (isLoadingMore) return;
+
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
       }
+    });
+
+    if (node) observer.current.observe(node);
+  }, [isLoadingMore, hasMore]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchInput, selectedGenres, selectedSeason, selectedYear, selectedFormats, selectedStatus]);
+
+  const handleGenreClick = (genre) => {
+    setSelectedGenres((prevGenres) => {
+      if (!prevGenres.includes(genre)) {
+        return [...prevGenres, genre];
+      }
+      return prevGenres;
     });
   };
 
@@ -154,15 +205,22 @@ const Animes = () => {
       updatedUser.animes = updatedAnimes;
       return updatedUser;
     });
-
-    // Close the modal
     setIsAnimeEditorOpen(false);
   };
 
-  // Function to handle the top-right button click
   const handleTopRightButtonClick = (anime) => {
     setSelectedAnimeForEdit(anime);
     setIsAnimeEditorOpen(true);
+  };
+
+  const handleGenreChange = (selectedGenre) => {
+    setSelectedGenres((prevGenres) => {
+      if (!prevGenres.includes(selectedGenre)) {
+        return [...prevGenres, selectedGenre];
+      } else {
+        return prevGenres;
+      }
+    });
   };
 
   const handleFormatChange = (selectedFormat) => {
@@ -180,20 +238,9 @@ const Animes = () => {
     );
   };
 
-  const handleGenreClick = (genre) => {
-    setSelectedGenres((prevGenres) => {
-      if (!prevGenres.includes(genre)) {
-        return [...prevGenres, genre];
-      }
-      return prevGenres;
-    });
-  };
-
   return (
     <div className={browseStyles.browseContainer}>
       <div className={browseStyles.filterContainer}>
-
-        {/* New buttons for layout selection */}
         <div className={browseStyles.layoutButtons}>
           <button onClick={() => changeLayout('default')} className={browseStyles.layoutButton}>Default</button>
           <button onClick={() => changeLayout('wide')} className={browseStyles.layoutButton}>Wide</button>
@@ -217,28 +264,19 @@ const Animes = () => {
             value=""
             id="genreSearchInput"
             name="genreSearchInput"
-            onChange={(e) => handleGenreChange(e.target.value)}
+            onChange={(e) => handleGenreClick(e.target.value)}
             className={browseStyles.genreSelect}
           >
-            <option value="" disabled>
-              Select a genre
-            </option>
+            <option value="" disabled>Select a genre</option>
             {AVAILABLE_GENRES.map((genre) => (
-              <option key={genre} value={genre}>
-                {genre}
-              </option>
+              <option key={genre} value={genre}>{genre}</option>
             ))}
           </select>
           <div className={browseStyles.selectedGenres}>
             {selectedGenres.map((genre) => (
               <div key={genre} className={browseStyles.selectedGenre}>
                 {genre}
-                <button
-                  onClick={() => handleRemoveGenre(genre)}
-                  className={browseStyles.removeGenreBtn}
-                >
-                  ×
-                </button>
+                <button onClick={() => handleRemoveGenre(genre)} className={browseStyles.removeGenreBtn}>×</button>
               </div>
             ))}
           </div>
@@ -282,9 +320,7 @@ const Animes = () => {
             onChange={(e) => handleFormatChange(e.target.value)}
             className={browseStyles.filterSelect}
           >
-            <option value="" disabled>
-              Select a Format
-            </option>
+            <option value="" disabled>Select a Format</option>
             {ANIME_FORMATS.map(format => (
               <option key={format} value={format}>{format}</option>
             ))}
@@ -293,12 +329,7 @@ const Animes = () => {
             {selectedFormats.map((format) => (
               <div key={format} className={browseStyles.selectedFilter}>
                 {format}
-                <button
-                  onClick={() => handleRemoveFormat(format)}
-                  className={browseStyles.removeGenreBtn}
-                >
-                  ×
-                </button>
+                <button onClick={() => handleRemoveFormat(format)} className={browseStyles.removeGenreBtn}>×</button>
               </div>
             ))}
           </div>
@@ -322,20 +353,20 @@ const Animes = () => {
       </div>
 
       <div className={`${browseStyles.listSection} ${browseStyles[gridLayout]}`}>
-        {isLoading ? (
-          <div className={browseStyles.loadingContainer}>
-            <div className={browseStyles.loader}></div>
+        {displayedAnimes.length === 0 && !isInitialLoading ? (
+          <div className={browseStyles.noResults}>
+            No anime found matching your criteria
           </div>
         ) : (
-          <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
-            {sortedAnime.length === 0 ? (
-              <div className={browseStyles.noResults}>
-                No anime found matching your criteria
-              </div>
-            ) : (
+          <>
+            <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
               <ul className={`${browseStyles.list} ${browseStyles[gridLayout]}`}>
-                {sortedAnime.map((anime) => (
-                  <li key={anime._id} className={browseStyles.listItem}>
+                {displayedAnimes.map((anime, index) => (
+                  <li
+                    key={anime._id}
+                    className={`${browseStyles.listItem} ${index >= displayedAnimes.length - ANIMES_PER_PAGE && isLoadingMore ? browseStyles.fadeIn : ''}`}
+                    ref={index === displayedAnimes.length - 1 ? lastAnimeElementRef : null}
+                  >
                     <AnimeCard
                       anime={anime}
                       name={animeTitle(anime.titles)}
@@ -347,17 +378,24 @@ const Animes = () => {
                   </li>
                 ))}
               </ul>
+            </div>
+            {isLoadingMore && hasMore && (
+              <div className={browseStyles.loadingMore}>
+                <Loader />
+              </div>
             )}
+          </>
+        )}
+        {isInitialLoading && (
+          <div className={browseStyles.loadingContainer}>
+            <Loader />
           </div>
         )}
       </div>
 
       {isAnimeEditorOpen && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
-          <div
-            className={modalStyles.characterModal}
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
             <AnimeEditor
               anime={selectedAnimeForEdit}
               userId={userData._id}

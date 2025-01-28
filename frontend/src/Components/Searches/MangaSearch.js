@@ -26,9 +26,9 @@ export const MangaSearch = ({ onMangaSelected, onClose }) => {
     } catch (error) {
       console.error('Search error:', error);
       setError(
-        error.response?.data?.message || 
-        error.response?.data?.error || 
-        error.message || 
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
         'Error searching manga'
       );
     } finally {
@@ -57,6 +57,8 @@ export const MangaSearch = ({ onMangaSelected, onClose }) => {
               <form id='searchManga' onSubmit={handleSearch} className={searchStyles.searchForm}>
                 <input
                   type='text'
+                  id="mangaTitle"
+                  name="mangaTitle"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder='Enter manga title...'

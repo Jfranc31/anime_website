@@ -393,30 +393,42 @@ export default function AddAnime() {
 
         const characterToAdd = {
           ...characterDetailsResponse.data,
-          role: formattedRole,
           animes: [],
           mangas: []
         };
 
-        const res = await axiosInstance.post(
-          '/characters/addcharacter',
-          characterToAdd
-        );
+        console.log('Character being added:', characterToAdd);
 
-        const addCharacter = {
-          ...res.data,
-          role: formattedRole
-        };
+        const res = await axiosInstance.post('/characters/addcharacter', characterToAdd)
+          .catch((error) => {
+            if (error.response?.data?.message === "This character is already registered") {
+              console.log(`Skipping character ${characterToAdd.names?.givenName} as it is already registered.`);
+            } else {
+              throw error;
+            }
+          });
+
+        if (res?.data) {
+          const addCharacter = {
+            ...res.data,
+            role: formattedRole
+          };
+
+          // Use handleAddingCharacter for each new character
+          handleAddingCharacter(addCharacter);
+        }
 
         track -= 1;
-        // Use handleAddingCharacter for each new character
-        handleAddingCharacter(addCharacter);
-
         console.log('Number of characters left to add: ', track);
       }
 
     } catch (error) {
       console.error('Error adding characters: ', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      if (error.response?.data === "This character is already registered") {
+        console.log(`Character with AniList ID ${anilistId} is already registered.`);
+      }
     } finally {
       setIsLoadingCharacters(false);
     }
