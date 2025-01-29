@@ -416,9 +416,9 @@ export default function AddAnime() {
 
           // Use handleAddingCharacter for each new character
           handleAddingCharacter(addCharacter);
+          track -= 1;
         }
 
-        track -= 1;
         console.log('Number of characters left to add: ', track);
       }
 

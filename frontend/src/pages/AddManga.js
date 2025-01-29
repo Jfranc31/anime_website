@@ -370,6 +370,7 @@ export default function AddManga() {
 
       // Use existing handleSelectExistingCharacter method
       if (existingCharacters.length > 0) {
+        console.log("Existing Characters being added: ", existingCharacters);
         handleSelectExistingCharacter(existingCharacters);
         track -= existingCharacters.length;
       }
@@ -410,8 +411,9 @@ export default function AddManga() {
 
           // Use handleAddingCharacter for each new character
           handleAddingCharacter(addCharacter);
+          track -= 1;
         }
-        track -= 1;
+
         console.log('Number of characters left to add: ', track);
       }
 
