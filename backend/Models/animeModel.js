@@ -73,6 +73,7 @@ const animeSchema = new mongoose.Schema({
         "Comic",
         "Game",
         "Live Action",
+        "Other"
       ],
     },
     CountryOfOrigin: {

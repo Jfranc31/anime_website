@@ -67,6 +67,7 @@ const AVAILABLE_SOURCE = [
   'Comic',
   'Game',
   'Live Action',
+  'Other'
 ];
 
 const AVAILABLE_COUNTRY = [
