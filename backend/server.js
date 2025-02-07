@@ -229,5 +229,13 @@ app.listen(8080, () => {
 });
 
 // Add this after your other middleware setup
-runScheduledAnimeUpdates('*/5 * * * *');
-runScheduledMangaUpdates('* */12 * * * ');
+runScheduledAnimeUpdates('0 23 * * *');
+runScheduledMangaUpdates('0 23 * * *');
+
+/*  * * * * *  command_to_run
+    | | | | |
+    | | | | |_____ Day of the week (0 - 7) [Sunday = 0 or 7]
+    | | | |_______ Month (1 - 12)
+    | | |_________ Day of the month (1 - 31)
+    | |___________ Hour (0 - 23)
+    |_____________ Minute (0 - 59) */

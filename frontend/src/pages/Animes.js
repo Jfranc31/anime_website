@@ -2,18 +2,17 @@
 
 // Importing React and other dependencies
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
 import AnimeCard from '../cards/AnimeCard';
+import SkeletonCard from '../cards/SkeletonCard';
 import AnimeEditor from '../Components/ListEditors/AnimeEditor';
 import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
 import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
-import Loader from '../constants/Loader';
 
-const ANIMES_PER_PAGE = 20;
-const LOAD_DELAY = 500;
+const ANIMES_PER_PAGE = 18;
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
@@ -29,25 +28,55 @@ const Animes = () => {
   const [gridLayout, setGridLayout] = useState('default');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [displayedAnimes, setDisplayedAnimes] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingStates, setLoadingStates] = useState({});
+
   const observer = useRef();
-  const timeoutRef = useRef();
+  const filteredAnimesRef = useRef([]);
+  const isLoadingRef = useRef(false);
 
-  const handleModalClose = () => {
-    setIsAnimeEditorOpen(false);
-  };
+  const handleModalClose = () => setIsAnimeEditorOpen(false);
+  const changeLayout = (layout) => setGridLayout(layout);
 
-  // Function to change grid layout
-  const changeLayout = async (layout) => {
-    setGridLayout(layout);
-  };
+  const handleAnimeLoad = useCallback((animeId) => {
+    setLoadingStates(prev => ({
+      ...prev,
+      [animeId]: true
+    }));
+
+    setTimeout(() => {
+      setLoadingStates(prev => ({
+        ...prev,
+        [animeId]: false
+      }));
+    }, Math.random() * 300 + 200);
+  }, []);
+
+  useEffect(() => {
+    displayedAnimes.forEach(anime => {
+      if (loadingStates[anime._id] === undefined) {
+        handleAnimeLoad(anime._id);
+      }
+    });
+  }, [displayedAnimes, handleAnimeLoad, loadingStates]);
+
+  const animeTitle = useCallback((titles) => {
+    switch (userData.title) {
+      case 'english':
+        return titles.english || titles.romaji;
+      case 'romaji':
+        return titles.romaji || titles.english;
+      case 'native':
+        return titles.native;
+      default:
+        return titles.english || titles.romaji || titles.native || 'Unknown Title';
+    }
+  }, [userData.title]);
 
   useEffect(() => {
     setIsInitialLoading(true);
-    axios
-      .get('http://localhost:8080/animes/animes')
+    axiosInstance.get('8080/animes/animes')
       .then((response) => {
         setAnimeList(response.data);
         setIsInitialLoading(false);
@@ -56,12 +85,6 @@ const Animes = () => {
         console.error(error);
         setIsInitialLoading(false);
       });
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
   }, [setAnimeList]);
 
   const determineSeason = (startDate) => {
@@ -82,10 +105,10 @@ const Animes = () => {
     };
   };
 
-  const filterAnimes = useCallback((animes) => {
-    if (!Array.isArray(animes)) return [];
+  const filterAndSortAnimes = useCallback(() => {
+    if (!Array.isArray(animeList)) return [];
 
-    return animes.filter((anime) => {
+    return animeList.filter((anime) => {
       const matchesSearch =
           anime.titles?.romaji?.toLowerCase().includes(searchInput.toLowerCase()) ||
           anime.titles?.english?.toLowerCase().includes(searchInput.toLowerCase()) ||
@@ -103,61 +126,52 @@ const Animes = () => {
             )
           ));
 
-      const matchesYear = !selectedYear || anime.releaseData.startDate.year === selectedYear;
-
       const { season } = determineSeason(anime.releaseData.startDate);
+
+      const matchesYear = !selectedYear || anime.releaseData.startDate.year === selectedYear;
       const matchesSeason = !selectedSeason || season === selectedSeason;
-
-      const matchesFormat =
-        selectedFormats.length === 0 ||
-        selectedFormats.includes(anime.typings.Format);
-
+      const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(anime.typings.Format);
       const matchesStatus = !selectedStatus || anime.releaseData.releaseStatus === selectedStatus;
 
-      return (
-        matchesSearch &&
-        matchesGenres &&
-        matchesYear &&
-        matchesSeason &&
-        matchesFormat &&
-        matchesStatus
-      );
+      return matchesSearch && matchesGenres && matchesYear && matchesSeason && matchesFormat && matchesStatus;
+    }).sort((a, b) => {
+      const titleA = animeTitle(a.titles);
+      const titleB = animeTitle(b.titles);
+      return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
     });
-  }, [searchInput, selectedGenres, selectedSeason, selectedYear, selectedFormats, selectedStatus]);
-
-  const animeTitle = useCallback((titles) => {
-    switch (userData.title) {
-      case 'english':
-        return titles.english || titles.romaji
-      case 'romaji':
-        return titles.romaji || titles.english
-      case 'native':
-        return titles.native
-      default:
-        return titles.english || titles.romaji || titles.native || 'Unknown Title';
-    }
-  }, [userData.title]);
+  }, [animeList, searchInput, selectedGenres, selectedSeason, selectedYear, selectedFormats, selectedStatus, animeTitle]);
 
   useEffect(() => {
-    const loadMoreAnimes = () => {
-      const filtered = filterAnimes(animeList);
-      const sorted = [...filtered].sort((a, b) => {
-        const titleA = animeTitle(a.titles);
-        const titleB = animeTitle(b.titles);
-        return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-      });
+    if (!animeList) return;
 
-      setDisplayedAnimes(sorted.slice(0, page * ANIMES_PER_PAGE));
-      setHasMore(sorted.length > page * ANIMES_PER_PAGE);
+    setDisplayedAnimes([]); // Clear current display
+    filteredAnimesRef.current = filterAndSortAnimes();
 
-      timeoutRef.current = setTimeout(() => {
-        setIsLoadingMore(false);
-      }, LOAD_DELAY);
-    };
+    // Load initial batch
+    const initialBatch = filteredAnimesRef.current.slice(0, ANIMES_PER_PAGE);
+    setDisplayedAnimes(initialBatch);
+    setHasMore(filteredAnimesRef.current.length > ANIMES_PER_PAGE);
+  }, [filterAndSortAnimes, animeList]);
 
+  const loadMoreAnimes = useCallback(() => {
+    if (isLoadingRef.current || !hasMore) return;
+
+    isLoadingRef.current = true;
     setIsLoadingMore(true);
-    loadMoreAnimes();
-  }, [animeList, page, searchInput, selectedGenres, selectedSeason, selectedYear, selectedFormats, selectedStatus, filterAnimes, animeTitle]);
+
+    const currentLength = displayedAnimes.length;
+    const nextBatch = filteredAnimesRef.current.slice(
+      currentLength,
+      currentLength + ANIMES_PER_PAGE
+    );
+
+    setTimeout(() => {
+      setDisplayedAnimes(prev => [...prev, ...nextBatch]);
+      setHasMore(currentLength + ANIMES_PER_PAGE < filteredAnimesRef.current.length);
+      setIsLoadingMore(false);
+      isLoadingRef.current = false;
+    }, 500);
+  }, [displayedAnimes.length, hasMore]);
 
   const lastAnimeElementRef = useCallback(node => {
     if (isLoadingMore) return;
@@ -166,46 +180,69 @@ const Animes = () => {
 
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
+        loadMoreAnimes();
       }
     });
 
     if (node) observer.current.observe(node);
-  }, [isLoadingMore, hasMore]);
+  }, [isLoadingMore, hasMore, loadMoreAnimes]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [searchInput, selectedGenres, selectedSeason, selectedYear, selectedFormats, selectedStatus]);
+  const renderListItems = () => {
+    const items = [];
+
+    displayedAnimes.forEach((anime, index) => {
+      const isLoading = loadingStates[anime._id];
+      items.push(
+        <li
+          key={anime._id}
+          ref={index === displayedAnimes.length - 1 ? lastAnimeElementRef : null}
+          className={`${browseStyles.listItem} ${isLoading ? browseStyles.loading : browseStyles.loaded}`}
+        >
+          {isLoading ? (
+            <SkeletonCard layout={gridLayout} />
+          ) : (
+            <div className={browseStyles.fadeIn}>
+              <AnimeCard
+                anime={anime}
+                name={animeTitle(anime.titles)}
+                layout={gridLayout}
+                onTopRightButtonClick={handleTopRightButtonClick}
+                hideTopRightButton={!userData || !userData._id}
+                handleGenreClick={handleGenreClick}
+              />
+            </div>
+          )}
+        </li>
+      );
+    });
+
+    if (isLoadingMore && hasMore) {
+      for (let i = 0; i < 4; i++) {
+        items.push(
+          <li key={`skeleton-more${i}`} className={`${browseStyles.listItem} ${browseStyles.loading}`}>
+            <SkeletonCard layout={gridLayout} />
+          </li>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const handleGenreClick = (genre) => {
-    setSelectedGenres((prevGenres) => {
-      if (!prevGenres.includes(genre)) {
-        return [...prevGenres, genre];
-      }
-      return prevGenres;
-    });
+    setSelectedGenres(prev => prev.includes(genre) ? prev : [...prev, genre]);
   };
 
-  const handleRemoveGenre = (removedGenre) => {
-    setSelectedGenres((prevGenres) =>
-      prevGenres.filter((genre) => genre !== removedGenre)
-    );
+  const handleRemoveGenre = (genre) => {
+    setSelectedGenres(prev => prev.filter(g => g !== genre));
   };
 
-  const onAnimeDelete = (animeId) => {
-    setUserData((prevUserData) => {
-      if (!prevUserData || !prevUserData.animes) {
-        return prevUserData;
-      }
-      const updatedUser = { ...prevUserData };
-      const updatedAnimes = updatedUser.animes.filter(
-        (anime) => anime.animeId !== animeId
-      );
-      updatedUser.animes = updatedAnimes;
-      return updatedUser;
-    });
-    setIsAnimeEditorOpen(false);
+  const handleFormatChange = (format) => {
+    setSelectedFormats(prev => prev.includes(format) ? prev : [...prev, format]);
+  };
+
+  const handleRemoveFormat = (format) => {
+    setSelectedFormats(prev => prev.filter(f => f !== format));
   };
 
   const handleTopRightButtonClick = (anime) => {
@@ -213,29 +250,15 @@ const Animes = () => {
     setIsAnimeEditorOpen(true);
   };
 
-  const handleGenreChange = (selectedGenre) => {
-    setSelectedGenres((prevGenres) => {
-      if (!prevGenres.includes(selectedGenre)) {
-        return [...prevGenres, selectedGenre];
-      } else {
-        return prevGenres;
-      }
+  const onAnimeDelete = (animeId) => {
+    setUserData(prev => {
+      if (!prev?.animes) return prev;
+      return {
+        ...prev,
+        animes: prev.animes.filter(anime => anime.animeId !== animeId)
+      };
     });
-  };
-
-  const handleFormatChange = (selectedFormat) => {
-    setSelectedFormats((prevFormats) => {
-      if (!prevFormats.includes(selectedFormat)) {
-        return [...prevFormats, selectedFormat];
-      }
-      return prevFormats;
-    });
-  };
-
-  const handleRemoveFormat = (removedFormat) => {
-    setSelectedFormats((prevFormats) =>
-      prevFormats.filter((format) => format !== removedFormat)
-    );
+    setIsAnimeEditorOpen(false);
   };
 
   return (
@@ -349,46 +372,18 @@ const Animes = () => {
             ))}
           </select>
         </div>
-
       </div>
 
       <div className={`${browseStyles.listSection} ${browseStyles[gridLayout]}`}>
-        {displayedAnimes.length === 0 && !isInitialLoading ? (
+        {displayedAnimes.length === 0 && !isInitialLoading && !isLoadingMore ? (
           <div className={browseStyles.noResults}>
             No anime found matching your criteria
           </div>
         ) : (
-          <>
-            <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
-              <ul className={`${browseStyles.list} ${browseStyles[gridLayout]}`}>
-                {displayedAnimes.map((anime, index) => (
-                  <li
-                    key={anime._id}
-                    className={`${browseStyles.listItem} ${index >= displayedAnimes.length - ANIMES_PER_PAGE && isLoadingMore ? browseStyles.fadeIn : ''}`}
-                    ref={index === displayedAnimes.length - 1 ? lastAnimeElementRef : null}
-                  >
-                    <AnimeCard
-                      anime={anime}
-                      name={animeTitle(anime.titles)}
-                      layout={gridLayout}
-                      onTopRightButtonClick={handleTopRightButtonClick}
-                      hideTopRightButton={!userData || !userData._id}
-                      handleGenreClick={handleGenreClick}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {isLoadingMore && hasMore && (
-              <div className={browseStyles.loadingMore}>
-                <Loader />
-              </div>
-            )}
-          </>
-        )}
-        {isInitialLoading && (
-          <div className={browseStyles.loadingContainer}>
-            <Loader />
+          <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
+            <ul className={`${browseStyles.list} ${browseStyles[gridLayout]}`}>
+              {renderListItems()}
+            </ul>
           </div>
         )}
       </div>

@@ -135,9 +135,7 @@ function AnimeCard({
 
   return (
     <div
-      className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${layout === 'compact' ? cardsStyles.compact : ''} ${isHovered ? cardsStyles.hovered : ''}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${layout === 'compact' ? cardsStyles.compact : ''}`}
     >
       {layout === 'compact' ? (
         <>
@@ -185,7 +183,10 @@ function AnimeCard({
         </>
       ) : (
         // Default and Wide layouts
-        <div className={cardsStyles.animeCard}>
+        <div className={`${cardsStyles.animeCard} ${isHovered ? cardsStyles.hovered : ''}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <div className={cardsStyles.card2}>
             <div className={cardsStyles.imgContainer}>
               <img src={anime.images.image} alt={anime.titles.english} />

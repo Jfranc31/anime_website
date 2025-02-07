@@ -29,7 +29,7 @@ import { ThemeProvider } from './Context/ThemeContext';
 import './themes.module.css';
 import UserManagement from './Components/Admin/UserManagement';
 import Settings from './pages/Settings';
-import Loader from './constants/Loader';
+import Loader from './constants/Loader.js';
 
 function App() {
   const [userData, setUserData] = useState({});

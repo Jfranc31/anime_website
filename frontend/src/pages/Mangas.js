@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { useMangaContext } from '../Context/MangaContext';
 import MangaCard from '../cards/MangaCard';
+import SkeletonCard from '../cards/SkeletonCard';
 import MangaEditor from '../Components/ListEditors/MangaEditor';
 import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
 import { MANGA_FORMATS, AVAILABLE_GENRES, AIRING_STATUS, YEARS } from '../constants/filterOptions';
-import Loader from '../constants/Loader';
 
-const MANGAS_PER_PAGE = 20;
-const LOAD_DELAY = 500;
+const MANGAS_PER_PAGE = 18;
 
 const Mangas = () => {
   const { mangaList, setMangaList } = useMangaContext();
   const { userData, setUserData } = useContext(data);
+  const [userMangaStatuses, setUserMangaStatuses] = useState({});
   const [searchInput, setSearchInput] = useState('');
-  const [isMangaEditorOpen, setIsMangaEditorOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [isMangaEditorOpen, setIsMangaEditorOpen] = useState(false);
   const [selectedMangaForEdit, setSelectedMangaForEdit] = useState(null);
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedFormats, setSelectedFormats] = useState([]);
@@ -25,44 +25,105 @@ const Mangas = () => {
   const [gridLayout, setGridLayout] = useState('default');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [displayedMangas, setDisplayedMangas] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingStates, setLoadingStates] = useState({});
+
   const observer = useRef();
-  const timeoutRef = useRef();
+  const filteredMangasRef = useRef([]);
+  const isLoadingRef = useRef(false);
 
-  const handleModalClose = () => {
-    setIsMangaEditorOpen(false);
-  };
+  const handleModalClose = () => setIsMangaEditorOpen(false);
+  const changeLayout = (layout) => setGridLayout(layout);
 
-  const changeLayout = (layout) => {
-    setGridLayout(layout);
-  };
+  // NEW: Handle manga loading transitions
+  const handleMangaLoad = useCallback((mangaId) => {
+    setLoadingStates(prev => ({
+      ...prev,
+      [mangaId]: true
+    }));
 
+    setTimeout(() => {
+      setLoadingStates(prev => ({
+        ...prev,
+        [mangaId]: false
+      }));
+    }, Math.random() * 300 + 200);
+  }, []);
+
+  // NEW: Initialize loading states for new mangas
+  useEffect(() => {
+    displayedMangas.forEach(manga => {
+      if (loadingStates[manga._id] === undefined) {
+        handleMangaLoad(manga._id);
+      }
+    });
+  }, [displayedMangas, handleMangaLoad, loadingStates]);
+
+  const mangaTitle = useCallback((titles) => {
+    switch (userData.title) {
+      case 'english':
+        return titles.english || titles.romaji;
+      case 'romaji':
+        return titles.romaji || titles.english;
+      case 'native':
+        return titles.native;
+      default:
+        return titles.english || titles.romaji || titles.native || 'Unknown Title';
+    }
+  }, [userData.title]);
+
+  // Initial data fetch
   useEffect(() => {
     setIsInitialLoading(true);
-    axios
-      .get('http://localhost:8080/mangas/mangas')
-      .then((response) => {
+    axiosInstance.get('8080/mangas/mangas')
+      .then(response => {
         setMangaList(response.data);
         setIsInitialLoading(false);
       })
-      .catch((error) => {
+      .catch(error => {
         console.error(error);
         setIsInitialLoading(false);
       });
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
   }, [setMangaList]);
 
-  const filterMangas = useCallback((mangas) => {
-    if (!Array.isArray(mangas)) return [];
+  // Fetch user's current manga statuses when userData changes
+  useEffect(() => {
+    const fetchUserMangaStatuses = async () => {
+      if (!userData?._id) {
+        setUserMangaStatuses({});
+        return;
+      }
 
-    return mangas.filter((manga) => {
+      try {
+        const userResponse = await axiosInstance.get(`/users/${userData._id}/current`);
+        const currentUser = userResponse.data;
+
+        // Create a map of mangaId to status for quick lookup
+        const statusMap = {};
+        currentUser?.mangas?.forEach(manga => {
+          statusMap[manga.mangaId] = manga.status;
+        });
+
+        setUserMangaStatuses(statusMap);
+      } catch (error) {
+        console.error('Error fetching user manga statuses:', error);
+      }
+    };
+
+    fetchUserMangaStatuses();
+  }, [userData]);
+
+  // Update getMangaStatus to use the status map
+  const getMangaStatus = useCallback((mangaId) => {
+    return userMangaStatuses[mangaId] || null;
+  }, [userMangaStatuses]);
+
+  // Filter and sort manga list
+  const filterAndSortMangas = useCallback(() => {
+    if (!Array.isArray(mangaList)) return [];
+
+    return mangaList.filter(manga => {
       const matchesSearch =
         manga.titles?.romaji?.toLowerCase().includes(searchInput.toLowerCase()) ||
         manga.titles?.english?.toLowerCase().includes(searchInput.toLowerCase()) ||
@@ -72,66 +133,61 @@ const Mangas = () => {
         selectedGenres.length === 0 ||
         (manga.genres &&
           Array.isArray(manga.genres) &&
-          selectedGenres.every((genre) =>
+          selectedGenres.every(genre =>
             manga.genres.some(
-              (mangaGenre) =>
+              mangaGenre =>
                 genre &&
                 mangaGenre.toLowerCase().includes(genre.toLowerCase())
             )
           ));
 
       const matchesYear = !selectedYear || manga.releaseData.startDate.year === selectedYear;
-
-      const matchesFormat =
-        selectedFormats.length === 0 ||
-        selectedFormats.includes(manga.typings.Format);
-
+      const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(manga.typings.Format);
       const matchesStatus = !selectedStatus || manga.releaseData.releaseStatus === selectedStatus;
 
-      return (
-        matchesSearch &&
-        matchesGenres &&
-        matchesYear &&
-        matchesFormat &&
-        matchesStatus
-      );
+      return matchesSearch && matchesGenres && matchesYear && matchesFormat && matchesStatus;
+    }).sort((a, b) => {
+      const titleA = mangaTitle(a.titles);
+      const titleB = mangaTitle(b.titles);
+      return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
     });
-  }, [searchInput, selectedGenres, selectedYear, selectedFormats, selectedStatus]);
+  }, [mangaList, searchInput, selectedGenres, selectedYear, selectedFormats, selectedStatus, mangaTitle]);
 
-  const mangaTitle = useCallback((titles) => {
-    switch (userData.title) {
-      case 'english':
-        return titles.english || titles.romaji
-      case 'romaji':
-        return titles.romaji || titles.english
-      case 'native':
-        return titles.native
-      default:
-        return titles.english || titles.romaji || titles.native || 'Unknown Title';
-    }
-  }, [userData.title]);
-
+  // Update filtered mangas when filters change
   useEffect(() => {
-    const loadMoreMangas = () => {
-      const filtered = filterMangas(mangaList);
-      const sorted = [...filtered].sort((a, b) => {
-        const titleA = mangaTitle(a.titles);
-        const titleB = mangaTitle(b.titles);
-        return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-      });
+    if (!mangaList) return;
 
-      setDisplayedMangas(sorted.slice(0, page * MANGAS_PER_PAGE));
-      setHasMore(sorted.length > page * MANGAS_PER_PAGE);
+    setDisplayedMangas([]); // Clear current display
+    filteredMangasRef.current = filterAndSortMangas();
 
-      timeoutRef.current = setTimeout(() => {
-        setIsLoadingMore(false);
-      }, LOAD_DELAY);
-    };
+    // Load initial batch
+    const initialBatch = filteredMangasRef.current.slice(0, MANGAS_PER_PAGE);
+    setDisplayedMangas(initialBatch);
+    setHasMore(filteredMangasRef.current.length > MANGAS_PER_PAGE);
+  }, [filterAndSortMangas, mangaList]);
 
+  // Load more mangas
+  const loadMoreMangas = useCallback(() => {
+    if (isLoadingRef.current || !hasMore) return;
+
+    isLoadingRef.current = true;
     setIsLoadingMore(true);
-    loadMoreMangas();
-  }, [mangaList, page, searchInput, selectedGenres, selectedYear, selectedFormats, selectedStatus, filterMangas, mangaTitle]);
 
+    const currentLength = displayedMangas.length;
+    const nextBatch = filteredMangasRef.current.slice(
+      currentLength,
+      currentLength + MANGAS_PER_PAGE
+    );
+
+    setTimeout(() => {
+      setDisplayedMangas(prev => [...prev, ...nextBatch]);
+      setHasMore(currentLength + MANGAS_PER_PAGE < filteredMangasRef.current.length);
+      setIsLoadingMore(false);
+      isLoadingRef.current = false;
+    }, 500);
+  }, [displayedMangas.length, hasMore]);
+
+  // Intersection Observer setup
   const lastMangaElementRef = useCallback(node => {
     if (isLoadingMore) return;
 
@@ -139,46 +195,72 @@ const Mangas = () => {
 
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
+        loadMoreMangas();
       }
     });
 
     if (node) observer.current.observe(node);
-  }, [isLoadingMore, hasMore]);
+  }, [isLoadingMore, hasMore, loadMoreMangas]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [searchInput, selectedGenres, selectedYear, selectedFormats, selectedStatus]);
+  // NEW: Render list items with transitions
+  const renderListItems = () => {
+    const items = [];
+
+    displayedMangas.forEach((manga, index) => {
+      const isLoading = loadingStates[manga._id];
+      const mangaStatus = getMangaStatus(manga._id);
+      items.push(
+        <li
+          key={manga._id}
+          ref={index === displayedMangas.length - 1 ? lastMangaElementRef : null}
+          className={`${browseStyles.listItem} ${isLoading ? browseStyles.loading : browseStyles.loaded}`}
+        >
+          {isLoading ? (
+            <SkeletonCard layout={gridLayout} />
+          ) : (
+            <div className={browseStyles.fadeIn}>
+              <MangaCard
+                manga={manga}
+                name={mangaTitle(manga.titles)}
+                layout={gridLayout}
+                onTopRightButtonClick={handleTopRightButtonClick}
+                hideTopRightButton={!userData || !userData._id}
+                handleGenreClick={handleGenreClick}
+                status={mangaStatus}
+              />
+            </div>
+          )}
+        </li>
+      );
+    });
+
+    if (isLoadingMore && hasMore) {
+      for (let i = 0; i < 4; i++) {
+        items.push(
+          <li key={`skeleton-more-${i}`} className={`${browseStyles.listItem} ${browseStyles.loading}`}>
+            <SkeletonCard layout={gridLayout} />
+          </li>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const handleGenreClick = (genre) => {
-    setSelectedGenres((prevGenres) => {
-      if (!prevGenres.includes(genre)) {
-        return [...prevGenres, genre];
-      }
-      return prevGenres;
-    });
+    setSelectedGenres(prev => prev.includes(genre) ? prev : [...prev, genre]);
   };
 
-  const handleRemoveGenre = (removedGenre) => {
-    setSelectedGenres((prevGenres) =>
-      prevGenres.filter((genre) => genre !== removedGenre)
-    );
+  const handleRemoveGenre = (genre) => {
+    setSelectedGenres(prev => prev.filter(g => g !== genre));
   };
 
-  const onMangaDelete = (mangaId) => {
-    setUserData((prevUserData) => {
-      if (!prevUserData || !prevUserData.mangas) {
-        return prevUserData;
-      }
-      const updatedUser = { ...prevUserData };
-      const updatedMangas = updatedUser.mangas.filter(
-        (manga) => manga.mangaId !== mangaId
-      );
-      updatedUser.mangas = updatedMangas;
-      return updatedUser;
-    });
-    setIsMangaEditorOpen(false);
+  const handleFormatChange = (format) => {
+    setSelectedFormats(prev => prev.includes(format) ? prev : [...prev, format]);
+  };
+
+  const handleRemoveFormat = (format) => {
+    setSelectedFormats(prev => prev.filter(f => f !== format));
   };
 
   const handleTopRightButtonClick = (manga) => {
@@ -186,19 +268,15 @@ const Mangas = () => {
     setIsMangaEditorOpen(true);
   };
 
-  const handleFormatChange = (selectedFormat) => {
-    setSelectedFormats((prevFormats) => {
-      if (!prevFormats.includes(selectedFormat)) {
-        return [...prevFormats, selectedFormat];
-      }
-      return prevFormats;
+  const onMangaDelete = (mangaId) => {
+    setUserData(prev => {
+      if (!prev?.mangas) return prev;
+      return {
+        ...prev,
+        mangas: prev.mangas.filter(manga => manga.mangaId !== mangaId)
+      };
     });
-  };
-
-  const handleRemoveFormat = (removedFormat) => {
-    setSelectedFormats((prevFormats) =>
-      prevFormats.filter((format) => format !== removedFormat)
-    );
+    setIsMangaEditorOpen(false);
   };
 
   return (
@@ -300,42 +378,15 @@ const Mangas = () => {
       </div>
 
       <div className={`${browseStyles.listSection} ${browseStyles[gridLayout]}`}>
-        {displayedMangas.length === 0 && !isInitialLoading ? (
+        {displayedMangas.length === 0 && !isInitialLoading && !isLoadingMore ? (
           <div className={browseStyles.noResults}>
             No manga found matching your criteria
           </div>
         ) : (
-          <>
-            <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
-              <ul className={`${browseStyles.list} ${browseStyles[gridLayout]}`}>
-                {displayedMangas.map((manga, index) => (
-                  <li
-                    key={manga._id}
-                    className={`${browseStyles.listItem} ${index >= displayedMangas.length - MANGAS_PER_PAGE && isLoadingMore ? browseStyles.fadeIn : ''}`}
-                    ref={index === displayedMangas.length - 1 ? lastMangaElementRef : null}
-                  >
-                    <MangaCard
-                      manga={manga}
-                      name={mangaTitle(manga.titles)}
-                      layout={gridLayout}
-                      onTopRightButtonClick={handleTopRightButtonClick}
-                      hideTopRightButton={!userData || !userData._id}
-                      handleGenreClick={handleGenreClick}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {isLoadingMore && hasMore && (
-              <div className={browseStyles.loadingMore}>
-                <Loader />
-              </div>
-            )}
-          </>
-        )}
-        {isInitialLoading && (
-          <div className={browseStyles.loadingContainer}>
-            <Loader />
+          <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
+            <ul className={`${browseStyles.list} ${browseStyles[gridLayout]}`}>
+              {renderListItems()}
+            </ul>
           </div>
         )}
       </div>

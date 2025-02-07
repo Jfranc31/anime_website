@@ -11,7 +11,8 @@ import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
 import { MONTHS } from '../../constants/filterOptions';
 import axiosInstance from '../../utils/axiosConfig';
-import Loader from '../../constants/Loader';
+import Loader from '../../constants/Loader.js';
+import SkeletonDetails from './SkeletonDetails';
 
 /**
  * Functional component representing details of a manga.
@@ -86,7 +87,7 @@ const MangaDetails = () => {
     setCharactersDetails([]); // Clear previous characters
 
     try {
-      const sortedCharacters = await Promise.all(
+      await Promise.all(
         (mangaDetails?.characters || []).map(async (character) => {
           try {
             const response = await axiosInstance.get(
@@ -114,9 +115,8 @@ const MangaDetails = () => {
                     const priorityB = rolePriority.indexOf(b.role);
 
                     if (priorityA === priorityB) {
-                      const nameA = getFullName(a.characterDetails.names);
-                      const nameB = getFullName(b.characterDetails.names);
-                      return nameA.localeCompare(nameB);
+                      // Sort by anilistId as secondary criteria
+                      return (a.characterDetails.anilistId || 0) - (b.characterDetails.anilistId || 0);
                     }
 
                     return priorityA - priorityB;
@@ -221,7 +221,7 @@ const MangaDetails = () => {
   }, [userData, mangaDetails]);
 
   if (!mangaDetails) {
-    return <div>Loading...</div>;
+    return <SkeletonDetails/>;
   }
 
   const onMangaDelete = (mangaId) => {

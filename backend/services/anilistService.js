@@ -88,8 +88,8 @@ async function fetchCharactersBySeriesId(seriesId, mediaType = "ANIME") {
           console.log(`Processed page ${page-1}, Current unique characters: ${allCharacters.size}`);
       } catch (error) {
           if (error.response?.status === 429) {
-              console.log('Rate limit hit, waiting 5 seconds...');
-              await new Promise(resolve => setTimeout(resolve, 5000));
+              console.log('Rate limit hit, waiting 10 seconds...');
+              await new Promise(resolve => setTimeout(resolve, 10000));
               continue;
           }
           console.error(`Error on page ${page}:`, error.message);
@@ -99,7 +99,7 @@ async function fetchCharactersBySeriesId(seriesId, mediaType = "ANIME") {
 
   const finalCharacters = Array.from(allCharacters.values());
   console.log(`Fetch complete. Retrieved ${finalCharacters.length} unique characters`);
-  
+
   return finalCharacters;
 }
 
@@ -110,7 +110,7 @@ async function fetchCharactersBySeriesId(seriesId, mediaType = "ANIME") {
 //   let page = 1;
 //   let hasNextPage = true;
 //   let totalCharacters = 0;
-    
+
 //   const query = `
 //     query ($id: Int!, $type: MediaType, $page: Int!) {
 //         Media(id: $id, type: $type) {
@@ -141,7 +141,7 @@ async function fetchCharactersBySeriesId(seriesId, mediaType = "ANIME") {
 //             }
 //         }
 //     }`;
-  
+
 //   console.log(`Starting character fetch for series ID: ${seriesId}, Media Type: ${mediaType}`);
 
 //   while (hasNextPage) {

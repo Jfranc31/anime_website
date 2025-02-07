@@ -19,8 +19,8 @@
 .characterModal {
   position: relative;
   background: var(--modal-bg);
-  width: 600px;
-  max-height: 90vh;
+  width: 100vh;
+  max-height: 100vh;
   border-radius: 12px;
   box-shadow: 0 8px 32px var(--modal-box-shadow);
   overflow: hidden;
@@ -33,12 +33,13 @@
 
 .modalHeader {
   position: relative;
-  height: 200px;
+  height: 30vh;
+  width: 100vh;
   overflow: hidden;
 }
 
 .modalHeader img {
-  width: 600px;
+  width: 100vh;
   height: 100%;
   object-fit: cover;
   filter: brightness(40%);

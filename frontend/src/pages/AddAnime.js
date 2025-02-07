@@ -10,7 +10,7 @@ import RelationSearch from '../Components/Searches/RelationSearch';
 import addPageStyles from '../styles/pages/add_page.module.css';
 import { AnimeSearch } from '../Components/Searches/AnimeSearch';
 import { DEFAULT_BORDER } from '../constants/assets';
-import Loader from '../constants/Loader';
+import Loader from '../constants/Loader.js';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -146,8 +146,6 @@ const INITIAL_FORM_STATE = {
 };
 // #endregion --------------------------------------------------------------
 
-let track = 0;
-
 export default function AddAnime() {
   // #region State Management ----------------------------------------------
   const navigate = useNavigate();
@@ -157,6 +155,7 @@ export default function AddAnime() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
+  const [remainingCharacters, setRemainingCharacters] = useState(0);
   // #endregion ------------------------------------------------------------
 
   // #region Modal Handlers ------------------------------------------------
@@ -343,7 +342,7 @@ export default function AddAnime() {
       const characters = response.data;
       const existingCharacters = [];
       const charactersToCreate = [];
-      track = characters.length;
+      setRemainingCharacters(characters.length);
 
       console.log("characters: ", characters);
 
@@ -378,7 +377,7 @@ export default function AddAnime() {
       // Use existing handleSelectExistingCharacter method
       if (existingCharacters.length > 0) {
         handleSelectExistingCharacter(existingCharacters);
-        track -= existingCharacters.length;
+        setRemainingCharacters((prev) => prev - existingCharacters.length);
       }
 
       // Create new characters
@@ -387,7 +386,20 @@ export default function AddAnime() {
         await new Promise(resolve => setTimeout(resolve, 5000)); // Longer delay for new characters
 
         // Fetch full character details from AniList
-        const characterDetailsResponse = await axiosInstance.get(`/characters/search/${characterToCreate.node.id}`);
+        const characterDetailsResponse = await axiosInstance.get(`/characters/search/${characterToCreate.node.id}`)
+          .catch((error) => {
+            if(error.response?.data?.message === "Character not found") {
+              console.log(`Skipping as character does not exist`);
+              setRemainingCharacters((prev) => prev - 1);
+              return null;
+            } else {
+              throw error;
+            }
+          });
+
+        if (!characterDetailsResponse) {
+          continue; // Skip the rest of the loop iteration if character is not found
+        }
 
         // Capitalize first letter of role
         const formattedRole = characterToCreate.role.charAt(0) + characterToCreate.role.slice(1).toLowerCase();
@@ -404,6 +416,7 @@ export default function AddAnime() {
           .catch((error) => {
             if (error.response?.data?.message === "This character is already registered") {
               console.log(`Skipping character ${characterToAdd.names?.givenName} as it is already registered.`);
+              return null;
             } else {
               throw error;
             }
@@ -417,10 +430,12 @@ export default function AddAnime() {
 
           // Use handleAddingCharacter for each new character
           handleAddingCharacter(addCharacter);
-          track -= 1;
+          setRemainingCharacters((prev) => prev - 1);;
+        } else {
+          continue;
         }
 
-        console.log('Number of characters left to add: ', track);
+        console.log('Number of characters left to add: ', remainingCharacters);
       }
 
     } catch (error) {
@@ -920,7 +935,7 @@ export default function AddAnime() {
         {/* Add loader here */}
         {isLoadingCharacters && (
           <div>
-            <Loader text={`Adding characters... ${track} left to add`} />
+            <Loader text={`Adding characters... ${remainingCharacters} left to add`} />
           </div>
         )}
 

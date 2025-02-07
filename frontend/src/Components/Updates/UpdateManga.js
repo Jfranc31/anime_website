@@ -9,7 +9,7 @@ import CharacterSearch from '../Searches/CharacterSearch';
 import RelationSearch from '../Searches/RelationSearch';
 import addPageStyles from '../../styles/pages/add_page.module.css';
 import { CompareMangaData } from './CompareMangaData';
-import Loader from '../../constants/Loader';
+import Loader from '../../constants/Loader.js';
 // #endregion --------------------------------------------------------------
 
 // #region Constants -------------------------------------------------------
@@ -731,7 +731,6 @@ export const UpdateManga = ({ match }) => {
               name="titles.english"
               value={formData.titles.english || ''}
               onChange={handleChange}
-              required
             />
           </div>
           <div>

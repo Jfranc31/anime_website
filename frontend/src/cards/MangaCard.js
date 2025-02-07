@@ -21,7 +21,8 @@ function MangaCard({
   onTopRightButtonClick,
   hideTopRightButton = false,
   layout,
-  handleGenreClick
+  handleGenreClick,
+  status
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [titleHeight, setTitleHeight] = useState('auto');
@@ -33,6 +34,17 @@ function MangaCard({
       setTitleHeight(height);
     }
   }, [manga.titles.english]);
+
+  const renderStatusIndicator = () => {
+    if (!status) return null;
+
+    return (
+      <div
+        className={`${cardsStyles.statusIndicator} ${cardsStyles[status.toLowerCase()]}`}
+        title={`Status: ${status}`}
+      />
+    );
+  };
 
   // Add this helper function to determine season
   const getSeason = (month) => {
@@ -100,9 +112,7 @@ function MangaCard({
 
   return (
     <div
-      className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${layout === 'compact' ? cardsStyles.compact : ''} ${isHovered ? cardsStyles.hovered : ''}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${layout === 'compact' ? cardsStyles.compact : ''}`}
     >
       {layout === 'compact' ? (
         <>
@@ -113,8 +123,11 @@ function MangaCard({
           </div>
           <div className={cardsStyles.titleAndProgress} style={{ minHeight: titleHeight }}>
             <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
-              <div className={cardsStyles.mangaTitle} ref={titleRef}>
-                {name}
+              <div className={cardsStyles.titleWrapper}>
+                {renderStatusIndicator()}
+                <div className={cardsStyles.mangaTitle} ref={titleRef}>
+                  {name}
+                </div>
               </div>
             </Link>
             <div className={cardsStyles.genres}>
@@ -149,14 +162,20 @@ function MangaCard({
           </div>
         </>
       ): (
-        <div className={cardsStyles.mangaCard}>
+        <div className={`${cardsStyles.mangaCard} ${isHovered ? cardsStyles.hovered : ''}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <div className={cardsStyles.card2}>
             <div className={cardsStyles.imgContainer}>
               <img src={manga.images.image} alt={manga.titles.english} />
               <div className={cardsStyles.titleAndProgress} style={{ height: titleHeight }}>
                 <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
-                  <div className={cardsStyles.mangaTitle} ref={titleRef}>
-                    {name}
+                  <div className={cardsStyles.titleWrapper}>
+                    {renderStatusIndicator()}
+                    <div className={cardsStyles.mangaTitle} ref={titleRef}>
+                      {name}
+                    </div>
                   </div>
                 </Link>
               </div>

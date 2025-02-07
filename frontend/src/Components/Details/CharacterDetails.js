@@ -7,6 +7,7 @@ import { useParams, Link } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import axiosInstance from '../../utils/axiosConfig';
 import characterDetailsStyles from '../../styles/pages/character_details.module.css';
+import CharacterDetailsSkeleton from './CharacterSkeleton';
 /**
  * Functional component representing details of a character.
  * @returns {JSX.Element} - Rendered character details component.
@@ -101,12 +102,7 @@ const CharacterDetails = () => {
   }, [characterDetails]);
 
   if (!characterDetails) {
-    return (
-      <div className="character-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading character details...</p>
-      </div>
-    );
+    return <CharacterDetailsSkeleton/>
   }
 
   const formatDOB = (dob) => {
@@ -149,12 +145,9 @@ const CharacterDetails = () => {
 
     lines.forEach((line) => {
       const trimmedLine = line.trim();
-      const metadataMatch = trimmedLine.match(/^__\s*(.+?)\s*:\s*__\s*(.+?)\s*$/) ||
-                            trimmedLine.match(/^__\s*(.+?)\s*__\s*:\s*(.+?)\s*$/) ||
-                            trimmedLine.match(/^\*\*\s*(.+?)\s*:\*\*\s*(.+?)\s*$/) ||
-                            trimmedLine.match(/^__\s*(.+?)\s*:\s*(.+?)\s*$/) ||
-                            trimmedLine.match(/^__\s*(.+?)\s*:\s*__\s*(.+?)\s*$/) ||
-                            trimmedLine.match(/^__\s*(.+?)\s*:\s*(.+?)\s*$/);
+      const metadataMatch = trimmedLine.match(
+        /^(?:__|\*\*)\s*(.+?)\s*:(?:__||\*\*)?\s*(.+?)\s*$/
+      );
       if (metadataMatch) {
         // Handle metadata with potential links
         const label = metadataMatch[1].trim();

@@ -35,7 +35,7 @@ const MangaEditor = ({
   useEffect(() => {
     const fetchMangaDetails = async () => {
       if (!manga?._id || !userId) return;
-      
+
       try {
         const mangaResponse = await axiosInstance.get(
           `/mangas/manga/${manga._id}`
@@ -98,7 +98,7 @@ const MangaEditor = ({
     try {
       const endpoint = isInUserList ? 'updateManga' : 'addManga';
       const url = `/users/${userId}/${endpoint}`;
-      
+
       const response = await axiosInstance.post(url, {
         mangaId: manga._id,
         status: userProgress.status || 'Planning',
@@ -165,7 +165,7 @@ const MangaEditor = ({
     >
       <div className={editModalStyles.modalHeader}>
         <img src={manga?.images?.border || manga?.images?.image} alt={manga?.titles?.english} />
-        <h2>{mangaDetails?.titles?.english || ''}</h2>
+        <h2>{mangaDetails?.titles?.english || mangaDetails?.titles?.romaji}</h2>
         <button
           className={editModalStyles.characterModalClose}
           onClick={closeModal}

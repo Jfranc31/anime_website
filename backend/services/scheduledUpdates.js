@@ -12,6 +12,7 @@ const runScheduledAnimeUpdates = (time) => {
       });
 
       for (const anime of animes) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
         const updatedAnime = await updateAnimeFromAnilist(anime);
         if (updatedAnime) {
           console.log("Updated: ", updatedAnime.titles.english);
@@ -32,9 +33,10 @@ const runScheduledMangaUpdates = (time) => {
       });
 
       for (const manga of mangas) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
         const updatedManga = await updateMangaFromAnilist(manga);
         if (updatedManga) {
-          console.log("Updated: ", updatedManga.titles.english);
+          console.log("Updated: ", updatedManga.titles?.english || updatedManga.titles.romaji);
         }
       }
     } catch (error) {

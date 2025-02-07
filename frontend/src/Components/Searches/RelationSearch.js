@@ -1,6 +1,6 @@
 // src/Components/Searches/RelationSearch.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import searchStyles from '../../styles/components/search.module.css';
 /**
@@ -21,20 +21,7 @@ export default function RelationSearch({
   const [selectedRelations, setSelectedRelations] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Add debounce effect for auto-search
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery) {
-        handleSearch(searchType);
-      } else {
-        setRelations([]); // Clear results if search is empty
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, searchType]);
-
-  const handleSearch = async (contentType) => {
+  const handleSearch = useCallback(async (contentType) => {
     try {
       setLoading(true);
       const response = await searchRelations(searchQuery, contentType);
@@ -49,7 +36,20 @@ export default function RelationSearch({
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery]);
+
+  // Add debounce effect for auto-search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery) {
+        handleSearch(searchType);
+      } else {
+        setRelations([]); // Clear results if search is empty
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, searchType, handleSearch]);
 
   const searchRelations = async (query, contentType) => {
     return axios.get(
@@ -120,7 +120,7 @@ export default function RelationSearch({
                       </div>
                       <div className={searchStyles.itemInfo}>
                         <p className={searchStyles.itemName}>
-                          {relation.titles.english}
+                          {relation.titles?.english || relation.titles.romaji}
                         </p>
                       </div>
                     </div>

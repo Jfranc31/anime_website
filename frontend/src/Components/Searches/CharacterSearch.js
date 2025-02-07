@@ -1,6 +1,6 @@
 // src/Components/Searches/CharacterSearch.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import searchStyles from '../../styles/components/search.module.css';
 
@@ -10,19 +10,7 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
   const [loading, setLoading] = useState(false);
   const [selectedCharacters, setSelectedCharacters] = useState([]);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchTerm) {
-        searchCharacters();
-      } else {
-        setCharacters([]); // Clear results if search is empty
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
-
-  const searchCharacters = async () => {
+  const searchCharacters = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get('/characters/searchcharacters', {
@@ -38,7 +26,19 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchTerm) {
+        searchCharacters();
+      } else {
+        setCharacters([]); // Clear results if search is empty
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, searchCharacters]);
 
   const handleCharacterClick = (character) => {
     setSelectedCharacters((prev) => {

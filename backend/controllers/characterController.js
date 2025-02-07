@@ -74,7 +74,6 @@ const searchForCharacters = async (req, res) => {
 const checkForCharacter = async (req, res) => {
   try {
     const { anilistId } = req.body;
-    console.log("Received anilistId: ", anilistId);
 
     // Validate that anilistId is a number
     if (!anilistId || isNaN(Number(anilistId))) {

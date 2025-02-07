@@ -11,7 +11,8 @@ import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
 import { MONTHS } from '../../constants/filterOptions';
 import axiosInstance from '../../utils/axiosConfig';
-import Loader from '../../constants/Loader';
+import Loader from '../../constants/Loader.js';
+import SkeletonDetails from './SkeletonDetails';
 
 /**
  * Functional component representing details of an anime.
@@ -84,7 +85,7 @@ const AnimeDetails = () => {
     setCharactersDetails([]); // Clear previous characters
 
     try {
-      const sortedCharacters = await Promise.all(
+      await Promise.all(
         (animeDetails?.characters || []).map(async (character) => {
           try {
             const response = await axiosInstance.get(
@@ -112,9 +113,8 @@ const AnimeDetails = () => {
                     const priorityB = rolePriority.indexOf(b.role);
 
                     if (priorityA === priorityB) {
-                      const nameA = getFullName(a.characterDetails.names);
-                      const nameB = getFullName(b.characterDetails.names);
-                      return nameA.localeCompare(nameB);
+                      // Sort by anilistId as secondary criteria
+                      return (a.characterDetails.anilistId || 0) - (b.characterDetails.anilistId || 0);
                     }
 
                     return priorityA - priorityB;
@@ -293,7 +293,7 @@ const AnimeDetails = () => {
   }, [userData, animeDetails]);
 
   if (!animeDetails) {
-    return <div>Loading...</div>;
+    return <SkeletonDetails/>;
   }
 
   const onAnimeDelete = (animeId) => {
