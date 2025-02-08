@@ -10,28 +10,29 @@ export const UpdateCharacter = ({ match }) => {
   // Use useParams to get the characterId from the URL
   const { id } = useParams();
   const navigate = useNavigate();
-  console.log('characterId: ', id);
   // Initialize state for character data
+  const genders = ['Female', 'Male', 'Non-binary'];
+  const [altNames, setAltNames] = useState(['']);
+  const [altSpoilerNames, setAltSpoilerNames] = useState(['']);
   const [characterData, setCharacterData] = useState({
     names: {
       givenName: '',
       middleName: '',
       surName: '',
-      alterNames: '',
+      nativeName: '',
+      alterNames: [],
+      alterSpoiler: [],
     },
     about: '',
     gender: '',
-    age: 0,
+    age: '',
     DOB: {
-      year: 0,
-      month: 0,
-      day: 0,
+      year: '',
+      month: '',
+      day: '',
     },
     characterImage: '',
   });
-
-  // Define the genders array
-  const genders = ['Female', 'Male', 'Non-binary'];
 
   // Use useEffect to fetch character details when the component mounts
   useEffect(() => {
@@ -40,8 +41,14 @@ export const UpdateCharacter = ({ match }) => {
         const response = await axiosInstance.get(
           `/characters/character/${id}`
         );
-        console.log('Character details response:', response.data); // Log the response
         setCharacterData(response.data);
+        setAltNames(response.data.names.alterNames.length > 0
+          ? [...response.data.names.alterNames, '']
+          : ['']);
+        setAltSpoilerNames(response.data.names.alterSpoiler.length > 0
+          ? [...response.data.names.alterSpoiler, '']
+          : ['']
+        );
       } catch (error) {
         console.error('Error fetching character details:', error);
       }
@@ -72,7 +79,57 @@ export const UpdateCharacter = ({ match }) => {
     }
   };
 
-  console.log('character: ', characterData);
+  const handleAltNameChange = (value, index) => {
+    const newAltNames = [...altNames];
+    newAltNames[index] = value;
+
+    // Automatically add a new empty input if the last one is filled
+    if (index === newAltNames.length - 1 && value.trim() !== '') {
+      newAltNames.push('');
+    }
+
+    // Remove empty inputs except the last one
+    const filteredAltNames = newAltNames.filter((name, i) =>
+      name.trim() !== '' || i === newAltNames.length - 1
+    );
+
+    setAltNames(filteredAltNames);
+
+    // Update the characterData state to reflect alternative names
+    setCharacterData(prev => ({
+      ...prev,
+      names: {
+        ...prev.names,
+        alterNames: filteredAltNames.filter(name => name.trim() !== '')
+      }
+    }));
+  };
+
+  const handleAltSpoilerNameChange = (value, index) => {
+    const newAltSpoilerNames = [...altSpoilerNames];
+    newAltSpoilerNames[index] = value;
+
+    // Automatically add a new empty input if the last one is filled
+    if (index === newAltSpoilerNames.length - 1 && value.trim() !== '') {
+      newAltSpoilerNames.push('');
+    }
+
+    // Remove empty inputs except the last one
+    const filteredAltSpoilerNames = newAltSpoilerNames.filter((name, i) =>
+      name.trim() !== '' || i === newAltSpoilerNames.length - 1
+    );
+
+    setAltSpoilerNames(filteredAltSpoilerNames);
+
+    // Update the characterData state to reflect alternative names
+    setCharacterData(prev => ({
+      ...prev,
+      names: {
+        ...prev.names,
+        alterSpoiler: filteredAltSpoilerNames.filter(name => name.trim() !== '')
+      }
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,68 +168,83 @@ export const UpdateCharacter = ({ match }) => {
             <h3>Names</h3>
             <div className={createCharacterStyles.grid}>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                className={createCharacterStyles.label}
-                htmlFor="names.givenName"
-                >
-                  Given Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
                   id="names.givenName"
                   name="names.givenName"
+                  placeholder={`Given Name...`}
                   value={characterData.names.givenName}
                   onChange={handleChange}
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.middleName"
-                >
-                  Middle Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
                   id="names.middleName"
                   name="names.middleName"
+                  placeholder={`Middle Name...`}
                   value={characterData.names.middleName}
                   onChange={handleChange}
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.surName"
-                >
-                  Sur Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
                   id="names.surName"
                   name="names.surName"
+                  placeholder={`Sur Name...`}
                   value={characterData.names.surName}
                   onChange={handleChange}
                 />
               </div>
               <div className={createCharacterStyles.gridItem}>
-                <label
-                  className={createCharacterStyles.label}
-                  htmlFor="names.alterNames"
-                >
-                  Alternative Name:
-                </label>
                 <input
                   className={createCharacterStyles.input}
                   type="text"
-                  id="names.alterNames"
-                  name="names.alterNames"
-                  value={characterData.names.alterNames}
+                  id="names.nativeName"
+                  name="names.nativeName"
+                  placeholder={`Native Name...`}
+                  value={characterData.names.nativeName}
                   onChange={handleChange}
                 />
+              </div>
+              <div className={createCharacterStyles.gridItem}>
+                <div className={createCharacterStyles.gridItem}>
+                  {altNames.map((altName, index) => (
+                    <div key={index}>
+                    <input
+                      className={createCharacterStyles.input}
+                      key={index}
+                      type="text"
+                      id={`names.alterNames-${index}`}
+                      name={`names.alterNames[${index}]`}
+                      value={altName}
+                      onChange={(e) => handleAltNameChange(e.target.value, index)}
+                      placeholder={`Alternative Name...`}
+                    />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className={createCharacterStyles.gridItem}>
+                <div className={createCharacterStyles.gridItem}>
+                  {altSpoilerNames.map((altSpoilerName, index) => (
+                    <div key={index}>
+                      <input
+                        className={createCharacterStyles.input}
+                        type="text"
+                        id={`alterSpoilerName-${index}`}
+                        name={`names.alterSpoiler[${index}]`}
+                        value={altSpoilerName}
+                        onChange={(e) => handleAltSpoilerNameChange(e.target.value, index)}
+                        placeholder={`Alternative Spoiler Name...`}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

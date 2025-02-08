@@ -16,7 +16,7 @@ import Cookies from 'js-cookie';
 import AnimeDetails from './Components/Details/AnimeDetails';
 import MangaDetails from './Components/Details/MangaDetails';
 import CharacterDetails from './Components/Details/CharacterDetails';
-import { UpdateAnime } from './Components/Updates/UpdateAnime';
+import { UpdateAnime } from './Components/Updates/UpdateAnime.js';
 import { UpdateManga } from './Components/Updates/UpdateManga';
 import { UpdateCharacter } from './Components/Updates/UpdateCharacter';
 import Navbar from './Components/Navbars/Navbar';

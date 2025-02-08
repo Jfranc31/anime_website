@@ -3,12 +3,12 @@
 // #region Importing React and other dependencies --------------------------
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axiosInstance from '../../utils/axiosConfig';
-import CreateCharacter from '../CreateCharacter';
-import CharacterSearch from '../Searches/CharacterSearch';
-import RelationSearch from '../Searches/RelationSearch';
+import axiosInstance from '../../utils/axiosConfig.js';
+import CreateCharacter from '../CreateCharacter.js';
+import CharacterSearch from '../Searches/CharacterSearch.js';
+import RelationSearch from '../Searches/RelationSearch.js';
 import addPageStyles from '../../styles/pages/add_page.module.css';
-import { CompareAnimeData } from './CompareAnimeData';
+import { CompareAnimeData } from './CompareAnimeData.js';
 import Loader from '../../constants/Loader.js';
 // #endregion --------------------------------------------------------------
 

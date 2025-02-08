@@ -1,69 +1,87 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import axiosInstance from '../utils/axiosConfig';
 import { useCharacterContext } from '../Context/CharacterContext';
 import data from '../Context/ContextApi';
 import CharacterCard from '../cards/CharacterCard';
+import SkeletonCard from '../cards/SkeletonCard';
 import browseStyles from '../styles/pages/Browse.module.css';
-import Loader from '../constants/Loader.js';
 
-const CHARACTERS_PER_PAGE = 21;
-const LOAD_DELAY = 1000; // 500ms delay for smoother loading
+const CHARACTERS_PER_PAGE = 18;
+const DEBOUNCE_DELAY = 300; // ms delay for search debouncing
 
 const Characters = () => {
   const { characterList, setCharacterList } = useCharacterContext();
   const { userData } = useContext(data);
   const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [displayedCharacters, setDisplayedCharacters] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingStates, setLoadingStates] = useState({});
+  const [isSearching, setIsSearching] = useState(false);
 
+  const observer = useRef();
+  const filteredCharactersRef = useRef([]);
+  const isLoadingRef = useRef(false);
+  const debounceTimeout = useRef(null);
+
+  // Debounce search input
+  useEffect(() => {
+    setIsSearching(true);
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setIsSearching(false);
+    }, DEBOUNCE_DELAY);
+
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [searchInput]);
+
+  // Handle character loading transitions
+  const handleCharacterLoad = useCallback((characterId) => {
+    setLoadingStates(prev => ({
+      ...prev,
+      [characterId]: true
+    }));
+
+    setTimeout(() => {
+      setLoadingStates(prev => ({
+        ...prev,
+        [characterId]: false
+      }));
+    }, Math.random() * 300 + 200);
+  }, []);
+
+  // Initialize loading states for new characters
+  useEffect(() => {
+    displayedCharacters.forEach(character => {
+      if (loadingStates[character._id] === undefined) {
+        handleCharacterLoad(character._id);
+      }
+    });
+  }, [displayedCharacters, handleCharacterLoad, loadingStates]);
+
+  // Initial data fetch
   useEffect(() => {
     setIsInitialLoading(true);
-    axios
-      .get('http://localhost:8080/characters/characters')
-      .then((response) => {
+    axiosInstance.get('8080/characters/characters')
+      .then(response => {
         setCharacterList(response.data);
         setIsInitialLoading(false);
       })
-      .catch((error) => {
+      .catch(error => {
         console.error(error);
         setIsInitialLoading(false);
       });
   }, [setCharacterList]);
-
-  const filterCharacters = useCallback((characters) => {
-    if (!Array.isArray(characters)) return [];
-
-    return characters.filter((character) => {
-      const names = character.names || {};
-      const givenName = names.givenName || '';
-      const middleName = names.middleName || '';
-      const surName = names.surName || '';
-      const alterNames = names.alterNames || [];
-
-      const namesToCheck = [
-        givenName,
-        middleName,
-        surName,
-        ...(Array.isArray(alterNames) ? alterNames : [alterNames]),
-      ].map(name => (typeof name === 'string' ? name : '').toLowerCase());
-
-      return namesToCheck.some(name => name.includes(searchInput.toLowerCase()));
-    });
-  }, [searchInput]);
-
-  const getSortingName = useCallback((names) => {
-    const givenName = (names.givenName || '').trim();
-    const surName = (names.surName || '').trim();
-    const nativeName = (names.nativeName || '').trim();
-
-    if (userData.characterName === 'romaji-western') {
-      return (surName || givenName || nativeName).toLowerCase();
-    }
-    return (givenName || surName || nativeName).toLowerCase();
-  }, [userData.characterName]);
 
   const getFullName = useCallback((names) => {
     const givenName = names.givenName || '';
@@ -83,38 +101,131 @@ const Characters = () => {
     }
   }, [userData.characterName]);
 
-  // Load characters based on current page
+  const getSortingName = useCallback((names) => {
+    const givenName = (names.givenName || '').trim();
+    const surName = (names.surName || '').trim();
+    const nativeName = (names.nativeName || '').trim();
+
+    if (userData.characterName === 'romaji-western') {
+      return (surName || givenName || nativeName).toLowerCase();
+    }
+    return (givenName || surName || nativeName).toLowerCase();
+  }, [userData.characterName]);
+
+  // Filter and sort character list
+  const filterAndSortCharacters = useCallback(() => {
+    if (!Array.isArray(characterList)) return [];
+
+    return characterList.filter(character => {
+      const names = character.names || {};
+      const givenName = names.givenName || '';
+      const middleName = names.middleName || '';
+      const surName = names.surName || '';
+      const alterNames = names.alterNames || [];
+
+      const namesToCheck = [
+        givenName,
+        middleName,
+        surName,
+        ...(Array.isArray(alterNames) ? alterNames : [alterNames]),
+      ].map(name => (typeof name === 'string' ? name : '').toLowerCase());
+
+      return namesToCheck.some(name => name.includes(debouncedSearch.toLowerCase()));
+    }).sort((a, b) => {
+      const aName = getSortingName(a.names);
+      const bName = getSortingName(b.names);
+      return aName.localeCompare(bName);
+    });
+  }, [characterList, debouncedSearch, getSortingName]);
+
+  // Update filtered characters when filters change
   useEffect(() => {
-    const loadCharacters = () => {
-      const filtered = filterCharacters(characterList);
-      const sorted = [...filtered].sort((a, b) => {
-        const aName = getSortingName(a.names);
-        const bName = getSortingName(b.names);
-        return aName.localeCompare(bName);
-      });
+    if (!characterList || isSearching) return;
 
-      setDisplayedCharacters(sorted.slice(0, page * CHARACTERS_PER_PAGE));
-      setHasMore(sorted.length > page * CHARACTERS_PER_PAGE);
+    setDisplayedCharacters([]); // Clear current display
+    filteredCharactersRef.current = filterAndSortCharacters();
 
-      if (isLoadingMore) {
-        setTimeout(() => {
-          setIsLoadingMore(false);
-        }, LOAD_DELAY);
-      }
-    };
+    // Load initial batch
+    const initialBatch = filteredCharactersRef.current.slice(0, CHARACTERS_PER_PAGE);
+    setDisplayedCharacters(initialBatch);
+    setHasMore(filteredCharactersRef.current.length > CHARACTERS_PER_PAGE);
+  }, [filterAndSortCharacters, characterList, isSearching]);
 
-    loadCharacters();
-  }, [characterList, page, searchInput, filterCharacters, getSortingName, isLoadingMore]);
+  // Load more characters
+  const loadMoreCharacters = useCallback(() => {
+    if (isLoadingRef.current || !hasMore || isSearching) return;
 
-  const handleLoadMore = () => {
+    isLoadingRef.current = true;
     setIsLoadingMore(true);
-    setPage(prevPage => prevPage + 1);
-  };
 
-  // Reset to first page when search changes
-  useEffect(() => {
-    setPage(1);
-  }, [searchInput]);
+    const currentLength = displayedCharacters.length;
+    const nextBatch = filteredCharactersRef.current.slice(
+      currentLength,
+      currentLength + CHARACTERS_PER_PAGE
+    );
+
+    setTimeout(() => {
+      setDisplayedCharacters(prev => [...prev, ...nextBatch]);
+      setHasMore(currentLength + CHARACTERS_PER_PAGE < filteredCharactersRef.current.length);
+      setIsLoadingMore(false);
+      isLoadingRef.current = false;
+    }, 500);
+  }, [displayedCharacters.length, hasMore, isSearching]);
+
+  // Intersection Observer setup
+  const lastCharacterElementRef = useCallback(node => {
+    if (isLoadingMore || isSearching) return;
+
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreCharacters();
+      }
+    });
+
+    if (node) observer.current.observe(node);
+  }, [isLoadingMore, hasMore, loadMoreCharacters, isSearching]);
+
+  // Render list items with transitions
+  const renderListItems = () => {
+    const items = [];
+
+    displayedCharacters.forEach((character, index) => {
+      const isLoading = loadingStates[character._id];
+      items.push(
+        <li
+          key={character._id}
+          ref={index === displayedCharacters.length - 1 ? lastCharacterElementRef : null}
+          className={`${browseStyles.listItem} ${isLoading ? browseStyles.loading : browseStyles.loaded}`}
+        >
+          {isLoading ? (
+            <SkeletonCard />
+          ) : (
+            <div className={browseStyles.fadeIn}>
+              <CharacterCard
+                character={character}
+                name={getFullName(character.names)}
+                setCharacterList={setCharacterList}
+              />
+            </div>
+          )}
+        </li>
+      );
+    });
+
+    if ((isLoadingMore || isSearching) && hasMore) {
+      for (let i = 0; i < 4; i++) {
+        items.push(
+          <li key={`skeleton-more-${i}`} className={`${browseStyles.listItem} ${browseStyles.loading}`}>
+            <SkeletonCard />
+          </li>
+        );
+      }
+    }
+
+    return items;
+  };
 
   return (
     <div className={browseStyles.browseContainer}>
@@ -133,42 +244,15 @@ const Characters = () => {
       </div>
 
       <div className={browseStyles.listSection}>
-        {displayedCharacters.length === 0 && !isInitialLoading ? (
+        {displayedCharacters.length === 0 && !isInitialLoading && !isLoadingMore && !isSearching ? (
           <div className={browseStyles.noResults}>
             No characters found matching your criteria
           </div>
         ) : (
-          <>
+          <div className={browseStyles.listContainer}>
             <ul className={browseStyles.list}>
-              {displayedCharacters.map((character, index) => (
-                <li
-                  key={character._id}
-                  className={`${browseStyles.listItem} ${index >= displayedCharacters.length - CHARACTERS_PER_PAGE && isLoadingMore ? browseStyles.fadeIn : ''}`}
-                >
-                  <CharacterCard
-                    character={character}
-                    name={getFullName(character.names)}
-                    setCharacterList={setCharacterList}
-                  />
-                </li>
-              ))}
+              {renderListItems()}
             </ul>
-            {hasMore && !isLoadingMore && (
-              <div className={browseStyles.loadMoreContainer}>
-                <button
-                  onClick={handleLoadMore}
-                  className={browseStyles.loadMoreButton}
-                  disabled={isLoadingMore}
-                >
-                  Load More Characters
-                </button>
-              </div>
-            )}
-          </>
-        )}
-        {isLoadingMore && (
-          <div className={browseStyles.loadingContainer}>
-            <Loader />
           </div>
         )}
       </div>

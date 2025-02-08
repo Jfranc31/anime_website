@@ -78,14 +78,14 @@ const Home = () => {
 
   const handleIncrementWatchCount = async (id, type) => {
     console.log('Incrementing count:', { id, type });
-    
+
     if (type === 'anime') {
       const currentAnime = userAnimeList.find(anime => anime.animeId === id);
       console.log('Current anime:', currentAnime);
 
       if (currentAnime) {
         const newEpisodeCount = currentAnime.currentEpisode + 1;
-  
+
         // Update the local state immediately
         setUserAnimeList((prevList) =>
           prevList.map((anime) =>
@@ -94,7 +94,7 @@ const Home = () => {
               : anime
           )
         );
-  
+
         try {
           // Make an API call to update the current episode on the backend
           const response = await axiosInstance.post(`/users/${userData._id}/updateAnime`, {
@@ -102,7 +102,7 @@ const Home = () => {
             status: userData.status || 'Watching',
             currentEpisode: newEpisodeCount,
           });
-      
+
           if (!response.data) {
             console.error('Failed to update on the server');
           } else {
@@ -183,7 +183,7 @@ const Home = () => {
 
     // Calculate the right edge of the popup
     const rightEdge = cardRect.right + popupWidth;
-  
+
     if (rightEdge > activityPageRightEdge) {
       // If it overflows, position it to the left of the card
       setPopupPosition({
@@ -197,7 +197,7 @@ const Home = () => {
         top: `0`, // Align with the card's top
       });
     }
-  
+
     setHoveredCard(animeId);
   };
 
@@ -221,10 +221,12 @@ const Home = () => {
                     </div>
                   </Link>
                   <div className={homeStyles.activityInfo}>
-                    <h3>{activity.animeDetails.titles.english}</h3>
+                    <h3>{activity.animeDetails.titles.english || activity.animeDetails.titles.romaji}</h3>
                     <p className={homeStyles.activityStatus}>
                       {activity.status === 'Completed'
                         ? 'Completed'
+                        : activity.status === 'Planning'
+                        ? `Planning to watch`
                         : activity.currentEpisode === 0 &&
                             activity.status === 'Watching'
                           ? 'Started watching'
@@ -252,7 +254,7 @@ const Home = () => {
                     onMouseEnter={(event) => handleMouseEnter(activity.animeId, event)}
                     onMouseLeave={() => setHoveredCard(null)}
                   >
-                    <Link 
+                    <Link
                       to={`/anime/${activity.animeId}`}
                     >
                       <img
@@ -288,7 +290,7 @@ const Home = () => {
                     </div>
                     {hoveredCard === activity.animeId && (
                       <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                        <h4>{getAnimeById(activity.animeId)?.titles.english}</h4>
+                        <h4>{getAnimeById(activity.animeId)?.titles.english || getAnimeById(activity.animeId)?.titles.romaji}</h4>
                         <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
                       </div>
                     )}
@@ -318,10 +320,12 @@ const Home = () => {
                     </div>
                   </Link>
                   <div className={homeStyles.activityInfo}>
-                    <h3>{activity.mangaDetails.titles.english}</h3>
+                    <h3>{activity.mangaDetails.titles.english || activity.mangaDetails.titles.romaji}</h3>
                     <p className={homeStyles.activityStatus}>
                       {activity.status === 'Completed'
                         ? 'Completed'
+                        : activity.status === 'Planning'
+                        ? 'Planning to read'
                         : activity.currentChapter === 0 &&
                             activity.status === 'Reading'
                           ? 'Started reading'
@@ -374,7 +378,7 @@ const Home = () => {
                     </div>
                     {hoveredCard === activity.mangaId && (
                       <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                        <h4>{getMangaById(activity.mangaId)?.titles.english}</h4>
+                        <h4>{getMangaById(activity.mangaId)?.titles.english || getMangaById(activity.mangaId)?.titles.romaji}</h4>
                         <p>Progress: {activity.currentChapter}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
                       </div>
                     )}

@@ -14,7 +14,7 @@ import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
 import cookieParser from "cookie-parser";
-import { runScheduledAnimeUpdates, runScheduledMangaUpdates } from './services/scheduledUpdates.js';
+import { runScheduledAnimeUpdates, runScheduledMangaUpdates, runScheduledAiringUpdates } from './services/scheduledUpdates.js';
 
 // Creating an Express application
 const app = express();
@@ -228,9 +228,12 @@ app.listen(8080, () => {
   console.log("Server is running at port 8080");
 });
 
-// Add this after your other middleware setup
-runScheduledAnimeUpdates('0 23 * * *');
-runScheduledMangaUpdates('0 23 * * *');
+// Initialize all schedulers
+console.log('Initializing scheduled tasks...');
+runScheduledAnimeUpdates('0 23 * * *');     // Daily at 11 PM
+runScheduledMangaUpdates('0 23 * * *');     // Daily at 11 PM
+runScheduledAiringUpdates('15 * * * *');    // Every 15 minutes
+console.log('Scheduled tasks registered.');
 
 /*  * * * * *  command_to_run
     | | | | |

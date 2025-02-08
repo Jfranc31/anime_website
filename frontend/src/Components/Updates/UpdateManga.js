@@ -693,6 +693,8 @@ export const UpdateManga = ({ match }) => {
 
       if (res.status === 200) {
 
+        window.dispatchEvent(new CustomEvent('mangaUpdated', { detail: updatedFormData }));
+
         navigate(`/manga/${id}`);
       } else {
         console.error('Failed to update manga:', res.data);

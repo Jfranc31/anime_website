@@ -20,6 +20,7 @@ const CharacterDetails = () => {
   const [activeTab, setActiveTab] = useState('about');
   const [activeAppearanceType, setActiveAppearanceType] = useState('anime');
   const [revealedSpoilers, setRevealedSpoilers] = useState({});
+  const [revealName, setRevealName] = useState(new Set());
 
   useEffect(() => {
     const fetchCharacterDetails = async () => {
@@ -212,13 +213,13 @@ const CharacterDetails = () => {
     });
   };
 
-  const getFullName = (names) => {
+  const getFullName = (names, type) => {
     const givenName = names.givenName || '';
     const middleName = names.middleName || '';
     const surName = names.surName || '';
     const nativeName = names.nativeName || '';
 
-    switch (userData.characterName) {
+    switch (type) {
       case 'romaji':
         return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
       case 'romaji-western':
@@ -241,6 +242,18 @@ const CharacterDetails = () => {
       default:
         return titles.english || titles.romaji || titles.native || 'Unknown Title';
     }
+  };
+
+  const handleRevealSpoiler = (name) => {
+    setRevealName((prev) => {
+      const updated = new Set(prev);
+      if (updated.has(name)) {
+        updated.delete(name); // Hide spoiler
+      } else {
+        updated.add(name); // Reveal spoiler
+      }
+      return new Set(updated);
+    });
   };
 
   const renderAboutSection = () => {
@@ -372,14 +385,39 @@ const CharacterDetails = () => {
         </div>
         <div className={characterDetailsStyles.characterInfoSection}>
           <h1 className={characterDetailsStyles.characterName}>
-            {getFullName(characterDetails.names)}
+            {getFullName(characterDetails.names, userData.characterName)}
           </h1>
-          {characterDetails.names.alterNames && (
+
             <div className={characterDetailsStyles.characterAltNames}>
-              <span>Alternative Names:</span>{' '}
-              {characterDetails.names.alterNames.join(', ')}
+              {[
+                userData.characterName === 'native'
+                  ? getFullName(characterDetails.names, 'romaji-western')
+                  : getFullName(characterDetails.names, 'native'),
+
+                ...(characterDetails.names.alterNames || []),
+
+                ...(characterDetails.names.alterSpoiler || []).map((name) => (
+                  <span
+                    key={name}
+                    style={{
+                      filter: revealName.has(name) ? 'none' : 'blur(4px)',
+                      cursor: 'pointer',
+                      transition: 'filter 0.3s ease-in-out',
+                    }}
+                    onClick={() => handleRevealSpoiler(name)}
+                  >
+                    {name}
+                  </span>
+                )),
+              ]
+                .filter(Boolean) // Remove any null/undefined values
+                .map((name, index, arr) =>
+                  typeof name === 'string' ? name : name // Keep spoilers as JSX
+                )
+                .reduce((acc, name, index, arr) => acc.concat(name, index < arr.length - 1 ? ', ' : ''), [])
+              }
             </div>
-          )}
+
           <div className={characterDetailsStyles.characterTabs}>
             <button
               className={`${characterDetailsStyles.tabButton} ${activeTab === 'about' ? characterDetailsStyles.active : ''}`}

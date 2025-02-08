@@ -552,6 +552,11 @@ export default function AddManga() {
         // Redirect or perform additional actions on success
         console.log('Manga and characters updated successfully!', res.data);
 
+        const mangaCreatedEvent = new CustomEvent('mangaCreated', {
+          detail: res.data
+        });
+        window.dispatchEvent(mangaCreatedEvent);
+
         // Clear the form after successful submission
         setFormData(INITIAL_FORM_STATE);
         setSelectedGenres([]);

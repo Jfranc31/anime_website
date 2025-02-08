@@ -28,6 +28,7 @@ const Mangas = () => {
   const [displayedMangas, setDisplayedMangas] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingStates, setLoadingStates] = useState({});
+  const[updateTrigger, setUpdateTrigger] = useState(0);
 
   const observer = useRef();
   const filteredMangasRef = useRef([]);
@@ -73,19 +74,75 @@ const Mangas = () => {
     }
   }, [userData.title]);
 
-  // Initial data fetch
-  useEffect(() => {
-    setIsInitialLoading(true);
-    axiosInstance.get('8080/mangas/mangas')
-      .then(response => {
-        setMangaList(response.data);
-        setIsInitialLoading(false);
-      })
-      .catch(error => {
-        console.error(error);
-        setIsInitialLoading(false);
-      });
+  const fetchMangas = useCallback(async () => {
+    try {
+      setIsInitialLoading(true);
+      const response = await axiosInstance.get('8080/mangas/mangas');
+      setMangaList(response.data);
+      setIsInitialLoading(false);
+    } catch (error) {
+      console.error('Error fetching manga:', error);
+      setIsInitialLoading(false);
+    }
   }, [setMangaList]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchMangas();
+  }, [fetchMangas, updateTrigger]);
+
+  // Add event listeners for manga updates
+  useEffect(() => {
+    const handleMangaCreated = (event) => {
+      const newManga = event.detail;
+
+      // Update manga list with new manga
+      setMangaList(prevList => {
+        // Check if manga already exists
+        const exists = prevList.some(manga => manga._id === newManga._id);
+        if (exists) {
+          return prevList.map(manga =>
+            manga._id === newManga._id ? newManga : manga
+          );
+        }
+        return [...prevList, newManga];
+      });
+
+      // Initialize loading state for new manga
+      handleMangaLoad(newManga._id);
+
+      // Trigger a refresh of the filtered list
+      setUpdateTrigger(prev => prev + 1);
+    };
+
+    const handleMangaUpdated = (event) => {
+      const updatedManga = event.detail;
+      setMangaList(prevList =>
+        prevList.map(manga =>
+          manga._id === updatedManga._id ? updatedManga : manga
+        )
+      );
+    };
+
+    const handleMangaDeleted = (event) => {
+      const deletedMangaId = event.detail;
+      setMangaList(prevList =>
+        prevList.filter(manga => manga._id !== deletedMangaId)
+      );
+    };
+
+    // Add event listeners
+    window.addEventListener('mangaCreated', handleMangaCreated);
+    window.addEventListener('mangaUpdated', handleMangaUpdated);
+    window.addEventListener('mangaDeleted', handleMangaDeleted);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('mangaCreated', handleMangaCreated);
+      window.removeEventListener('mangaUpdated', handleMangaUpdated);
+      window.removeEventListener('mangaDeleted', handleMangaDeleted);
+    };
+  }, [handleMangaLoad]);
 
   // Fetch user's current manga statuses when userData changes
   useEffect(() => {
