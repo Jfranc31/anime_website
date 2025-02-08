@@ -28,7 +28,6 @@ const Mangas = () => {
   const [displayedMangas, setDisplayedMangas] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingStates, setLoadingStates] = useState({});
-  const[updateTrigger, setUpdateTrigger] = useState(0);
 
   const observer = useRef();
   const filteredMangasRef = useRef([]);
@@ -77,7 +76,7 @@ const Mangas = () => {
   const fetchMangas = useCallback(async () => {
     try {
       setIsInitialLoading(true);
-      const response = await axiosInstance.get('8080/mangas/mangas');
+      const response = await axiosInstance.get('/mangas/mangas');
       setMangaList(response.data);
       setIsInitialLoading(false);
     } catch (error) {
@@ -89,30 +88,38 @@ const Mangas = () => {
   // Initial fetch
   useEffect(() => {
     fetchMangas();
-  }, [fetchMangas, updateTrigger]);
+  }, [fetchMangas]);
 
   // Add event listeners for manga updates
   useEffect(() => {
     const handleMangaCreated = (event) => {
       const newManga = event.detail;
+      console.log('Manga created event received:', newManga);
 
       // Update manga list with new manga
       setMangaList(prevList => {
-        // Check if manga already exists
+        console.log('Previous manga list:', prevList);
         const exists = prevList.some(manga => manga._id === newManga._id);
         if (exists) {
           return prevList.map(manga =>
             manga._id === newManga._id ? newManga : manga
           );
         }
-        return [...prevList, newManga];
+        const newList = [newManga, ...prevList];
+        console.log('Updated manga list:', newList);
+        return newList;
       });
 
       // Initialize loading state for new manga
       handleMangaLoad(newManga._id);
 
-      // Trigger a refresh of the filtered list
-      setUpdateTrigger(prev => prev + 1);
+      // directly update displayed mangas
+      setDisplayedMangas(prevDisplayed => {
+        console.log('Previous displayed mangas:', prevDisplayed);
+        const newDisplayed = [newManga, ...prevDisplayed].slice(0, MANGAS_PER_PAGE);
+        console.log('Updated displayed mangas:', newDisplayed);
+        return newDisplayed;
+      });
     };
 
     const handleMangaUpdated = (event) => {
@@ -142,7 +149,7 @@ const Mangas = () => {
       window.removeEventListener('mangaUpdated', handleMangaUpdated);
       window.removeEventListener('mangaDeleted', handleMangaDeleted);
     };
-  }, [handleMangaLoad]);
+  }, [handleMangaLoad, setMangaList]);
 
   // Fetch user's current manga statuses when userData changes
   useEffect(() => {

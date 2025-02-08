@@ -562,7 +562,9 @@ export default function AddManga() {
         setSelectedGenres([]);
 
         // Redirect the user to the new manga page
-        navigate(`/manga/${res.data._id}`);
+        setTimeout(() => {
+          navigate(`/manga/${res.data._id}`);
+        }, 100);
       } else {
         // Handle errors from the backend
         console.error('Failed to update manga:', res.data);

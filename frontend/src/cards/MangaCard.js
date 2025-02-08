@@ -70,8 +70,12 @@ function MangaCard({
       return `${season} ${startYear}`;
     }
 
-    if (startYear !== currentYear) {
+    if (startYear < currentYear && manga.releaseData.releaseStatus === 'Currently Releasing') {
       return `Publishing Since ${startYear}`;
+    }
+
+    if ( manga.releaseData.releaseStatus === 'Not Yet Released') {
+      return `${season} ${startYear}`
     }
 
     return 'Publishing';

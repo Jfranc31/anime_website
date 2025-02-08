@@ -565,12 +565,19 @@ export default function AddAnime() {
         // Redirect or perform additional actions on success
         console.log('Anime and characters added successfully!', res.data);
 
+        const animeCreatedEvent = new CustomEvent('animeCreated', {
+          detail: res.data
+        });
+        window.dispatchEvent(animeCreatedEvent);
+
         // Clear the form after successful submission
         setFormData(INITIAL_FORM_STATE);
         setSelectedGenres([]);
 
         // Redirect the user to the new anime page
-        navigate(`/anime/${res.data._id}`);
+        setTimeout(() => {
+          navigate(`/anime/${res.data._id}`);
+        }, 100);
       } else {
         // Handle errors from the backend
         console.error('Failed to add anime:', res.data);

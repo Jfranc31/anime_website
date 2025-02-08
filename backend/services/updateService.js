@@ -56,14 +56,14 @@ const compareAnimeData = async (anime) => {
     const differences = {
       titles: {
         current: {
-          romaji: anime.titles.romaji,
-          english: anime.titles.english,
-          native: anime.titles.native
+          romaji: anime.titles.romaji || '',
+          english: anime.titles.english || '',
+          native: anime.titles.native || ''
         },
         anilist: {
-          romaji: anilistData.title.romaji,
-          english: anilistData.title.english,
-          native: anilistData.title.native
+          romaji: anilistData.title.romaji || '',
+          english: anilistData.title.english || '',
+          native: anilistData.title.native || ''
         },
         isDifferent: JSON.stringify({
           romaji: anime.titles.romaji,
@@ -83,7 +83,7 @@ const compareAnimeData = async (anime) => {
           CountryOfOrigin: anime.typings.CountryOfOrigin || ''
         },
         anilist: {
-          Format: anilistData.format || '',
+          Format: FORMAT_MAP[anilistData.format] || '',
           Source: SOURCE_MAP[anilistData.source] || '',
           CountryOfOrigin: COUNTRY_MAP[anilistData.countryOfOrigin] || ''
         },

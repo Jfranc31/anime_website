@@ -80,7 +80,8 @@
 
 .scrollWrap {
   height: 160px; /* Set a fixed height for scrolling */
-  overflow-y: auto; /* Enable vertical scrolling */
+  overflow: auto; /* Enable vertical scrolling */
+  overscroll-behavior: contain;
 }
 
 .description {
@@ -368,9 +369,10 @@ img {
   padding: 10px;
   height: auto;
   align-items: center;
-  background: var(--filter-bg);
+  background: var(--page-bg);
   border-radius: 8px;
   min-height: fit-content;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .card.compact .card2 {
@@ -404,6 +406,18 @@ img {
   line-height: 1.2;
   margin: 0;
   transition: color 0.3s, text-shadow 0.3s; /* Add transition for smooth hover effect */
+}
+
+.card.compact .mangaTitle h3,
+.card.compact .animeTitle h3 {
+  font-size: 1rem;
+  color: var(--text-primary);
+  word-break: break-word;
+  line-height: 1.2;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card.compact .mangaTitle:hover,
@@ -495,6 +509,10 @@ img {
 
 .reading {
   background-color: #4CAF50; /* Green for Reading */
+}
+
+.watching {
+  background-color: #4CAF50; /* Green for Watching */
 }
 
 .completed {

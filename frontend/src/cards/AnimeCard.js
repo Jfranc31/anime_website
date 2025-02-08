@@ -21,7 +21,8 @@ function AnimeCard({
   onTopRightButtonClick,
   hideTopRightButton = false,
   layout,
-  handleGenreClick
+  handleGenreClick,
+  status
 }) {
   // State to track hover state
   const [isHovered, setIsHovered] = useState(false);
@@ -43,6 +44,17 @@ function AnimeCard({
     return `Ep ${episode} airing in
             ${days} days, ${hours} hours`;
   };
+
+  const renderStatusIndicator = () => {
+      if (!status) return null;
+  
+      return (
+        <div
+          className={`${cardsStyles.statusIndicator} ${cardsStyles[status.toLowerCase()]}`}
+          title={`Status: ${status}`}
+        />
+      );
+    };
 
   // Add this helper function to determine season
   const getSeason = (month) => {
@@ -146,8 +158,13 @@ function AnimeCard({
           </div>
           <div className={cardsStyles.titleAndProgress} style={{ minHeight: titleHeight }}>
             <Link className={cardsStyles.navLink} to={`/anime/${anime._id}`}>
-              <div className={cardsStyles.animeTitle} ref={titleRef}>
-                {name}
+              <div className={cardsStyles.titleWrapper}>
+                {renderStatusIndicator()}
+                <div className={cardsStyles.animeTitle} ref={titleRef}>
+                  <h3>
+                    {name}
+                  </h3>
+                </div>
               </div>
             </Link>
             <div className={cardsStyles.genres}>
@@ -192,9 +209,12 @@ function AnimeCard({
               <img src={anime.images.image} alt={anime.titles.english} />
               <div className={cardsStyles.titleAndProgress} style={{ height: titleHeight }}>
                 <Link className={cardsStyles.navLink} to={`/anime/${anime._id}`}>
+                <div className={cardsStyles.titleWrapper}>
+                  {renderStatusIndicator()}
                   <div className={cardsStyles.animeTitle} ref={titleRef}>
                     {name}
                   </div>
+                </div>
                 </Link>
               </div>
             </div>

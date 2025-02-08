@@ -1,6 +1,3 @@
-// /src/Component/Animes.js
-
-// Importing React and other dependencies
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
@@ -17,6 +14,7 @@ const ANIMES_PER_PAGE = 18;
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
   const { userData, setUserData } = useContext(data);
+  const [userAnimeStatuses, setUserAnimeStatuses] = useState({});
   const [searchInput, setSearchInput] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
@@ -74,18 +72,115 @@ const Animes = () => {
     }
   }, [userData.title]);
 
-  useEffect(() => {
-    setIsInitialLoading(true);
-    axiosInstance.get('8080/animes/animes')
-      .then((response) => {
-        setAnimeList(response.data);
-        setIsInitialLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setIsInitialLoading(false);
-      });
+  const fetchAnimes = useCallback(async () => {
+    try {
+      setIsInitialLoading(true);
+      const response = await axiosInstance.get('/animes/animes');
+      setAnimeList(response.data);
+      setIsInitialLoading(false);
+    } catch (error) {
+      console.error('Error fetching anime:', error);
+      setIsInitialLoading(false);
+    }
   }, [setAnimeList]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchAnimes();
+  }, [fetchAnimes]);
+
+  // Add event listerners for anime updates
+  useEffect(() => {
+    const handleAnimeCreated = (event) => {
+      const newAnime = event.detail;
+      console.log('Anime created event received:', newAnime);
+
+      // Update anime list with new anime
+      setAnimeList(prevList => {
+        console.log('Previous anime list:', prevList);
+        const exists = prevList.some(anime => anime._id === newAnime._id);
+        if (exists) {
+          return prevList.map(anime =>
+            anime._id === newAnime._id ? newAnime : anime
+          );
+        }
+        const newList = [newAnime, ...prevList];
+        console.log('Updated anime list:', newList);
+        return newList;
+      });
+
+      // Initialize loading state for new anime
+      handleAnimeLoad(newAnime._id);
+
+      // directly update displated animes
+      setDisplayedAnimes(prevDisplayed => {
+        console.log('Previous displayed animes:', prevDisplayed);
+        const newDisplayed = [newAnime, ...prevDisplayed].slice(0, ANIMES_PER_PAGE);
+        console.log('Updated displayed animes:', newDisplayed);
+        return newDisplayed;
+      });
+    };
+
+    const handleAnimeUpdated = (event) => {
+      const updatedAnime = event.detail;
+      setAnimeList(prevList =>
+        prevList.map(anime =>
+          anime._id === updatedAnime._id ? updatedAnime : anime
+        )
+      );
+    };
+
+    const handleAnimeDeleted = (event) => {
+      const deletedAnimeId = event.detail;
+      setAnimeList(prevList =>
+        prevList.filter(anime => anime._id !== deletedAnimeId)
+      );
+    };
+
+    // Add event listeners
+    window.addEventListener('animeCreated', handleAnimeCreated);
+    window.addEventListener('animeUpdated', handleAnimeUpdated);
+    window.addEventListener('animeDeleted', handleAnimeDeleted);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('animeCreated', handleAnimeCreated);
+      window.removeEventListener('animeUpdated', handleAnimeUpdated);
+      window.removeEventListener('animeDeleted', handleAnimeDeleted);
+    };
+  }, [handleAnimeLoad, setAnimeList]);
+
+  // Fetch user's current anime statuses when userData changes
+  useEffect(() => {
+    const fetchUserAnimeStatuses = async () => {
+      if (!userData?._id) {
+        setUserAnimeStatuses({});
+        return;
+      }
+
+      try {
+        const userResponse = await axiosInstance.get(`/users/${userData._id}/current`);
+        const currentUser = userResponse.data;
+
+        // Create a map of animeId to status for quick lookup
+        const statusMap = {};
+        currentUser?.animes?.forEach(anime => {
+          statusMap[anime.animeId] = anime.status;
+        });
+
+        setUserAnimeStatuses(statusMap);
+      } catch (error) {
+        console.error('Error fetching user anime statuses:', error);
+      }
+    };
+
+    fetchUserAnimeStatuses();
+  }, [userData]);
+
+  // Update getAnimeStatus to use the status map
+  const getAnimeStatus = useCallback((animeId) => {
+    return userAnimeStatuses[animeId] || null;
+  }, [userAnimeStatuses]);
 
   const determineSeason = (startDate) => {
     if (!startDate || !startDate.month)
@@ -192,6 +287,7 @@ const Animes = () => {
 
     displayedAnimes.forEach((anime, index) => {
       const isLoading = loadingStates[anime._id];
+      const animeStatus = getAnimeStatus(anime._id);
       items.push(
         <li
           key={anime._id}
@@ -209,6 +305,7 @@ const Animes = () => {
                 onTopRightButtonClick={handleTopRightButtonClick}
                 hideTopRightButton={!userData || !userData._id}
                 handleGenreClick={handleGenreClick}
+                status={animeStatus}
               />
             </div>
           )}
