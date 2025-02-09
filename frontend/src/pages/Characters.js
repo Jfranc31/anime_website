@@ -5,7 +5,6 @@ import data from '../Context/ContextApi';
 import CharacterCard from '../cards/CharacterCard';
 import SkeletonCard from '../cards/SkeletonCard';
 import browseStyles from '../styles/pages/Browse.module.css';
-import Loader from '../constants/Loader';
 
 const CHARACTERS_PER_PAGE = 18;
 const DEBOUNCE_DELAY = 300; // ms delay for search debouncing
@@ -252,11 +251,7 @@ const Characters = () => {
         ) : (
           <div className={browseStyles.listContainer}>
             <ul className={browseStyles.list}>
-              {isInitialLoading ? (
-                <Loader />
-              ) : (
-                renderListItems()
-              )}
+              {renderListItems()}
             </ul>
           </div>
         )}
