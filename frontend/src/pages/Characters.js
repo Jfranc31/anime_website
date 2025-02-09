@@ -5,6 +5,7 @@ import data from '../Context/ContextApi';
 import CharacterCard from '../cards/CharacterCard';
 import SkeletonCard from '../cards/SkeletonCard';
 import browseStyles from '../styles/pages/Browse.module.css';
+import Loader from '../constants/Loader';
 
 const CHARACTERS_PER_PAGE = 18;
 const DEBOUNCE_DELAY = 300; // ms delay for search debouncing
@@ -72,7 +73,7 @@ const Characters = () => {
   // Initial data fetch
   useEffect(() => {
     setIsInitialLoading(true);
-    axiosInstance.get('8080/characters/characters')
+    axiosInstance.get('/characters/characters')
       .then(response => {
         setCharacterList(response.data);
         setIsInitialLoading(false);
@@ -251,7 +252,11 @@ const Characters = () => {
         ) : (
           <div className={browseStyles.listContainer}>
             <ul className={browseStyles.list}>
-              {renderListItems()}
+              {isInitialLoading ? (
+                <Loader />
+              ) : (
+                renderListItems()
+              )}
             </ul>
           </div>
         )}

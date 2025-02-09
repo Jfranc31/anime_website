@@ -9,6 +9,7 @@ import Mangas from './pages/Mangas';
 import Characters from './pages/Characters';
 import AddSection from './pages/Add';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import data from './Context/ContextApi';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -30,6 +31,20 @@ import './themes.module.css';
 import UserManagement from './Components/Admin/UserManagement';
 import Settings from './pages/Settings';
 import Loader from './constants/Loader.js';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant'
+    });
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   const [userData, setUserData] = useState({});
@@ -64,6 +79,7 @@ function App() {
       <data.Provider value={{ userData, setUserData }}>
         <ThemeProvider>
           <div className="App">
+            <ScrollToTop />
             <Navbar />
             <AnimeProvider>
               <MangaProvider>

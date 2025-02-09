@@ -147,7 +147,7 @@ const CharacterDetails = () => {
     lines.forEach((line) => {
       const trimmedLine = line.trim();
       const metadataMatch = trimmedLine.match(
-        /^(?:__|\*\*)\s*(.+?)\s*:(?:__||\*\*)?\s*(.+?)\s*$/
+        /^(?:__|\*\*)\s*(.+?)\s*:(?:__|\*\*)?\s*(.+?)\s*$/
       );
       if (metadataMatch) {
         // Handle metadata with potential links
