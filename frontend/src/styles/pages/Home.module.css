@@ -1,6 +1,33 @@
 /*=============================================
                 Home Page css
 ==============================================*/
+.tabContainer {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.tabButton {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+.activeTab {
+  background: var(--accent-color);
+  color: white;
+}
+
 .activityPage {
   max-width: 1400px;
   margin: 70px auto 0;
@@ -9,7 +36,6 @@
   min-height: calc(100vh - 70px);
 }
 
-/* Section Containers */
 .sectionContainer {
   margin-bottom: 3rem;
   animation: fadeIn 0.3s ease-out;
@@ -28,7 +54,6 @@
   font-weight: 600;
 }
 
-/* Activities Grid */
 .activitiesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -92,7 +117,6 @@
   font-size: 0.8rem;
 }
 
-/* Progress Section */
 .progressSection {
   background: var(--card-bg);
   position: relative;
@@ -139,9 +163,9 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 50px; /* Set the height of the background for title and progress */
+  height: 50px;
   background: rgba(25, 30, 39, 0.8);
-  z-index: 1; /* Ensure this layer is above the image */
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -169,7 +193,6 @@
   overflow: hidden;
 }
 
-/* Empty State */
 .emptyState {
   text-align: center;
   padding: 4rem 2rem;
@@ -199,7 +222,6 @@
   opacity: 1;
 }
 
-/* Responsive Design */
 @media screen and (max-width: 1200px) {
   .activityPage {
     width: 95%;
@@ -222,9 +244,17 @@
   .headerContainer h1 {
     font-size: 1.5rem;
   }
+
+  .tabContainer {
+    gap: 0.5rem;
+  }
+
+  .tabButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
 }
 
-/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -245,12 +275,12 @@
   color: white;
   padding: 1rem;
   border-radius: 5px;
-  /* z-index: 9999; */
   width: calc(200% + 1rem);
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  pointer-events: none;
 }
 
 .popup h4 {

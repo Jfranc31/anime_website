@@ -138,6 +138,11 @@ const addAnime = async (req, res) => {
       status = "Watching";
     }
 
+    if (status == "Completed") {
+      const anime = await AnimeModel.findById(animeId);
+      currentEpisode = anime.lengths.Episodes;
+    }
+
     user.animes.push({ animeId, status, currentEpisode });
 
     // Save the updated user
@@ -177,6 +182,11 @@ const addManga = async (req, res) => {
 
     if (currentChapter > 0 || currentVolume > 0) {
       status = "Reading";
+    }
+
+    if (status = "Completed") {
+      const manga = await MangaModel.findById(mangaId);
+      currentChapter = manga.lengths.chapters;
     }
 
     user.mangas.push({ mangaId, status, currentChapter, currentVolume });

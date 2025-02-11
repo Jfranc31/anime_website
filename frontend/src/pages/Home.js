@@ -16,6 +16,7 @@ const Home = () => {
   const [userMangaList, setUserMangaList] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ left: '100%', top: '0' });
+  const [activeTab, setActiveTab] = useState('anime');
 
   const fetchLatestActivities = useCallback(async () => {
     try {
@@ -203,7 +204,22 @@ const Home = () => {
 
   return (
     <div className={homeStyles.activityPage}>
-      {animeActivities.length > 0 && (
+      <div classNAme={homeStyles.tabContainer}>
+        <button 
+          className={`${homeStyles.tabButton} ${activeTab === 'anime' ? homeStyles.activeTab : ''}`}
+          onClick={() => setActiveTab('anime')}
+        >
+          Anime
+        </button>
+        <button 
+          className={`${homeStyles.tabButton} ${activeTab === 'manga' ? homeStyles.activeTab : ''}`}
+          onClick={() => setActiveTab('manga')}
+        >
+          Manga
+        </button>
+      </div>
+
+      {activeTab === 'anime' && animeActivities.length > 0 && (
         <>
           <div className={homeStyles.sectionContainer}>
             <div className={homeStyles.headerContainer}>
@@ -302,7 +318,7 @@ const Home = () => {
         </>
       )}
 
-      {mangaActivities.length > 0 && (
+      {activeTab === 'manga' && mangaActivities.length > 0 && (
         <>
           <div className={homeStyles.sectionContainer}>
             <div className={homeStyles.headerContainer}>
@@ -390,11 +406,12 @@ const Home = () => {
         </>
       )}
 
-      {animeActivities.length === 0 && mangaActivities.length === 0 && (
+      {((activeTab === 'anime' && animeActivities.length === 0) || 
+        (activeTab === 'manga' && mangaActivities.length === 0)) && (
         <div className={homeStyles.emptyState}>
           <h2>No Recent Activities</h2>
           <p>
-            Start watching anime or reading manga to see your activities here!
+            Start {activeTab === 'anime' ? 'watching anime' : 'reading manga'} to see your activities here!
           </p>
         </div>
       )}
