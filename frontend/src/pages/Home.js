@@ -8,27 +8,69 @@ import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 
 const Home = () => {
-  const { animeList } = useAnimeContext();
+  const { animeList } = useAnimeContext() || {};
   const { mangaList } = useMangaContext();
   const { userData } = useContext(data);
-  const [latestActivities, setLatestActivities] = useState([]);
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ left: '100%', top: '0' });
   const [activeTab, setActiveTab] = useState('anime');
+  const [airingTimes, setAiringTimes] = useState({});
 
-  const fetchLatestActivities = useCallback(async () => {
+  const [animeActivitiesPage, setAnimeActivitiesPage] = useState(1);
+  const [mangaActivitiesPage, setMangaActivitiesPage] = useState(1);
+  const [hasMoreAnime, setHasMoreAnime] = useState(true);
+  const [hasMoreManga, setHasMoreManga] = useState(true);
+  const [loadingAnime, setLoadingAnime] = useState(false);
+  const [loadingManga, setLoadingManga] = useState(false);
+  const [animeActivities, setAnimeActivities] = useState([]);
+  const [mangaActivities, setMangaActivities] = useState([]);
+
+  const calculateTimeUntilAiring = useCallback((airingAt) => {
+    const now = Math.floor(Date.now() / 1000);
+    return airingAt - now;
+  }, []);
+
+  const fetchActivities = useCallback(async (type, page, append = false) => {
+    const setLoading = type === 'anime' ? setLoadingAnime : setLoadingManga;
+    const setActivities = type === 'anime' ? setAnimeActivities : setMangaActivities;
+    const setHasMore = type === 'anime' ? setHasMoreAnime : setHasMoreManga;
+
     try {
-      const data = await fetchWithErrorHandling(`/latest-activities/${userData._id}`);
-      const sortedActivities = data.sort(
+      setLoading(true);
+      const response = await fetchWithErrorHandling(
+        `/latest-activities/${userData._id}?page=${page}&limit=15&type=${type}`
+      );
+      
+      const sortedActivities = response.activities.sort(
         (a, b) => new Date(b.activityTimestamp) - new Date(a.activityTimestamp)
       );
-      setLatestActivities(sortedActivities);
+
+      setActivities(prev => 
+        append ? [...prev, ...sortedActivities] : sortedActivities
+      );
+      setHasMore(response.pagination.hasMore);
     } catch (error) {
-      setLatestActivities([]);
+      if (!append) {
+        setActivities([]);
+      }
+    } finally {
+      setLoading(false);
     }
   }, [userData._id]);
+
+  const handleLoadMoreAnime = async () => {
+    const nextPage = animeActivitiesPage + 1;
+    setAnimeActivitiesPage(nextPage);
+    await fetchActivities('anime', nextPage, true);
+  };
+
+  const handleLoadMoreManga = async () => {
+    const nextPage = mangaActivitiesPage + 1;
+    setMangaActivitiesPage(nextPage);
+    await fetchActivities('manga', nextPage, true);
+  };
 
   const fetchUserList = useCallback(async () => {
     try {
@@ -42,9 +84,10 @@ const Home = () => {
   }, [userData._id]);
 
   useEffect(() => {
-    fetchLatestActivities();
+    fetchActivities('anime', 1, false);
+    fetchActivities('manga', 1, false);
     fetchUserList();
-  }, [userData._id, fetchLatestActivities, fetchUserList]);
+  }, [userData._id, fetchActivities, fetchUserList]);
 
   const getAnimeById = (animeId) => {
     return animeList.find((anime) => anime._id === animeId);
@@ -77,17 +120,51 @@ const Home = () => {
       }));
   };
 
-  const handleIncrementWatchCount = async (id, type) => {
-    console.log('Incrementing count:', { id, type });
+  const watchingAnime = filterAnimeByWatching();
+  const readingManga = filterMangaByReading();
 
+  const updateAiringTimes = useCallback(() => {
+    const updatedTimes = {};
+    
+    watchingAnime.forEach((activity) => {
+      const anime = getAnimeById(activity.animeId);
+      if (anime?.nextAiringEpisode?.airingAt) {
+        const timeUntilAiring = calculateTimeUntilAiring(anime.nextAiringEpisode.airingAt);
+        
+        // If the episode has aired
+        if (timeUntilAiring <= 0) {
+          // Calculate how many episodes have aired since
+          const WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
+          const weeksSinceAiring = Math.floor(Math.abs(timeUntilAiring) / WEEK_IN_SECONDS) + 1;
+          const newEpisode = anime.nextAiringEpisode.episode + weeksSinceAiring;
+          const newAiringAt = anime.nextAiringEpisode.airingAt + (weeksSinceAiring * WEEK_IN_SECONDS);
+          
+          updatedTimes[activity.animeId] = {
+            airingAt: newAiringAt,
+            episode: newEpisode,
+            timeUntilAiring: calculateTimeUntilAiring(newAiringAt)
+          };
+        } else {
+          // If not aired yet, use current info
+          updatedTimes[activity.animeId] = {
+            airingAt: anime.nextAiringEpisode.airingAt,
+            episode: anime.nextAiringEpisode.episode,
+            timeUntilAiring
+          };
+        }
+      }
+    });
+    
+    setAiringTimes(updatedTimes);
+  }, [watchingAnime, getAnimeById, calculateTimeUntilAiring]);
+
+  const handleIncrementWatchCount = async (id, type) => {
     if (type === 'anime') {
       const currentAnime = userAnimeList.find(anime => anime.animeId === id);
-      console.log('Current anime:', currentAnime);
 
       if (currentAnime) {
         const newEpisodeCount = currentAnime.currentEpisode + 1;
 
-        // Update the local state immediately
         setUserAnimeList((prevList) =>
           prevList.map((anime) =>
             anime.animeId === id
@@ -97,32 +174,30 @@ const Home = () => {
         );
 
         try {
-          // Make an API call to update the current episode on the backend
           const response = await axiosInstance.post(`/users/${userData._id}/updateAnime`, {
             animeId: id,
             status: userData.status || 'Watching',
             currentEpisode: newEpisodeCount,
           });
 
-          if (!response.data) {
-            console.error('Failed to update on the server');
-          } else {
-            fetchLatestActivities();
+          if (response.data) {
+            // Reset to page 1 and fetch fresh data
+            setAnimeActivitiesPage(1);
+            await fetchActivities('anime', 1, false);
           }
         } catch (error) {
           console.error('Error updating user progress:', error);
         }
       }
     }
+    
     if (type === 'manga') {
       const currentManga = userMangaList.find(manga => manga.mangaId === id);
-      console.log('Current manga:', currentManga);
 
       if (currentManga) {
         const newChapterCount = currentManga.currentChapter + 1;
         const volumeCount = currentManga.currentVolume;
 
-        // Update the local state immediately
         setUserMangaList((prevList) =>
           prevList.map((manga) =>
             manga.mangaId === id
@@ -131,10 +206,7 @@ const Home = () => {
           )
         );
 
-        console.log('UserMangaList: ', userMangaList);
-
         try {
-          // Make an API call to update the current chapter on the backend
           const response = await axiosInstance.post(`/users/${userData._id}/updateManga`, {
             mangaId: id,
             status: userData.status || 'Reading',
@@ -142,10 +214,10 @@ const Home = () => {
             currentVolume: volumeCount
           });
 
-          if (!response.data) {
-            console.log('Failed to update on the server');
-          } else {
-            fetchLatestActivities();
+          if (response.data) {
+            // Reset to page 1 and fetch fresh data
+            setMangaActivitiesPage(1);
+            await fetchActivities('manga', 1, false);
           }
         } catch (error) {
           console.error('Error updating user progress:', error);
@@ -154,14 +226,12 @@ const Home = () => {
     }
   };
 
-  const animeActivities = latestActivities.filter(
-    (activity) => activity.animeDetails
-  );
-  const mangaActivities = latestActivities.filter(
-    (activity) => activity.mangaDetails
-  );
-  const watchingAnime = filterAnimeByWatching();
-  const readingManga = filterMangaByReading();
+  useEffect(() => {
+    updateAiringTimes();
+    const interval = setInterval(updateAiringTimes, 60000);
+    console.log('Update time');
+    return () => clearInterval(interval);
+  }, [updateAiringTimes]);
 
   const formatTimeUntilNextEpisode = (timeUntilAiring) => {
     const days = Math.floor(timeUntilAiring / (3600 * 24));
@@ -202,9 +272,62 @@ const Home = () => {
     setHoveredCard(animeId);
   };
 
+  const renderProgressSection = () => (
+    <div className={homeStyles.progressSection}>
+      <h2>Currently Watching</h2>
+      <div className={homeStyles.progressGrid}>
+        {watchingAnime.map((activity) => (
+          <div
+            key={activity.animeId}
+            className={homeStyles.progressCard}
+            onMouseEnter={(event) => handleMouseEnter(activity.animeId, event)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            <Link to={`/anime/${activity.animeId}`}>
+              <img
+                src={getAnimeById(activity.animeId)?.images.image}
+                alt={getAnimeById(activity.animeId)?.titles.english}
+              />
+            </Link>
+            <div className={homeStyles.progressInfo}>
+              {hoveredCard === activity.animeId ? (
+                <div className={homeStyles.episodeInfo}>
+                  <span>{activity.currentEpisode}</span>
+                  <span
+                    className={homeStyles.incrementWatchCount}
+                    onClick={() => handleIncrementWatchCount(activity.animeId, 'anime')}
+                  >
+                    +
+                  </span>
+                </div>
+              ) : (
+                airingTimes[activity.animeId] && (
+                  <div className={homeStyles.episodeInfo}>
+                    <span>
+                      {airingTimes[activity.animeId].episode}
+                    </span>
+                    <span>
+                      {formatTimeUntilNextEpisode(airingTimes[activity.animeId].timeUntilAiring)}
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
+            {hoveredCard === activity.animeId && (
+              <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
+                <h4>{getAnimeById(activity.animeId)?.titles.english || getAnimeById(activity.animeId)?.titles.romaji}</h4>
+                <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className={homeStyles.activityPage}>
-      <div classNAme={homeStyles.tabContainer}>
+      <div className={homeStyles.tabContainer}>
         <button 
           className={`${homeStyles.tabButton} ${activeTab === 'anime' ? homeStyles.activeTab : ''}`}
           onClick={() => setActiveTab('anime')}
@@ -226,7 +349,7 @@ const Home = () => {
               <h1>Anime Activities</h1>
             </div>
             <div className={homeStyles.activitiesGrid}>
-              {animeActivities.slice(0, 15).map((activity) => (
+              {animeActivities.map((activity) => (
                 <div key={activity._id} className={homeStyles.activityCard}>
                   <Link to={`/anime/${activity.animeDetails._id}`}>
                     <div className={homeStyles.activityImage}>
@@ -257,64 +380,20 @@ const Home = () => {
                 </div>
               ))}
             </div>
+            {hasMoreAnime && (
+              <div className={homeStyles.loadMoreContainer}>
+                <button
+                  className={homeStyles.loadMoreButton}
+                  onClick={handleLoadMoreAnime}
+                  disabled={loadingAnime}
+                >
+                  {loadingAnime ? 'Loading...' : 'Load More Anime'}
+                </button>
+              </div>
+            )}
           </div>
 
-          {watchingAnime.length > 0 && (
-            <div className={homeStyles.progressSection}>
-              <h2>Currently Watching</h2>
-              <div className={homeStyles.progressGrid}>
-                {watchingAnime.map((activity) => (
-                  <div
-                    key={activity.animeId}
-                    className={homeStyles.progressCard}
-                    onMouseEnter={(event) => handleMouseEnter(activity.animeId, event)}
-                    onMouseLeave={() => setHoveredCard(null)}
-                  >
-                    <Link
-                      to={`/anime/${activity.animeId}`}
-                    >
-                      <img
-                        src={getAnimeById(activity.animeId)?.images.image}
-                        alt={getAnimeById(activity.animeId)?.titles.english}
-                      />
-                    </Link>
-                    <div className={homeStyles.progressInfo}>
-                      {hoveredCard === activity.animeId ? (
-                        <div className={homeStyles.episodeInfo}>
-                          <span>
-                            {activity.currentEpisode} {/* Show the current episode */}
-                          </span>
-                          <span
-                            className={homeStyles.incrementWatchCount}
-                            onClick={() => handleIncrementWatchCount(activity.animeId, 'anime')} // Increment function
-                          >
-                            +
-                          </span>
-                        </div>
-                      ) : (
-                        getAnimeById(activity.animeId)?.nextAiringEpisode?.airingAt && (
-                          <div className={homeStyles.episodeInfo}>
-                            <span>
-                              {getAnimeById(activity.animeId)?.nextAiringEpisode?.episode}
-                            </span>
-                            <span>
-                              {formatTimeUntilNextEpisode(getAnimeById(activity.animeId)?.nextAiringEpisode?.timeUntilAiring)}
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                    {hoveredCard === activity.animeId && (
-                      <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                        <h4>{getAnimeById(activity.animeId)?.titles.english || getAnimeById(activity.animeId)?.titles.romaji}</h4>
-                        <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {watchingAnime.length > 0 && renderProgressSection()}
         </>
       )}
 
@@ -325,7 +404,7 @@ const Home = () => {
               <h1>Manga Activities</h1>
             </div>
             <div className={homeStyles.activitiesGrid}>
-              {mangaActivities.slice(0, 15).map((activity) => (
+              {mangaActivities.map((activity) => (
                 <div key={activity._id} className={homeStyles.activityCard}>
                   <Link to={`/manga/${activity.mangaDetails._id}`}>
                     <div className={homeStyles.activityImage}>
@@ -356,6 +435,17 @@ const Home = () => {
                 </div>
               ))}
             </div>
+            {hasMoreManga && (
+              <div className={homeStyles.loadMoreContainer}>
+                <button
+                  className={homeStyles.loadMoreButton}
+                  onClick={handleLoadMoreManga}
+                  disabled={loadingManga}
+                >
+                  {loadingManga ? 'Loading...' : 'Load More Manga'}
+                </button>
+              </div>
+            )}
           </div>
 
           {readingManga.length > 0 && (

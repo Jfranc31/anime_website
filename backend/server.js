@@ -103,35 +103,71 @@ app.get("/searchrelations", async (req, res) => {
 // Route for fetching the latest activities for a specific user
 app.get("/latest-activities/:userId", async (req, res) => {
   const userId = req.params.userId;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 15;
+  const type = req.query.type; // 'anime' or 'manga'
+  const skip = (page - 1) * limit;
 
   try {
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findById(userId).lean();
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Populate anime details for each activity
-    const userAnimeActivities = await Promise.all(
-      user.animes.slice(0, 15).map(async (activity) => {
-        const animeDetails = await AnimeModel.findById(activity.animeId);
-        return { ...activity.toObject(), animeDetails };
-      }),
+    // Handle either anime or manga activities based on type
+    const activities = type === 'anime' ? user.animes : user.mangas;
+    const totalActivities = activities?.length || 0;
+
+    // Sort and paginate activities
+    const sortedActivities = (activities || [])
+      .sort((a, b) => new Date(b.activityTimestamp || b.updatedAt) - new Date(a.activityTimestamp || a.updatedAt))
+      .slice(skip, skip + limit)
+      .map(activity => ({
+        ...activity,
+        _id: activity._id || new mongoose.Types.ObjectId(),
+        type
+      }));
+
+    // Fetch details based on type
+    const ids = sortedActivities.map(activity => 
+      type === 'anime' ? activity.animeId : activity.mangaId
     );
 
-    // Populate manga details for each activity
-    const userMangaActivities = await Promise.all(
-      user.mangas.slice(0, 15).map(async (activity) => {
-        const mangaDetails = await MangaModel.findById(activity.mangaId);
-        return { ...activity.toObject(), mangaDetails };
-      }),
+    const details = ids.length > 0 
+      ? await (type === 'anime' ? AnimeModel : MangaModel)
+          .find({ _id: { $in: ids } })
+          .lean()
+      : [];
+
+    // Create lookup map
+    const detailsMap = new Map(
+      details.map(item => [item._id.toString(), item])
     );
 
-    const activities = [...userAnimeActivities, ...userMangaActivities];
-    res.json(activities);
+    // Combine activities with their details
+    const activitiesWithDetails = sortedActivities.map(activity => ({
+      ...activity,
+      [`${type}Details`]: detailsMap.get(
+        (type === 'anime' ? activity.animeId : activity.mangaId).toString()
+      )
+    }));
+
+    res.json({
+      activities: activitiesWithDetails,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalActivities / limit),
+        totalActivities,
+        hasMore: skip + limit < totalActivities
+      }
+    });
   } catch (error) {
     console.error("Error fetching latest activities:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ 
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
