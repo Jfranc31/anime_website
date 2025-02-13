@@ -28,7 +28,6 @@ function AnimeCard({
   const [isHovered, setIsHovered] = useState(false);
   const [titleHeight, setTitleHeight] = useState('auto');
   const titleRef = useRef(null);
-
   // Use useEffect to measure and set the title height after render
   useEffect(() => {
     if (titleRef.current) {
@@ -46,15 +45,15 @@ function AnimeCard({
   };
 
   const renderStatusIndicator = () => {
-      if (!status) return null;
-  
-      return (
-        <div
-          className={`${cardsStyles.statusIndicator} ${cardsStyles[status.toLowerCase()]}`}
-          title={`Status: ${status}`}
-        />
-      );
-    };
+    if (!status) return null;
+
+    return (
+      <div
+        className={`${cardsStyles.statusIndicator} ${cardsStyles[status.toLowerCase()]}`}
+        title={`Status: ${status}`}
+      />
+    );
+  };
 
   // Add this helper function to determine season
   const getSeason = (month) => {

@@ -217,6 +217,7 @@ const addManga = async (req, res) => {
 const updateUserAnime = async (req, res) => {
   const { userId } = req.params;
   const { animeId, status, currentEpisode } = req.body;
+  let sendEpisode = currentEpisode;
 
   try {
     const user = await UserModel.findById(userId);
@@ -247,6 +248,7 @@ const updateUserAnime = async (req, res) => {
       }
       if (status === 'Completed') {
         updatedStatus = 'Completed';
+        sendEpisode = maxEpisodes;
       }
 
       // Only auto-complete if the series is finished and all episodes are watched
@@ -258,7 +260,7 @@ const updateUserAnime = async (req, res) => {
       user.animes[existingAnimeIndex] = {
         animeId: user.animes[existingAnimeIndex].animeId, // Keep the existing animeId
         status: updatedStatus,
-        currentEpisode: parseInt(currentEpisode) || 0,
+        currentEpisode: parseInt(sendEpisode) || 0,
         activityTimestamp: new Date()
       };
 
@@ -302,6 +304,8 @@ const updateUserAnime = async (req, res) => {
 const updateUserManga = async (req, res) => {
   const { userId } = req.params;
   const { mangaId, status, currentChapter, currentVolume } = req.body;
+  let sendChapter = currentChapter;
+  let sendVolume = currentVolume;
 
   try {
     const user = await UserModel.findById(userId);
@@ -333,6 +337,14 @@ const updateUserManga = async (req, res) => {
       }
       if (status === 'Completed') {
         updatedStatus = 'Completed';
+        if (sendChapter > 0 && sendVolume === 0) {
+          sendChapter = maxChapters;
+        } else if (sendChapter === 0 && sendVolume > 0) {
+          sendVolume = maxVolumes;
+        } else {
+          sendChapter = maxChapters;
+          sendVolume = maxVolumes;
+        }
       }
 
       // Only auto-complete if the series is finished and all chapters/volumes are read
@@ -352,8 +364,8 @@ const updateUserManga = async (req, res) => {
       user.mangas[existingMangaIndex] = {
         mangaId: user.mangas[existingMangaIndex].mangaId, // Keep the existing mangaId
         status: updatedStatus,
-        currentChapter: parseInt(currentChapter) || 0,
-        currentVolume: parseInt(currentVolume) || 0,
+        currentChapter: parseInt(sendChapter) || 0,
+        currentVolume: parseInt(sendVolume) || 0,
         activityTimestamp: new Date()
       };
 

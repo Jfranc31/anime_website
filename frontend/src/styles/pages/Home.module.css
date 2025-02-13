@@ -160,13 +160,14 @@
 
 .progressCard .episodeInfo {
   position: absolute;
+  display: inline-flex;
+  cursor: pointer;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 50px;
   background: rgba(25, 30, 39, 0.8);
   z-index: 1;
-  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -212,8 +213,10 @@
   display: inline-block;
   transition: color 0.2s ease;
   position: absolute;
-  top: 10px;
-  right: 10px;
+  padding-left: 10px;
+  padding-right: 40px;
+  top: 0px;
+  right: 0px;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -294,8 +297,8 @@
 }
 
 .incrementWatchCount {
-  cursor: pointer;
-  font-size: 1.5rem;
+  padding-left: 20px;
+  transition: color 0.2s ease;
   color: #04aa6d;
   margin-top: 0.5rem;
 }

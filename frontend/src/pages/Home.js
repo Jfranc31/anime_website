@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from './../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
@@ -8,7 +8,7 @@ import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 
 const Home = () => {
-  const { animeList } = useAnimeContext() || {};
+  const { animeList } = useAnimeContext();
   const { mangaList } = useMangaContext();
   const { userData } = useContext(data);
   const [userAnimeList, setUserAnimeList] = useState([]);
@@ -89,27 +89,28 @@ const Home = () => {
     fetchUserList();
   }, [userData._id, fetchActivities, fetchUserList]);
 
-  const getAnimeById = (animeId) => {
-    return animeList.find((anime) => anime._id === animeId);
-  };
+  const getAnimeById = useCallback((animeId) => {
+    return animeList?.find((anime) => anime._id === animeId);
+  }, [animeList]);
 
-  const getMangaById = (mangaId) => {
-    return mangaList.find((manga) => manga._id === mangaId);
-  };
+  const getMangaById = useCallback((mangaId) => {
+    return mangaList?.find((manga) => manga._id === mangaId);
+  }, [mangaList]);
 
-  const filterAnimeByWatching = () => {
-    return userAnimeList
+  const watchingAnime = useMemo(() => 
+    userAnimeList
       .filter((userAnime) => userAnime.status === 'Watching')
       .map((userAnime) => ({
         animeId: userAnime.animeId,
         currentEpisode: userAnime.currentEpisode,
         status: userAnime.status,
         animeDetails: getAnimeById(userAnime.animeId),
-      }));
-  };
+      })),
+    [userAnimeList, getAnimeById]
+  );
 
-  const filterMangaByReading = () => {
-    return userMangaList
+  const readingManga = useMemo(() => 
+    userMangaList
       .filter((userManga) => userManga.status === 'Reading')
       .map((userManga) => ({
         mangaId: userManga.mangaId,
@@ -117,23 +118,19 @@ const Home = () => {
         currentVolume: userManga.currentVolume,
         status: userManga.status,
         mangaDetails: getMangaById(userManga.mangaId),
-      }));
-  };
-
-  const watchingAnime = filterAnimeByWatching();
-  const readingManga = filterMangaByReading();
+      })),
+    [userMangaList, getMangaById]
+  );
 
   const updateAiringTimes = useCallback(() => {
     const updatedTimes = {};
     
     watchingAnime.forEach((activity) => {
-      const anime = getAnimeById(activity.animeId);
+      const anime = activity.animeDetails;
       if (anime?.nextAiringEpisode?.airingAt) {
         const timeUntilAiring = calculateTimeUntilAiring(anime.nextAiringEpisode.airingAt);
         
-        // If the episode has aired
         if (timeUntilAiring <= 0) {
-          // Calculate how many episodes have aired since
           const WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
           const weeksSinceAiring = Math.floor(Math.abs(timeUntilAiring) / WEEK_IN_SECONDS) + 1;
           const newEpisode = anime.nextAiringEpisode.episode + weeksSinceAiring;
@@ -145,7 +142,6 @@ const Home = () => {
             timeUntilAiring: calculateTimeUntilAiring(newAiringAt)
           };
         } else {
-          // If not aired yet, use current info
           updatedTimes[activity.animeId] = {
             airingAt: anime.nextAiringEpisode.airingAt,
             episode: anime.nextAiringEpisode.episode,
@@ -156,7 +152,7 @@ const Home = () => {
     });
     
     setAiringTimes(updatedTimes);
-  }, [watchingAnime, getAnimeById, calculateTimeUntilAiring]);
+  }, [watchingAnime, calculateTimeUntilAiring])
 
   const handleIncrementWatchCount = async (id, type) => {
     if (type === 'anime') {
@@ -229,9 +225,8 @@ const Home = () => {
   useEffect(() => {
     updateAiringTimes();
     const interval = setInterval(updateAiringTimes, 60000);
-    console.log('Update time');
     return () => clearInterval(interval);
-  }, [updateAiringTimes]);
+  }, [updateAiringTimes])
 
   const formatTimeUntilNextEpisode = (timeUntilAiring) => {
     const days = Math.floor(timeUntilAiring / (3600 * 24));
@@ -292,12 +287,10 @@ const Home = () => {
             <div className={homeStyles.progressInfo}>
               {hoveredCard === activity.animeId ? (
                 <div className={homeStyles.episodeInfo}>
-                  <span>{activity.currentEpisode}</span>
                   <span
-                    className={homeStyles.incrementWatchCount}
                     onClick={() => handleIncrementWatchCount(activity.animeId, 'anime')}
                   >
-                    +
+                    {activity.currentEpisode}+
                   </span>
                 </div>
               ) : (
@@ -470,14 +463,10 @@ const Home = () => {
                     <div className={homeStyles.progressInfo}>
                       {hoveredCard === activity.mangaId && (
                         <div className={homeStyles.episodeInfo}>
-                          <span>
-                            {activity.currentChapter}
-                          </span>
                           <span
-                            className={homeStyles.incrementWatchCount}
                             onClick={() => handleIncrementWatchCount(activity.mangaId, 'manga')}
                           >
-                            +
+                            {activity.currentChapter}+
                           </span>
                         </div>
                       )}
