@@ -170,6 +170,9 @@
   flex: 1;
   text-decoration: none;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .compactContent {
@@ -277,6 +280,9 @@
   align-items: center;
   gap: 8px;
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .compactTitleSection .airingDot,

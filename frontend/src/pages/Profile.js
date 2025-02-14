@@ -91,8 +91,8 @@ const Profile = () => {
         ),
       }))
       .sort((a, b) => {
-        const titleA = a.mediaDetails?.titles?.[userData?.title].toLowerCase() || '';
-        const titleB = b.mediaDetails?.titles?.[userData?.title].toLowerCase() || '';
+        const titleA = a.mediaDetails?.titles?.[userData?.title] || '';
+        const titleB = b.mediaDetails?.titles?.[userData?.title] || '';
 
         return titleA.localeCompare(titleB);
       });
