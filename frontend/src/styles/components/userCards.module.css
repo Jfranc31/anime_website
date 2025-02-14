@@ -1,0 +1,289 @@
+.gridCard {
+  position: relative;
+  border-radius: 10px;
+  display: block;
+  overflow: hidden;
+  width: 200px;
+  height: 270px;
+}
+
+.gridCard:hover {
+  transform: translateY(-2px);
+}
+
+.airingDot {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 15px;
+  height: 15px;
+  background: #4CAF50;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.notAiringDot {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 15px;
+  height: 15px;
+  background: #dd0909;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.coverWrapper {
+  position: relative;
+  padding-top: 140%;
+}
+
+.coverImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+}
+
+.progressOverlay {
+  color: white;
+  font-size: 14px;
+  text-align: right;
+}
+
+.cardInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(25, 30, 39, 0.8);
+  padding: 8px 8px;
+  min-height: 70px; /* Minimum height for short titles */
+  transition: height 0.3s ease;
+}
+
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 14px;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cardMeta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--success-color);
+}
+
+/* List View Styles */
+.listItem {
+  display: grid;
+  grid-template-columns: 70px 1fr 150px 150px; /* Fixed widths for format and airing info */
+  gap: 5px;
+  padding: 0px;
+  height: auto;
+  align-items: center;
+  background: var(--page-bg);
+  border-radius: 8px;
+  min-height: fit-content;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.listItemContent {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.smallCover {
+  width: 70px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.titleSection {
+  position: static;
+  background: none;
+  padding: 0;
+  height: auto;
+  min-height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: visible;
+}
+
+.titleLink {
+  margin: 0;
+  padding: 10px 15px; /* Add padding for button-like appearance */
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 2em; /* Adjust font size as needed */
+  color: white; /* Default text color */
+  position: relative;
+  transition: color 0.3s, text-shadow 0.3s; /* Smooth transition */
+}
+
+.scoreSection, .typeSection {
+  color: #888;
+  font-size: 14px;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* Compact View Styles */
+.compactItem {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  margin-bottom: 2px;
+}
+
+.compactLink {
+  flex: 1;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.compactContent {
+  display: grid;
+  grid-template-columns: 1fr 100px 100px; /* Title takes remaining space, fixed widths for progress and format */
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+}
+
+.compactContent:hover {
+  background-color: #04aa6d;
+}
+
+.compactTitle {
+  font-size: 1rem;
+  color: var(--text-primary);
+  word-break: break-word;
+  line-height: 1.2;
+  margin: 0;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+
+.compactTitle h3 {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  word-break: break-word;
+  line-height: 1.2;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compactTitle:hover {
+  color: #37FF8B;
+  text-shadow: 0 0 10px rgba(55, 255, 139, 0.8);
+}
+
+.compactProgress {
+  color: white;
+  width: 100px; /* Fixed width */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align to start of column */
+  gap: 4px;
+}
+
+.compactType {
+  color: white;
+  width: 100px; /* Fixed width */
+  text-align: left;
+}
+
+.increaseButton {
+  color: #4CAF50;
+  margin-left: 0px;
+  padding: 0px 5px;
+  background-color: transparent;
+  color: #04aa6d;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.compactIncreaseButton {
+  color: white;
+  padding: 0px 5px;
+  background-color: transparent;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  margin-left: 4px;
+}
+
+.compactWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.compactHoverImage {
+  display: none;
+  position: absolute;
+  left: -200px; /* Position to the left of the content */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 180px;
+  height: 260px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.compactWrapper:hover .compactHoverImage {
+  display: block;
+}
+
+.compactTitleSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.compactTitleSection .airingDot,
+.compactTitleSection .notAiringDot {
+  width: 5px;
+  height: 5px;
+  position: relative;
+  top: auto;
+  left: auto;
+}

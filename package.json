@@ -1,0 +1,24 @@
+{
+  "name": "anime_website",
+  "version": "1.0.0",
+  "description": "The Anime Project is a web application designed to track and manage anime series, manga, and related characters. It provides users with the ability to create accounts, add series to their watchlists, browse through a comprehensive database of anime and manga, and view detailed information about each series and character.",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"cd frontend && npm start\" \"cd backend && npm run start\"",
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jfranc31/anime_website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jfranc31/anime_website/issues"
+  },
+  "homepage": "https://github.com/Jfranc31/anime_website#readme",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
