@@ -14,6 +14,8 @@ import editModalStyles from '../../styles/components/EditModal.module.css';
  * @param {string} props.userId - User ID associated with the manga.
  * @param {function} props.closeModal - Function to close the modal.
  * @param {function} props.onMangaDelete - Function to handle manga deletion.
+ * @param {function} props.onMangaUpdate - Function to handle manga updates.
+ * @param {function} props.setUserData - Function to update user data context.
  * @returns {JSX.Element} - Rendered manga editor component.
  */
 const MangaEditor = ({
@@ -21,6 +23,7 @@ const MangaEditor = ({
   userId,
   closeModal,
   onMangaDelete,
+  onMangaUpdate,
   setUserData,
 }) => {
   const [mangaDetails, setMangaDetails] = useState(null);
@@ -97,63 +100,67 @@ const MangaEditor = ({
     e.preventDefault();
     try {
       const endpoint = isInUserList ? 'updateManga' : 'addManga';
-      const url = `/users/${userId}/${endpoint}`;
-
-      const response = await axiosInstance.post(url, {
+      const payload = {
         mangaId: manga._id,
         status: userProgress.status || 'Planning',
         currentChapter: userProgress.currentChapter || 0,
         currentVolume: userProgress.currentVolume || 0
-      });
+      };
+
+      const response = await axiosInstance.post(
+        `users/${userId}/${endpoint}`,
+        payload
+      );
 
       if (response.data) {
-        const userResponse = await axiosInstance.get(`/users/${userId}/current`);
+        const userResponse = await axiosInstance.get(
+          `/users/${userId}/current`
+        );
         setUserData(userResponse.data);
+        // Notify the parent component about the update
+        if (onMangaUpdate) {
+          // Create an updated manga entry object for the parent
+          const updatedMangaEntry = {
+            mangaId: manga._id,
+            status: userProgress.status || 'Planning',
+            currentChapter: userProgress.currentChapter || 0,
+            currentVolume: userProgress.currentVolume || 0
+          };
+          onMangaUpdate(updatedMangaEntry);
+          closeModal();
+        } else {
+          // If onMangaUpdate is not provided, just close the modal
+          closeModal();
+        }
         setIsInUserList(true);
-        closeModal();
       }
     } catch (error) {
-      console.error('Error updating user progress:', error);
-      console.error('Error response:', error.response);
-      console.error('Request details:', {
-        endpoint: `/users/${userId}/${isInUserList ? 'updateManga' : 'addManga'}`,
-        userId,
-        mangaId: manga._id,
-        status: userProgress.status,
-        currentChapter: userProgress.currentChapter,
-        currentVolume: userProgress.currentVolume
-      });
+      console.error('Error updating user progress:', error);;
     }
   };
 
   const handleDelete = async () => {
     try {
-      console.log('Starting delete process...', {
-        userId,
-        mangaId: manga._id
-      });
+      console.log('Starting delete process...');
 
       const response = await axiosInstance.post(
         `/users/${userId}/removeManga`,
         {
-          mangaId: manga._id.toString()
+          mangaId: manga._id
         }
       );
 
-      console.log('Delete response:', response);
+      console.log('API response:', response);
 
       if (response.data && response.data.user) {
         setUserData(response.data.user);
         onMangaDelete(manga._id);
-        closeModal();
       }
     } catch (error) {
-      console.error('Delete error:', {
+      console.error('Error Details:', {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
-        url: `/users/${userId}/removeManga`,
-        mangaId: manga._id
       });
     }
   };

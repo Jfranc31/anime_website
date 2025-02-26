@@ -440,7 +440,23 @@ img {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  overflow: visible;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card.compact .copmactEditorButton {
+  position: static;
+  background: none;
+  padding: 0;
+  height: auto;
+  min-height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card.compact .mangaTitle,
@@ -465,6 +481,24 @@ img {
   text-overflow: ellipsis;
 }
 
+.compactLink {
+  flex: 1;
+  text-decoration: none;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding: 10px 15px; /* Add padding for button-like appearance */
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 2em; /* Adjust font size as needed */
+  color: white; /* Default text color */
+  position: relative;
+  transition: color 0.3s, text-shadow 0.3s; /* Smooth transition */
+}
+
 .card.compact .mangaTitle:hover,
 .card.compact .animeTitle:hover {
   color: #37FF8B;
@@ -473,8 +507,11 @@ img {
 
 .card.compact .genres {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card.compact .genre {
@@ -531,6 +568,13 @@ img {
   color: var(--text-secondary);
 }
 
+.card.compact .titleWrapper {
+  display: contents;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .titleWrapper {
   display: flex;
   align-items: center;
@@ -570,7 +614,7 @@ img {
   right: 8px;
   width: 24px;
   height: 24px;
-  background: #2196F3;
+  background: var(--success-color);
   border: none;
   border-radius: 50%;
   color: white;

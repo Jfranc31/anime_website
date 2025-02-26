@@ -125,7 +125,7 @@ function MangaCard({
               <img src={manga.images.image} alt={manga.titles.english} />
             </div>
           </div>
-          <div className={cardsStyles.titleAndProgress} style={{ minHeight: titleHeight }}>
+          <div className={cardsStyles.titleAndProgress}>
             <Link className={cardsStyles.navLink} to={`/manga/${manga._id}`}>
               <div className={cardsStyles.titleWrapper}>
                 {renderStatusIndicator()}

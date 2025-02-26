@@ -286,6 +286,12 @@
   pointer-events: none;
 }
 
+.popup h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--success-color);
+}
+
 .popup h4 {
   margin: 0 0 0.5rem;
   font-size: 0.9rem;

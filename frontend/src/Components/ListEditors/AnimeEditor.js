@@ -14,6 +14,8 @@ import editModalStyles from '../../styles/components/EditModal.module.css';
  * @param {string} props.userId - User ID associated with the anime.
  * @param {function} props.closeModal - Function to close the modal.
  * @param {function} props.onAnimeDelete - Function to handle anime deletion.
+ * @param {function} props.onAnimeUpdate - Function to handle anime updates.
+ * @param {function} props.setUserData - Function to update user data context.
  * @returns {JSX.Element} - Rendered anime editor component.
  */
 const AnimeEditor = ({
@@ -21,6 +23,7 @@ const AnimeEditor = ({
   userId,
   closeModal,
   onAnimeDelete,
+  onAnimeUpdate,
   setUserData,
 }) => {
   const [animeDetails, setAnimeDetails] = useState(null);
@@ -88,13 +91,15 @@ const AnimeEditor = ({
     e.preventDefault();
     try {
       const endpoint = isInUserList ? 'updateAnime' : 'addAnime';
+      const payload = {
+        animeId: anime._id,
+        status: userProgress.status || 'Planning',
+        currentEpisode: userProgress.currentEpisode || 0,
+      };
+
       const response = await axiosInstance.post(
         `/users/${userId}/${endpoint}`,
-        {
-          animeId: anime._id,
-          status: userProgress.status || 'Planning',
-          currentEpisode: userProgress.currentEpisode || 0,
-        }
+        payload
       );
 
       if (response.data) {
@@ -102,8 +107,22 @@ const AnimeEditor = ({
           `/users/${userId}/current`
         );
         setUserData(userResponse.data);
+        
+        // Notify the parent component about the update
+        if (onAnimeUpdate) {
+          // Create an updated anime entry object for the parent
+          const updatedAnimeEntry = {
+            animeId: anime._id,
+            status: userProgress.status || 'Planning',
+            currentEpisode: userProgress.currentEpisode || 0,
+          };
+          onAnimeUpdate(updatedAnimeEntry);
+        } else {
+          // If onAnimeUpdate is not provided, just close the modal
+          closeModal();
+        }
+        
         setIsInUserList(true);
-        closeModal();
       }
     } catch (error) {
       console.error('Error updating user progress:', error);
@@ -126,7 +145,6 @@ const AnimeEditor = ({
       if (response.data && response.data.user) {
         setUserData(response.data.user);
         onAnimeDelete(anime._id);
-        closeModal();
       }
     } catch (error) {
       console.error('Error details:', {

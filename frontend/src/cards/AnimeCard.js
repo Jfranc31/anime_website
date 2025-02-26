@@ -155,8 +155,8 @@ function AnimeCard({
               <img src={anime.images.image} alt={anime.titles.english} />
             </div>
           </div>
-          <div className={cardsStyles.titleAndProgress} style={{ minHeight: titleHeight }}>
-            <Link className={cardsStyles.navLink} to={`/anime/${anime._id}`}>
+          <div className={cardsStyles.titleAndProgress}>
+            <Link className={cardsStyles.compactLink} to={`/anime/${anime._id}`}>
               <div className={cardsStyles.titleWrapper}>
                 {renderStatusIndicator()}
                 <div className={cardsStyles.animeTitle} ref={titleRef}>

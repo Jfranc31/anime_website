@@ -213,16 +213,15 @@
 }
 
 .compactProgress {
-  color: white;
-  width: 100px; /* Fixed width */
+  color: var(--text-primary);
+  text-align: left;
   display: flex;
-  align-items: center;
-  justify-content: flex-start; /* Align to start of column */
+  flex-direction: column;
   gap: 4px;
 }
 
 .compactType {
-  color: white;
+  color: var(--text-primary);
   width: 100px; /* Fixed width */
   text-align: left;
 }
@@ -241,7 +240,7 @@
 }
 
 .compactIncreaseButton {
-  color: white;
+  color: var(--text-primary);
   padding: 0px 5px;
   background-color: transparent;
   border: none;
@@ -250,6 +249,15 @@
   cursor: pointer;
   transition: opacity 0.3s ease;
   margin-left: 4px;
+}
+
+.card2 {
+  width: 200px;
+  height: 300px;
+  background-color: #1a1a1a;
+  border-radius: 10px;
+  transition: all 0.2s;
+  margin-right: 0px;
 }
 
 .compactWrapper {
@@ -292,4 +300,19 @@
   position: relative;
   top: auto;
   left: auto;
+}
+
+.compactEditorButton {
+  position: absolute;
+  top: 50px;
+  right: 200px;
+  width: 24px;
+  height: 24px;
+  background: var(--success-color);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 2;
 }

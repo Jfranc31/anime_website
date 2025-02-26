@@ -5,7 +5,7 @@
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  width: 85%;
+  width: 100%;
   background-color: var(--page-bg);
 }
 
@@ -63,7 +63,7 @@
 
 .statCard {
   padding: 1.5rem;
-  background-color: var(--card-bg);
+  background-color: var(--filter-bg);
   border-radius: 0.5rem;
   text-align: center;
 }
@@ -138,6 +138,7 @@
 
 .statusTab {
   padding: 0.5rem 1rem;
+  color: var(--text-primary);
   border: none;
   border-radius: 0.25rem;
   background: transparent;
@@ -146,7 +147,7 @@
 }
 
 .activeStatus {
-  background: #4a90e2;
+  background: var(--success-color);
   color: white;
 }
 
@@ -157,19 +158,12 @@
   padding: 1rem;
 }
 
-.contentGrid.wide {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-}
-
 .contentGrid.compact {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
   gap: 1rem;
   padding: 1rem;
-  background-color: var(--card-bg);
+  background-color: var(--filter-bg);
 }
 
 .noUser {
@@ -186,7 +180,7 @@
 
 .layoutButton {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--filter-bg);
   border-radius: 0.25rem;
   background: var(--card-bg);
   cursor: pointer;
@@ -198,7 +192,7 @@
 }
 
 .activeLayout {
-  background: var(--primary-color);
+  background: var(--accent-color);
   color: white;
   border-color: var(--primary-color);
 }
@@ -223,4 +217,124 @@
     align-items: flex-start;
   }
 }
-/*============================================*/
+
+/* Container for the list and headers */
+.listContainer {
+  width: 100%;
+}
+
+/* Column header styles */
+.columnHeaders {
+  display: flex;
+  background-color: var(--fiter-bg);
+  color: var(--text-primary);
+  padding: 12px 0;
+  border-radius: 5px 5px 0 0;
+  margin-bottom: 0;
+  font-weight: bold;
+}
+
+/* Anime column headers */
+.columnHeaders .columnTitle {
+  flex: 3;
+  padding-left: 120px;
+  text-align: left;
+}
+
+.columnHeaders .columnProgress {
+  flex: 1;
+  text-align: center;
+}
+
+.columnHeaders .columnFormat {
+  flex: 1;
+  text-align: center;
+  padding-right: 15px;
+}
+
+/* Additional manga column headers */
+.columnHeaders .columnChapters {
+  flex: 1;
+  text-align: center;
+}
+
+.columnHeaders .columnVolumes {
+  flex: 1;
+  text-align: center;
+}
+
+/* Compact layout container */
+.contentGrid.compact {
+  display: flex;
+  flex-direction: column;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+}
+
+/* Compact card styles - ensure they match header layout */
+.compact .userAnimeCard, 
+.compact .mangaCard {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.compact .userAnimeCard:last-child,
+.compact .mangaCard:last-child {
+  border-bottom: none;
+}
+
+/* Anime card content alignment */
+.compact .animeTitle,
+.compact .mangaTitle {
+  flex: 3;
+  padding-left: 15px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact .animeProgress {
+  flex: 1;
+  text-align: center;
+}
+
+.compact .animeFormat {
+  flex: 1;
+  text-align: center;
+  padding-right: 15px;
+}
+
+/* Manga card content alignment */
+.compact .mangaChapters {
+  flex: 1;
+  text-align: center;
+}
+
+.compact .mangaVolumes {
+  flex: 1;
+  text-align: center;
+}
+
+.compact .mangaFormat {
+  flex: 1;
+  text-align: center;
+  padding-right: 15px;
+}
+
+/* Make sure top right buttons don't disrupt alignment */
+.compact .topRightButton {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 1;
+}
+
+/* Ensuring card images don't affect alignment */
+.compact .cardCover {
+  margin-right: 10px;
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+}

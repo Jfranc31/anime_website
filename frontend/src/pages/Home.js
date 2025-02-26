@@ -232,8 +232,14 @@ const Home = () => {
     const days = Math.floor(timeUntilAiring / (3600 * 24));
     const hours = Math.floor((timeUntilAiring % (3600 * 24)) / 3600);
     const minutes = Math.floor((timeUntilAiring % 3600) / 60);
-
-    return `${days}d ${hours}h ${minutes}m`;
+  
+    const timeParts = [];
+  
+    if (days > 0) timeParts.push(`${days}d`);
+    if (hours > 0) timeParts.push(`${hours}h`);
+    if (minutes > 0) timeParts.push(`${minutes}m`);
+  
+    return timeParts.length > 0 ? timeParts.join(" ") : "0d 0h 0m";
   };
 
   const handleMouseEnter = (animeId, event) => {
@@ -266,6 +272,11 @@ const Home = () => {
 
     setHoveredCard(animeId);
   };
+
+  const getTitle = useCallback((titles) => {
+    const preference = userData?.title || 'english';
+    return titles[preference] || titles.english || titles.romaji || titles.native;
+  }, [userData?.title]);
 
   const renderProgressSection = () => (
     <div className={homeStyles.progressSection}>
@@ -308,7 +319,13 @@ const Home = () => {
             </div>
             {hoveredCard === activity.animeId && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                <h4>{getAnimeById(activity.animeId)?.titles.english || getAnimeById(activity.animeId)?.titles.romaji}</h4>
+                {getAnimeById(activity.animeId)?.releaseData.releaseStatus === 'Currently Releasing' && 
+                  activity.currentEpisode < getAnimeById(activity.animeId)?.nextAiringEpisode.episode - 1 && (
+                    <h3>
+                      {getAnimeById(activity.animeId)?.nextAiringEpisode.episode - 1 - activity.currentEpisode} Episodes Behind
+                    </h3>
+                )}
+                <h4>{getTitle(getAnimeById(activity.animeId)?.titles)}</h4>
                 <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
               </div>
             )}
@@ -353,7 +370,7 @@ const Home = () => {
                     </div>
                   </Link>
                   <div className={homeStyles.activityInfo}>
-                    <h3>{activity.animeDetails.titles.english || activity.animeDetails.titles.romaji}</h3>
+                    <h3>{getTitle(activity.animeDetails.titles)}</h3>
                     <p className={homeStyles.activityStatus}>
                       {activity.status === 'Completed'
                         ? 'Completed'
@@ -408,7 +425,7 @@ const Home = () => {
                     </div>
                   </Link>
                   <div className={homeStyles.activityInfo}>
-                    <h3>{activity.mangaDetails.titles.english || activity.mangaDetails.titles.romaji}</h3>
+                    <h3>{getTitle(activity.mangaDetails.titles)}</h3>
                     <p className={homeStyles.activityStatus}>
                       {activity.status === 'Completed'
                         ? 'Completed'
@@ -473,7 +490,7 @@ const Home = () => {
                     </div>
                     {hoveredCard === activity.mangaId && (
                       <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                        <h4>{getMangaById(activity.mangaId)?.titles.english || getMangaById(activity.mangaId)?.titles.romaji}</h4>
+                        <h4>{getTitle(getMangaById(activity.mangaId)?.titles)}</h4>
                         <p>Progress: {activity.currentChapter}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
                       </div>
                     )}

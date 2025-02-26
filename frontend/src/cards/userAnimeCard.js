@@ -6,7 +6,8 @@ import cardStyles from '../styles/components/cards.module.css';
 function UserAnimeCard({
   anime,
   name,
-  layout = 'grid', // 'grid', 'list', or 'compact'
+  layout = 'grid', // 'grid' or 'compact'
+  onTopRightButtonClick,
   userProgress,
   userStatus, // 'Watching', 'Planning', or 'Completed
   onProgressUpdate,
@@ -41,31 +42,42 @@ function UserAnimeCard({
     return `${total}`;
   };
 
-  if (layout === 'compact') {
-    return (
-      <div className={userCardStyles.compactWrapper}>
-        <div 
-          className={`${cardStyles.wide}`} 
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <img 
-            src={anime.images.image} 
-            alt={name}
-            className={userCardStyles.compactHoverImage}
-          />
-          <div className={userCardStyles.compactContent}>
-            <div className={userCardStyles.compactTitleSection}>
+  return (
+    <div
+      className={`${cardStyles.card} ${layout === 'compact' ? cardStyles.compact : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {layout === 'compact' ? (
+        <>
+          <div className={cardStyles.card2}>
+            <div className={cardStyles.imgContainer}>
+              <img src={anime.images.image} alt={anime.titles.english} />
+            </div>
+          </div>
+          <div className={cardStyles.titleAndProgress}>
+            <div className={cardStyles.titleWrapper}>
               {renderStatusDot()}
               <Link to={`/anime/${anime._id}`} className={userCardStyles.compactLink}>
-                <div className={userCardStyles.compactTitle}>
+                <div className={cardStyles.animeTitle} ref={titleRef}>
                   <h3>
                     {name}
                   </h3>
                 </div>
               </Link>
             </div>
-            <div className={userCardStyles.compactProgress}>
+          </div>
+          {/* New editor button between title and progress */}
+          {isHovered && (
+            <button
+              className={userCardStyles.compactEditorButton}
+              onClick={() => onTopRightButtonClick('anime', anime)}
+            >
+              •••
+            </button>
+          )}
+          <div className={cardStyles.formatInfo}>
+            <div className={cardStyles.format}>
               <span>{renderProgress()}</span>
               {isHovered && onProgressUpdate && userStatus !== 'Completed' && (
                 <button
@@ -80,28 +92,19 @@ function UserAnimeCard({
                 </button>
               )}
             </div>
-            <div className={userCardStyles.compactType}>
-              {anime.typings.Format}
-            </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Grid layout (default)
-  return (
-    <div
-      className={`${cardStyles.card} ${layout === 'wide' ? cardStyles.wide : ''} ${layout === 'compact' ? cardStyles.compact : ''}`}
-    >
-      {renderStatusDot()}
-      <div 
-        className={`${cardStyles.animeCard} ${isHovered ? cardStyles.hovered : ''}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        
-        
+          <div className={userCardStyles.compactType}>
+            {anime.typings.Format}
+          </div>
+          
+        </>
+      ) : (
+        // renderStatusDot()
+        <div 
+          className={`${cardStyles.animeCard} ${isHovered ? cardStyles.hovered : ''}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <div className={cardStyles.imgContainer}>
             <img src={anime.images.image} alt={name} />
             <div className={cardStyles.titleAndProgress} style={{ height: titleHeight}}>
@@ -110,7 +113,6 @@ function UserAnimeCard({
                   <div className={cardStyles.animeTitle} ref={titleRef}>
                     {name}
                   </div>
-                  
                 </div>
               </Link>
               <div className={userCardStyles.cardMeta}>
@@ -130,19 +132,16 @@ function UserAnimeCard({
               </div>
             </div>
           </div>
-        {isHovered && onProgressUpdate && (
-          <button
-            className={cardStyles.incrementButton}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onProgressUpdate(userProgress + 1);
-            }}
-          >
-            +
-          </button>
-        )}
-      </div>
+          {isHovered && (
+            <button
+              className={cardStyles.incrementButton}
+              onClick={() => onTopRightButtonClick('anime', anime)}
+            >
+              •••
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
