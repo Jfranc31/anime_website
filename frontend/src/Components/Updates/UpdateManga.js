@@ -685,6 +685,8 @@ export const UpdateManga = ({ match }) => {
       mangaRelations: mangaRelationsArray,
     };
 
+    console.log("Sending update: ", updatedFormData);
+
     try {
       const res = await axiosInstance.put(
         `/mangas/manga/${id}`,
@@ -692,6 +694,7 @@ export const UpdateManga = ({ match }) => {
       );
 
       if (res.status === 200) {
+        console.log("Response: ", res.request.response);
 
         window.dispatchEvent(new CustomEvent('mangaUpdated', { detail: updatedFormData }));
 

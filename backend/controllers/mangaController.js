@@ -221,6 +221,8 @@ const updateManga = async (req, res) => {
       ...otherFields
     } = req.body;
 
+    console.log("Titles: ", titles);
+
     // Validate required data
     if (!titles) {
       console.error('Titles object is missing from request body');
@@ -231,10 +233,10 @@ const updateManga = async (req, res) => {
     }
 
     // Log the character updates being attempted
-    console.log('Processing character updates:', {
-      characterCount: characters?.length || 0,
-      characters: characters
-    });
+    // console.log('Processing character updates:', {
+    //   characterCount: characters?.length || 0,
+    //   characters: characters
+    // });
 
     // Validate characters array
     if (!Array.isArray(characters)) {
@@ -259,7 +261,7 @@ const updateManga = async (req, res) => {
     // Update the manga, excluding characters with empty characterId
     const updatedManga = await MangaModel.findByIdAndUpdate(
       id,
-      { ...otherFields, characters: validCharacters },
+      { ...otherFields, titles: titles, characters: validCharacters },
       {
         new: true, // Return the modified document
         runValidators: true, // Run validators for update operations

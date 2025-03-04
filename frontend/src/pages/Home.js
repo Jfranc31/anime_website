@@ -40,7 +40,7 @@ const Home = () => {
     try {
       setLoading(true);
       const response = await fetchWithErrorHandling(
-        `/latest-activities/${userData._id}?page=${page}&limit=15&type=${type}`
+        `/latest-activities/${userData._id}?page=${page}&limit=8&type=${type}`
       );
       
       const sortedActivities = response.activities.sort(
@@ -97,29 +97,55 @@ const Home = () => {
     return mangaList?.find((manga) => manga._id === mangaId);
   }, [mangaList]);
 
+  const getTitle = useCallback((titles) => {
+    const preference = userData?.title || 'english';
+    return titles[preference] || titles.english || titles.romaji || titles.native;
+  }, [userData?.title]);
+
   const watchingAnime = useMemo(() => 
     userAnimeList
       .filter((userAnime) => userAnime.status === 'Watching')
-      .map((userAnime) => ({
-        animeId: userAnime.animeId,
-        currentEpisode: userAnime.currentEpisode,
-        status: userAnime.status,
-        animeDetails: getAnimeById(userAnime.animeId),
-      })),
-    [userAnimeList, getAnimeById]
+      .map((userAnime) => {
+        const animeDetails = getAnimeById(userAnime.animeId);
+        return {
+          animeId: userAnime.animeId,
+          currentEpisode: userAnime.currentEpisode,
+          status: userAnime.status,
+          animeDetails
+        };
+      })
+      // Filter out items where animeDetails is undefined
+      .filter(item => item.animeDetails)
+      .sort((a, b) => {
+        const titleA = getTitle(a.animeDetails.titles) || '';
+        const titleB = getTitle(b.animeDetails.titles) || '';
+  
+        return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
+      }),
+    [userAnimeList, getAnimeById, getTitle]
   );
 
   const readingManga = useMemo(() => 
     userMangaList
       .filter((userManga) => userManga.status === 'Reading')
-      .map((userManga) => ({
-        mangaId: userManga.mangaId,
-        currentChapter: userManga.currentChapter,
-        currentVolume: userManga.currentVolume,
-        status: userManga.status,
-        mangaDetails: getMangaById(userManga.mangaId),
-      })),
-    [userMangaList, getMangaById]
+      .map((userManga) => {
+        const mangaDetails = getMangaById(userManga.mangaId);
+        return {
+          mangaId: userManga.mangaId,
+          currentChapter: userManga.currentChapter,
+          currentVolume: userManga.currentVolume,
+          status: userManga.status,
+          mangaDetails
+        };
+      })
+      .filter(item => item.mangaDetails)
+      .sort((a, b) => {
+        const titleA = getTitle(a.mangaDetails.titles) || '';
+        const titleB = getTitle(b.mangaDetails.titles) || '';
+  
+        return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
+      }),
+    [userMangaList, getMangaById, getTitle]
   );
 
   const updateAiringTimes = useCallback(() => {
@@ -273,11 +299,6 @@ const Home = () => {
     setHoveredCard(animeId);
   };
 
-  const getTitle = useCallback((titles) => {
-    const preference = userData?.title || 'english';
-    return titles[preference] || titles.english || titles.romaji || titles.native;
-  }, [userData?.title]);
-
   const renderProgressSection = () => (
     <div className={homeStyles.progressSection}>
       <h2>Currently Watching</h2>
@@ -327,6 +348,48 @@ const Home = () => {
                 )}
                 <h4>{getTitle(getAnimeById(activity.animeId)?.titles)}</h4>
                 <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderReadingSection = () => (
+    <div className={homeStyles.progressSection}>
+      <h2>Currently Reading</h2>
+      <div className={homeStyles.progressGrid}>
+        {readingManga.map((activity) => (
+          <div
+            key={activity.mangaId}
+            className={homeStyles.progressCard}
+            onMouseEnter={(event) => handleMouseEnter(activity.mangaId, event)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            <Link
+              to={`/manga/${activity.mangaId}`}
+            >
+              <img
+                src={getMangaById(activity.mangaId)?.images.image}
+                alt={getMangaById(activity.mangaId)?.titles.english}
+              />
+            </Link>
+            <div className={homeStyles.progressInfo}>
+              {hoveredCard === activity.mangaId && (
+                <div className={homeStyles.episodeInfo}>
+                  <span
+                    onClick={() => handleIncrementWatchCount(activity.mangaId, 'manga')}
+                  >
+                    {activity.currentChapter}+
+                  </span>
+                </div>
+              )}
+            </div>
+            {hoveredCard === activity.mangaId && (
+              <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
+                <h4>{getTitle(getMangaById(activity.mangaId)?.titles)}</h4>
+                <p>Progress: {activity.currentChapter}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
               </div>
             )}
           </div>
@@ -459,45 +522,7 @@ const Home = () => {
           </div>
 
           {readingManga.length > 0 && (
-            <div className={homeStyles.progressSection}>
-              <h2>Currently Reading</h2>
-              <div className={homeStyles.progressGrid}>
-                {readingManga.map((activity) => (
-                  <div
-                    key={activity.mangaId}
-                    className={homeStyles.progressCard}
-                    onMouseEnter={(event) => handleMouseEnter(activity.mangaId, event)}
-                    onMouseLeave={() => setHoveredCard(null)}
-                  >
-                    <Link
-                      to={`/manga/${activity.mangaId}`}
-                    >
-                      <img
-                        src={getMangaById(activity.mangaId)?.images.image}
-                        alt={getMangaById(activity.mangaId)?.titles.english}
-                      />
-                    </Link>
-                    <div className={homeStyles.progressInfo}>
-                      {hoveredCard === activity.mangaId && (
-                        <div className={homeStyles.episodeInfo}>
-                          <span
-                            onClick={() => handleIncrementWatchCount(activity.mangaId, 'manga')}
-                          >
-                            {activity.currentChapter}+
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {hoveredCard === activity.mangaId && (
-                      <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                        <h4>{getTitle(getMangaById(activity.mangaId)?.titles)}</h4>
-                        <p>Progress: {activity.currentChapter}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            renderReadingSection()
           )}
         </>
       )}

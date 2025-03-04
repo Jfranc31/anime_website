@@ -10,6 +10,11 @@ import UserAnimeCard from '../cards/userAnimeCard';
 import UserMangaCard from '../cards/userMangaCard';
 import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
+import ProfileNavigation from '../Components/Navbars/ProfileNavbar';
+import '../styles/components/add_navbar.module.css';
+import AnimeProfile from './AnimeProfile';
+import MangaProfile from './MangaProfile';
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 const LAYOUTS = {
   GRID: 'grid',
@@ -106,12 +111,12 @@ const Profile = () => {
         ),
       }))
       .sort((a, b) => {
-        const titleA = a.mediaDetails?.titles?.[userData?.title] || '';
-        const titleB = b.mediaDetails?.titles?.[userData?.title] || '';
+        const titleA = getTitle(a.mediaDetails?.titles) || '';
+        const titleB = getTitle(b.mediaDetails?.titles) || '';
 
-        return titleA.localeCompare(titleB);
+        return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       });
-  }, [userAnimeList, userMangaList, statusType, getMediaById, mediaType, userData?.title]);
+  }, [userAnimeList, userMangaList, statusType, getMediaById, mediaType, getTitle]);
 
   const handleProgressUpdate = async (id, newProgress) => {
     const isAnime = mediaType === MEDIA_TYPES.ANIME;
@@ -254,168 +259,376 @@ const Profile = () => {
     }
   };
 
+  const animeStatusCounts = useMemo(() => {
+    return userAnimeList.reduce((acc, item) => {
+      switch(item.status) {
+        case 'Watching':
+          acc.watching++;
+          break;
+        case 'Planning':
+          acc.planning++;
+          break;
+        case 'Completed':
+          acc.completed++;
+          break;
+        default:
+          break;
+      }
+      return acc;
+    }, { watching: 0, planning: 0, completed: 0 });
+  }, [userAnimeList]);
+  
+  const mangaStatusCounts = useMemo(() => {
+    return userMangaList.reduce((acc, item) => {
+      switch(item.status) {
+        case 'Reading':
+          acc.reading++;
+          break;
+        case 'Planning':
+          acc.planning++;
+          break;
+        case 'Completed':
+          acc.completed++;
+          break;
+        default:
+          break;
+      }
+      return acc;
+    }, { reading: 0, planning: 0, completed: 0 });
+  }, [userMangaList]);
+  
+  const animeProgressStats = useMemo(() => {
+    const completedSeries = userAnimeList.filter(item => 
+      item.status === 'Completed'
+    ).length;
+  
+    const seriesWithProgress = userAnimeList.filter(item => 
+      item.currentEpisode > 0
+    ).length;
+  
+    const episodesWatched = userAnimeList.reduce((sum, item) => 
+      sum + (item.currentEpisode || 0), 0);
+    
+    const totalPossibleEpisodes = userAnimeList.reduce((sum, item) => {
+      const anime = animeList?.find(a => a._id === item.animeId);
+      const maxEpisodes = parseInt(anime?.lengths?.Episodes || 0);
+      
+      // If series is ongoing or max episodes unknown, use current progress
+      return sum + (maxEpisodes > 0 ? maxEpisodes : item.currentEpisode);
+    }, 0);
+  
+    const completionPercentage = seriesWithProgress > 0
+      ? Math.round((completedSeries / seriesWithProgress) * 100)
+      : 0;
+  
+    return { 
+      episodesWatched, 
+      completedSeries,
+      seriesWithProgress,
+      completionPercentage 
+    };
+  }, [userAnimeList, animeList]);
+  
+  const mangaProgressStats = useMemo(() => {
+    const completedSeries = userMangaList.filter(item => 
+      item.status === 'Completed'
+    ).length;
+  
+    const seriesWithProgress = userMangaList.filter(item => 
+      item.currentChapter > 0
+    ).length;
+  
+    const chaptersRead = userMangaList.reduce((sum, item) => 
+      sum + (item.currentChapter || 0), 0);
+    
+    const volumesRead = userMangaList.reduce((sum, item) => 
+      sum + (item.currentVolume || 0), 0);
+    
+    const totalPossibleChapters = userMangaList.reduce((sum, item) => {
+      const manga = mangaList?.find(m => m._id === item.mangaId);
+      const maxChapters = parseInt(manga?.lengths?.chapters || 0);
+      
+      // If series is ongoing or max chapters unknown, use current progress
+      return sum + (maxChapters > 0 ? maxChapters : item.currentChapter);
+    }, 0);
+  
+    const completionPercentage = seriesWithProgress > 0
+      ? Math.round((completedSeries / seriesWithProgress) * 100)
+      : 0;
+  
+    return { 
+      chaptersRead, 
+      volumesRead,
+      completedSeries,
+      seriesWithProgress,
+      completionPercentage 
+    };
+  }, [userMangaList, mangaList]);
+  
+  const animeFormatCounts = useMemo(() => {
+    return userAnimeList.reduce((acc, item) => {
+      const anime = animeList?.find(a => a._id === item.animeId);
+      const format = anime?.typings.Format?.toLowerCase() || 'other';
+      
+      switch(format) {
+        case 'tv':
+          acc.tv++;
+          break;
+        case "tv short":
+          acc.tv_short++;
+          break;
+        case 'movie':
+          acc.movie++;
+          break;
+        case 'ova':
+          acc.ova++;
+          break;
+        case 'ona':
+          acc.ona++;
+          break;
+        case 'special':
+          acc.special++;
+          break;
+        case 'music':
+          acc.music++;
+          break;
+        default:
+          acc.other++;
+      }
+      
+      return acc;
+    }, { tv: 0, tv_short: 0, movie: 0, ova: 0, ona: 0, special: 0, music: 0, other: 0 });
+  }, [userAnimeList, animeList]);
+  
+  const mangaFormatCounts = useMemo(() => {
+    return userMangaList.reduce((acc, item) => {
+      const manga = mangaList?.find(m => m._id === item.mangaId);
+      const format = manga?.typings.Format?.toLowerCase() || 'other';
+      
+      switch(format) {
+        case 'manga':
+          acc.manga++;
+          break;
+        case 'light novel':
+          acc.light_novel++;
+          break;
+        case 'one shot':
+          acc.oneShot++;
+          break;
+        default:
+          acc.other++;
+      }
+      
+      return acc;
+    }, { manga: 0, light_novel: 0, oneShot: 0, other: 0 });
+  }, [userMangaList, mangaList]);
+
   if (!userData) {
     return <div className={profileStyles.noUser}>Please log in to view your profile.</div>;
   }
 
   return (
-    <div className={profileStyles.profilePage}>
-      <div className={profileStyles.profileHeader}>
-        <div className={profileStyles.userInfo}>
-          <div className={profileStyles.avatarContainer}>
-            <div className={profileStyles.avatar}>
-              <img
-                src={`http://localhost:8080${userData?.avatar}`}
-                alt="Profile"
-              />
-            </div>
-          </div>
-          <div className={profileStyles.userDetails}>
-            <h1>{userData.username}</h1>
-          </div>
-        </div>
-
-        <div className={profileStyles.statsContainer}>
-          <div className={profileStyles.statCard}>
-            <h3>Anime Stats</h3>
-            <div className={profileStyles.statValue}>
-              {userAnimeList.length || 0} Total
-            </div>
-          </div>
-          <div className={profileStyles.statCard}>
-            <h3>Manga Stats</h3>
-            <div className={profileStyles.statValue}>
-              {userMangaList.length || 0} Total
-            </div>
-          </div>
-        </div>
+    <div className="add-page">
+      <ProfileNavigation />
+      <div className="add-content">
+        <Routes>
+          <Route path="/" element={<Navigate to="animeProfile" />} />
+          <Route path="animeProfile" element={<AnimeProfile />} />
+          <Route path="mangaProfile" element={<MangaProfile />} />
+        </Routes>
       </div>
-
-      <div className={profileStyles.contentSection}>
-        <div className={profileStyles.controls}>
-          <div className={profileStyles.tabContainer}>
-            <button
-              className={`${profileStyles.tabButton} ${mediaType === MEDIA_TYPES.ANIME ? profileStyles.activeTab : ''}`}
-              onClick={() => setMediaType(MEDIA_TYPES.ANIME)}
-            >
-              Anime
-            </button>
-            <button
-              className={`${profileStyles.tabButton} ${mediaType === MEDIA_TYPES.MANGA ? profileStyles.activeTab : ''}`}
-              onClick={() => setMediaType(MEDIA_TYPES.MANGA)}
-            >
-              Manga
-            </button>
-          </div>
-
-          <div className={profileStyles.layoutControls}>
-            {Object.values(LAYOUTS).map((layout) => (
-              <button
-                key={layout}
-                onClick={() => setGridLayout(layout)}
-                className={`${profileStyles.layoutButton} ${
-                  gridLayout === layout ? profileStyles.activeLayout : ''
-                }`}
-              >
-                {layout.charAt(0).toUpperCase() + layout.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className={profileStyles.statusTabs}>
-          {Object.values(STATUS_TYPES).map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusType(status)}
-              className={`${profileStyles.statusTab} ${
-                statusType === status ? profileStyles.activeStatus : ''
-              }`}
-            >
-              {mediaType === MEDIA_TYPES.ANIME && status === STATUS_TYPES.WATCHING
-                ? 'Watching'
-                : mediaType === MEDIA_TYPES.MANGA && status === STATUS_TYPES.WATCHING
-                ? 'Reading'
-                : status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        {error && (
-          <div className={profileStyles.error}>
-            {error}
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className={profileStyles.loading}>Loading...</div>
-        ) : (
-          <div className={profileStyles.listContainer}>
-            {gridLayout === LAYOUTS.COMPACT && renderColumnHeaders()}
-            <div className={`${profileStyles.contentGrid} ${profileStyles[gridLayout]}`}>
-              {filteredMediaList.map((item) => (
-                mediaType === MEDIA_TYPES.ANIME ? (
-                  <UserAnimeCard
-                    key={item.animeId}
-                    anime={item.mediaDetails}
-                    name={getTitle(item.mediaDetails.titles)}
-                    layout={gridLayout}
-                    onTopRightButtonClick={handleTopRightButtonClick}
-                    userProgress={item.currentEpisode}
-                    userStatus={item.status}
-                    onProgressUpdate={(newProgress) => 
-                      handleProgressUpdate(item.animeId, newProgress)
-                    }
-                  />
-                ) : (
-                  <UserMangaCard
-                    key={item.mangaId}
-                    manga={item.mediaDetails}
-                    name={getTitle(item.mediaDetails.titles)}
-                    layout={gridLayout}
-                    onTopRightButtonClick={handleTopRightButtonClick}
-                    userProgress={item.currentChapter}
-                    userStatus={item.status}
-                    onProgressUpdate={(newProgress) => 
-                      handleProgressUpdate(item.mangaId, newProgress)
-                    }
-                  />
-                )
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      {isAnimeEditorOpen && (
-        <div className={modalStyles.modalOverlay} onClick={handleAnimeModalClose}>
-          <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
-            <AnimeEditor
-              anime={selectedAnimeForEdit}
-              userId={userData._id}
-              closeModal={handleAnimeModalClose}
-              onAnimeDelete={onAnimeDelete}
-              onAnimeUpdate={onAnimeUpdate}
-              setUserData={setUserData}
-            />
-          </div>
-        </div>
-      )}
-      {isMangaEditorOpen && (
-        <div className={modalStyles.modalOverlay} onClick={handleMangaModalClose}>
-          <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
-            <MangaEditor
-              manga={selectedMangaForEdit}
-              userId={userData._id}
-              closeModal={handleMangaModalClose}
-              onMangaDelete={onMangaDelete}
-              onMangaUpdate={onMangaUpdate}
-              setUserData={setUserData}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
+  // return (
+  //   <div className={profileStyles.profilePage}>
+  //     <div className={profileStyles.profileHeader}>
+  //       <div className={profileStyles.userInfo}>
+  //         <div className={profileStyles.avatarContainer}>
+  //           <div className={profileStyles.avatar}>
+  //             <img
+  //               src={`http://localhost:8080${userData?.avatar}`}
+  //               alt="Profile"
+  //             />
+  //           </div>
+  //         </div>
+  //         <div className={profileStyles.userDetails}>
+  //           <h1>{userData.username}</h1>
+  //         </div>
+  //       </div>
+
+  //       <div className={profileStyles.statsContainer}>
+  //         <div className={profileStyles.statCard}>
+  //           <h3>Anime Stats</h3>
+  //           <div className={profileStyles.statValue}>
+  //             {userAnimeList.length || 0} Total
+  //           </div>
+  //           <div className={profileStyles.statBreakdown}>
+  //             <div>{animeStatusCounts.planning} Planning</div>
+  //             <div>{animeStatusCounts.watching} Watching</div>
+  //             <div>{animeStatusCounts.completed} Completed</div>
+  //             <div className={profileStyles.formatStats}>
+  //               <div>TV: {animeFormatCounts.tv}</div>
+  //               <div>TV Short: {animeFormatCounts.tv_short}</div>
+  //               <div>Movies: {animeFormatCounts.movie}</div>
+  //               <div>OVA: {animeFormatCounts.ova}</div>
+  //               <div>ONA: {animeFormatCounts.ona}</div>
+  //               <div>Specials: {animeFormatCounts.special}</div>
+  //               <div>Music: {animeFormatCounts.music}</div>
+  //               <div>Other: {animeFormatCounts.other}</div>
+  //             </div>
+  //             <div>Completed Series: {animeProgressStats.completedSeries} / {animeProgressStats.seriesWithProgress}</div>
+  //             <div>Completion Rate: {animeProgressStats.completionPercentage}%</div>
+  //             <div>Total Episodes Watched: {animeProgressStats.episodesWatched}</div>
+  //           </div>
+  //         </div>
+  //         <div className={profileStyles.statCard}>
+  //           <h3>Manga Stats</h3>
+  //           <div className={profileStyles.statValue}>
+  //             {userMangaList.length || 0} Total
+  //           </div>
+  //           <div className={profileStyles.statBreakdown}>
+  //             <div>{mangaStatusCounts.planning} Planning</div>
+  //             <div>{mangaStatusCounts.reading} Reading</div>
+  //             <div>{mangaStatusCounts.completed} Completed</div>
+  //             <div className={profileStyles.statCard}>
+  //               <div>Manga: {mangaFormatCounts.manga}</div>
+  //               <div>Light Novel: {mangaFormatCounts.light_novel}</div>
+  //               <div>One Shot: {mangaFormatCounts.oneShot}</div>
+  //               <div>Other: {mangaFormatCounts.other}</div>
+  //             </div>
+  //             <div>Completed Series: {mangaProgressStats.completedSeries} / {mangaProgressStats.seriesWithProgress}</div>
+  //             <div>Completion Rate: {mangaProgressStats.completionPercentage}%</div>
+  //             <div>Total Chapters Read: {mangaProgressStats.chaptersRead}</div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     <div className={profileStyles.contentSection}>
+  //       <div className={profileStyles.controls}>
+  //         <div className={profileStyles.tabContainer}>
+  //           <button
+  //             className={`${profileStyles.tabButton} ${mediaType === MEDIA_TYPES.ANIME ? profileStyles.activeTab : ''}`}
+  //             onClick={() => setMediaType(MEDIA_TYPES.ANIME)}
+  //           >
+  //             Anime
+  //           </button>
+  //           <button
+  //             className={`${profileStyles.tabButton} ${mediaType === MEDIA_TYPES.MANGA ? profileStyles.activeTab : ''}`}
+  //             onClick={() => setMediaType(MEDIA_TYPES.MANGA)}
+  //           >
+  //             Manga
+  //           </button>
+  //         </div>
+
+  //         <div className={profileStyles.layoutControls}>
+  //           {Object.values(LAYOUTS).map((layout) => (
+  //             <button
+  //               key={layout}
+  //               onClick={() => setGridLayout(layout)}
+  //               className={`${profileStyles.layoutButton} ${
+  //                 gridLayout === layout ? profileStyles.activeLayout : ''
+  //               }`}
+  //             >
+  //               {layout.charAt(0).toUpperCase() + layout.slice(1)}
+  //             </button>
+  //           ))}
+  //         </div>
+  //       </div>
+
+  //       <div className={profileStyles.statusTabs}>
+  //         {Object.values(STATUS_TYPES).map((status) => (
+  //           <button
+  //             key={status}
+  //             onClick={() => setStatusType(status)}
+  //             className={`${profileStyles.statusTab} ${
+  //               statusType === status ? profileStyles.activeStatus : ''
+  //             }`}
+  //           >
+  //             {mediaType === MEDIA_TYPES.ANIME && status === STATUS_TYPES.WATCHING
+  //               ? 'Watching'
+  //               : mediaType === MEDIA_TYPES.MANGA && status === STATUS_TYPES.WATCHING
+  //               ? 'Reading'
+  //               : status.charAt(0).toUpperCase() + status.slice(1)}
+  //           </button>
+  //         ))}
+  //       </div>
+
+  //       {error && (
+  //         <div className={profileStyles.error}>
+  //           {error}
+  //         </div>
+  //       )}
+
+  //       {isLoading ? (
+  //         <div className={profileStyles.loading}>Loading...</div>
+  //       ) : (
+  //         <div className={profileStyles.listContainer}>
+  //           {gridLayout === LAYOUTS.COMPACT && renderColumnHeaders()}
+  //           <div className={`${profileStyles.contentGrid} ${profileStyles[gridLayout]}`}>
+  //             {filteredMediaList.map((item) => (
+  //               mediaType === MEDIA_TYPES.ANIME ? (
+  //                 <UserAnimeCard
+  //                   key={item.animeId}
+  //                   anime={item.mediaDetails}
+  //                   name={getTitle(item.mediaDetails.titles)}
+  //                   layout={gridLayout}
+  //                   onTopRightButtonClick={handleTopRightButtonClick}
+  //                   userProgress={item.currentEpisode}
+  //                   userStatus={item.status}
+  //                   onProgressUpdate={(newProgress) => 
+  //                     handleProgressUpdate(item.animeId, newProgress)
+  //                   }
+  //                 />
+  //               ) : (
+  //                 <UserMangaCard
+  //                   key={item.mangaId}
+  //                   manga={item.mediaDetails}
+  //                   name={getTitle(item.mediaDetails.titles)}
+  //                   layout={gridLayout}
+  //                   onTopRightButtonClick={handleTopRightButtonClick}
+  //                   userProgress={item.currentChapter}
+  //                   userStatus={item.status}
+  //                   onProgressUpdate={(newProgress) => 
+  //                     handleProgressUpdate(item.mangaId, newProgress)
+  //                   }
+  //                 />
+  //               )
+  //             ))}
+  //           </div>
+  //         </div>
+  //       )}
+  //     </div>
+  //     {isAnimeEditorOpen && (
+  //       <div className={modalStyles.modalOverlay} onClick={handleAnimeModalClose}>
+  //         <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
+  //           <AnimeEditor
+  //             anime={selectedAnimeForEdit}
+  //             userId={userData._id}
+  //             closeModal={handleAnimeModalClose}
+  //             onAnimeDelete={onAnimeDelete}
+  //             onAnimeUpdate={onAnimeUpdate}
+  //             setUserData={setUserData}
+  //           />
+  //         </div>
+  //       </div>
+  //     )}
+  //     {isMangaEditorOpen && (
+  //       <div className={modalStyles.modalOverlay} onClick={handleMangaModalClose}>
+  //         <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
+  //           <MangaEditor
+  //             manga={selectedMangaForEdit}
+  //             userId={userData._id}
+  //             closeModal={handleMangaModalClose}
+  //             onMangaDelete={onMangaDelete}
+  //             onMangaUpdate={onMangaUpdate}
+  //             setUserData={setUserData}
+  //           />
+  //         </div>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 };
 
 export default Profile;

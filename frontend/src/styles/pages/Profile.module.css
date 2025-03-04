@@ -338,3 +338,63 @@
   height: 60px;
   object-fit: cover;
 }
+
+/* Add these to your Profile.module.css file */
+
+.statGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.statItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.9rem;
+}
+
+.statLabel {
+  color: #666;
+  margin-right: 8px;
+}
+
+.statValue {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Update existing statCard styles */
+.statCard {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.statCard h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+/* Make statsContainer responsive */
+.statsContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+  margin-top: 24px;
+}
+
+@media (min-width: 768px) {
+  .statsContainer {
+    grid-template-columns: 1fr 1fr;
+  }
+}

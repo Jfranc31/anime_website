@@ -98,7 +98,7 @@ function App() {
                       element={userData && userData._id ? <Home /> : <Login />}
                     />
                     <Route
-                      path="/profile"
+                      path="/profile/*"
                       element={userData && userData._id ? <Profile /> : <Login />}
                     />
                     <Route
