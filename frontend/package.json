@@ -54,5 +54,8 @@
   "main": "test.js",
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "react-app-rewired": "^2.2.1"
+  }
 }
