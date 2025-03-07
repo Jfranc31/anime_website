@@ -14,6 +14,8 @@ import ProfileNavigation from '../Components/Navbars/ProfileNavbar';
 import '../styles/components/add_navbar.module.css';
 import AnimeProfile from './AnimeProfile';
 import MangaProfile from './MangaProfile';
+import Stats from './StatsProfile';
+import Overview from './OverviewProfile';
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 const LAYOUTS = {
@@ -432,9 +434,11 @@ const Profile = () => {
       <ProfileNavigation />
       <div className="add-content">
         <Routes>
-          <Route path="/" element={<Navigate to="animeProfile" />} />
+          <Route path="/" element={<Navigate to="overview" />} />
+          <Route path="overview" element={<Overview />} />
           <Route path="animeProfile" element={<AnimeProfile />} />
           <Route path="mangaProfile" element={<MangaProfile />} />
+          <Route path="stats" element={<Stats />} />
         </Routes>
       </div>
     </div>

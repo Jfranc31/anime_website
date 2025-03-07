@@ -54,13 +54,6 @@
   color: var(--text-secondary);
 }
 
-.statsContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
 .statCard {
   padding: 1.5rem;
   background-color: var(--filter-bg);
@@ -70,7 +63,7 @@
 
 .statCard h3 {
   margin: 0;
-  color: var(--text-secondary);
+  color: #333;
   font-size: 1rem;
 }
 
@@ -123,10 +116,6 @@
     flex-direction: column;
     text-align: center;
     gap: 1rem;
-  }
-
-  .statsContainer {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -365,25 +354,6 @@
   color: #333;
 }
 
-/* Update existing statCard styles */
-.statCard {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.statCard h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-  font-size: 1.2rem;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 8px;
-}
-
 /* Make statsContainer responsive */
 .statsContainer {
   display: grid;
@@ -393,8 +363,316 @@
   margin-top: 24px;
 }
 
-@media (min-width: 768px) {
-  .statsContainer {
-    grid-template-columns: 1fr 1fr;
+/* Profile.module.css */
+
+
+.noUser {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  margin: 2rem auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Overview Page Styling */
+.overviewContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.statsSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+/* .statCard {
+  background-color: var(--filter-bg);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+} */
+
+/* .statCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+} */
+
+.statCard h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: var(--success-color);
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+}
+
+.statCard p {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.viewMoreLink {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--success-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.viewMoreLink:hover {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+
+.recentActivity {
+  margin-top: 1rem;
+}
+
+.recentActivity h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--success-color);
+  padding-bottom: 0.5rem;
+}
+
+.recentSection {
+  margin-bottom: 2rem;
+}
+
+.recentSection h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.recentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.recentItem {
+  display: flex;
+  background-color: var(--filter-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.recentItem:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.recentItemImage {
+  width: 80px;
+  height: 120px;
+  object-fit: cover;
+  border-right: 1px solid #eee;
+}
+
+.recentItemInfo {
+  padding: 0.8rem;
+  flex: 1;
+}
+
+.recentItemTitle {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recentItemInfo p {
+  margin: 0.3rem 0;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+/* Stats Page Styling */
+
+.statsSection {
+  background-color: var(--filter-bg);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.statsSection h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--success-color);
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+}
+
+.statSubsection {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.statSubsection h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.statCard .statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  color: #333;
+  text-align: center;
+}
+
+/* Status-specific stat card styling */
+.animeCard, .mangaCard {
+  background-color: #f0f4ff;
+  border-left: 4px solid #6366f1;
+}
+
+.episodesCard, .chaptersCard {
+  background-color: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.watchingCard, .readingCard {
+  background-color: #ecfdf5;
+  border-left: 4px solid #10b981;
+}
+
+.completedCard {
+  background-color: #eef2ff;
+  border-left: 4px solid #4f46e5;
+}
+
+.planningCard {
+  background-color: #fef3c7;
+  border-left: 4px solid #f59e0b;
+}
+
+.tvCard {
+  background-color: #f3e8ff;
+  border-left: 4px solid #8b5cf6;
+}
+
+.movieCard {
+  background-color: #fce7f3;
+  border-left: 4px solid #ec4899;
+}
+
+.ovaCard {
+  background-color: #d1fae5;
+  border-left: 4px solid #059669;
+}
+
+.specialCard {
+  background-color: #ffedd5;
+  border-left: 4px solid #f97316;
+}
+
+.mangaFormatCard {
+  background-color: #dbeafe;
+  border-left: 4px solid #2563eb;
+}
+
+.novelCard {
+  background-color: #e0e7ff;
+  border-left: 4px solid #4338ca;
+}
+
+.oneshotCard {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+}
+
+/* Progress bar styling */
+.progressBarContainer {
+  margin-bottom: 1.5rem;
+}
+
+.progressBarLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.progressBarTrack {
+  height: 12px;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: var(--success-color);
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profilePage {
+    padding: 1rem;
+  }
+  
+  .statsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .recentGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .avatar {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .userDetails h1 {
+    font-size: 1.5rem;
+  }
+  
+  /* .statsContainer h1 {
+    font-size: 1.8rem;
+  } */
+}
+
+@media (max-width: 480px) {
+  .statsGrid, .recentGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .statsSummary {
+    grid-template-columns: 1fr;
   }
 }

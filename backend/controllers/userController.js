@@ -72,7 +72,12 @@ const loginUser = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
-        theme: user.theme
+        theme: user.theme,
+        avatar: user.avatar,
+        title: user.title,
+        CharacterName: user.CharacterName,
+        animes: user.animes,
+        mangas: user.mangas,
       };
 
       res.cookie("userInfo", JSON.stringify(userForCookie), {
@@ -339,7 +344,9 @@ const updateUserManga = async (req, res) => {
         updatedStatus = 'Completed';
         if (sendChapter > 0 && sendVolume === 0) {
           sendChapter = maxChapters;
+          sendVolume = maxVolumes;
         } else if (sendChapter === 0 && sendVolume > 0) {
+          sendChapter = maxChapters;
           sendVolume = maxVolumes;
         } else {
           sendChapter = maxChapters;

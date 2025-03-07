@@ -7,7 +7,7 @@ const ProfileNavigation = () => {
         <nav className={styles.addNavbar}>
             <div className={styles.navLinks}>
                 <NavLink
-                    to="/"
+                    to="/profile/overview"
                     className={({ isActive }) => 
                         `${styles.link} ${isActive ? styles.active : ''}`
                     }
@@ -31,7 +31,7 @@ const ProfileNavigation = () => {
                     Manga
                 </NavLink>
                 <NavLink
-                    to="/"
+                    to="/profile/stats"
                     className={({ isActive }) => 
                         `${styles.link} ${isActive ? styles.active : ''}`
                     }
