@@ -27,6 +27,28 @@ const getAllAnimes = async (req, res) => {
   }
 };
 
+const checkForAnime = async (req, res) => {
+  try {
+    const { anilistId } = req.body;
+
+    console.log("checking for anime: ", anilistId);
+
+    if (!anilistId || isNaN(Number(anilistId))) {
+      return res.status(400).json({ message: "invalid anilistId"});
+    }
+
+    const anime = await AnimeModel.findOne({ anilistId: Number(anilistId) });
+
+    if (!anime) {
+      return res.status(200).json(false);
+    }
+    res.status(200).json(true);
+  } catch (error) {
+    console.error("Error checking if anime exists: ", error.message);
+    res.status(500).json({ message: "internal Server Error" });
+  }
+};
+
 /**
  * @function getAnimeInfo
  * @description Get information about a specific anime.
@@ -38,6 +60,20 @@ const getAnimeInfo = async (req, res) => {
   try {
     const animeID = req.params.id;
     const anime = await AnimeModel.findById(animeID);
+    if (!anime) {
+      return res.status(404).json({ message: "Anime not found" });
+    }
+    res.json(anime);
+  } catch (error) {
+    console.error("Error fetching anime for page: ", error);
+    res.status(500).json({ message: "internal Server Error" });
+  }
+};
+
+const findAnimeInfo = async (req, res) => {
+  try {
+    const anilistId = req.params.id;
+    const anime = await AnimeModel.findOne({ anilistId });
     if (!anime) {
       return res.status(404).json({ message: "Anime not found" });
     }
@@ -579,44 +615,46 @@ const createAnimeFromAnilist = async (req, res) => {
       'TW': 'Taiwan'
     };
 
+    console.log("AnilistData: ", anilistResults);
+
     const animeList = anilistResults.map((anilistData) => ({
-      anilistId: anilistData.id.toString(),
+      anilistId: anilistData.anilistId,
       titles: {
-        romaji: anilistData.title?.romaji || '',
-        english: anilistData.title?.english || '',
-        native: anilistData.title?.native || ''
+        romaji: anilistData.titles?.romaji || '',
+        english: anilistData.titles?.english || '',
+        native: anilistData.titles?.native || ''
       },
       releaseData: {
-        releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
+        releaseStatus: statusMap[anilistData.releaseData.releaseStatus] || 'Currently Releasing',
         startDate: {
-          year: anilistData.startDate?.year?.toString() || '',
-          month: anilistData.startDate?.month?.toString() || '',
-          day: anilistData.startDate?.day?.toString() || ''
+          year: anilistData.releaseData.startDate?.year?.toString() || '',
+          month: anilistData.releaseData.startDate?.month?.toString() || '',
+          day: anilistData.releaseData.startDate?.day?.toString() || ''
         },
         endDate: {
-          year: anilistData.endDate?.year?.toString() || '',
-          month: anilistData.endDate?.month?.toString() || '',
-          day: anilistData.endDate?.day?.toString() || ''
+          year: anilistData.releaseData.endDate?.year?.toString() || '',
+          month: anilistData.releaseData.endDate?.month?.toString() || '',
+          day: anilistData.releaseData.endDate?.day?.toString() || ''
         }
       },
       typings: {
-        Format: FORMAT_MAP[anilistData.format] || '',
-        Source: sourceMap[anilistData.source] || 'Original',
-        CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || 'Japan'
+        Format: FORMAT_MAP[anilistData.typings.Format] || '',
+        Source: sourceMap[anilistData.typings.Source] || 'Original',
+        CountryOfOrigin: countryMap[anilistData.typings.CountryOfOrigin] || 'Japan'
       },
       lengths: {
-        Episodes: anilistData.episodes?.toString() || '',
-        EpisodeDuration: anilistData.duration?.toString() || ''
+        Episodes: anilistData.lengths.Episodes?.toString() || '',
+        EpisodeDuration: anilistData.lengths.EpisodeDuration?.toString() || ''
       },
       genres: anilistData.genres || [],
       description: anilistData.description || '',
       images: {
-        image: anilistData.coverImage?.large || '',
-        border: anilistData?.bannerImage
+        image: anilistData.images?.image || '',
+        border: anilistData?.images?.border || ''
       },
       characters: [],
-      animeRelations: [],
-      mangaRelations: [],
+      animeRelations: anilistData.relations?.animeRelations || [],
+      mangaRelations: anilistData.relations?.mangaRelations || [],
       nextAiringEpisode: anilistData.nextAiringEpisode,
       activityTimestamp: Date.now()
     }));
@@ -695,7 +733,9 @@ const updateAnimeAnilist = async (req, res) => {
 
 export {
   getAllAnimes,
+  checkForAnime,
   getAnimeInfo,
+  findAnimeInfo,
   createAnime,
   updateAnime,
   createAnimeFromAnilist,

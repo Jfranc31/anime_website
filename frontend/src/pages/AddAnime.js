@@ -95,6 +95,21 @@ const AVAILABLE_RELATION = [
   'Contains',
   'Other',
 ];
+
+const RELATION_MAP = {
+  "PREQUEL": "Prequel",
+  "SEQUEL": "Sequel",
+  "ADAPTATION": "Adaptation",
+  "SOURCE": "Source",
+  "SIDE_STORY": "Child",
+  "CHARACTER": "Child",
+  "SUMMARY": "Child",
+  "ALTERNATIVE": "Alternative",
+  "SPIN_OFF": "Child",
+  "OTHER": "Other",
+  "COMPILATION": "Compilation",
+  "CONTAINS": "Contains"
+};
 // #endregion --------------------------------------------------------------
 
 // #region Initial Form State ----------------------------------------------
@@ -451,11 +466,95 @@ export default function AddAnime() {
   };
 
   const handleAnimeSelected = async (animeData) => {
-    console.log('AddAnime - Received Data:', animeData);
+    console.log('AddAnime - Full received data:', animeData);
 
+    // Start fetching characters
     handleAddingAniListCharacters(animeData.anilistId);
 
+    // Process relations if they exist
+    let animeRelations = [];
+    let mangaRelations = [];
+    let skippedRelations = {
+      anime: [],
+      manga: []
+    };
+
+    // First check if we have relations data
+    if (animeData.animeRelations || animeData.mangaRelations) {
+      console.log("Found relations in animeData:", animeData);
+
+      // Process anime relations
+      if (animeData.animeRelations?.length > 0) {
+        console.log("Processing anime relations:", animeData.animeRelations);
+        
+        for (const relation of animeData.animeRelations) {
+          try {
+            console.log("Checking anime relation:", relation);
+            const existingAnimeResponse = await axiosInstance.post('/animes/check-by-database', { anilistId: relation.anilistId });
+            
+            if (existingAnimeResponse.data === true) {
+              console.log("Found existing anime in database.");
+              const response = await axiosInstance.get(`/animes/find-anime/${relation.anilistId}`);
+              animeRelations.push({
+                ...response.data,
+                typeofRelation: RELATION_MAP[relation.typeofRelation]
+              });
+            } else {
+              console.log("Anime not found in database:", relation);
+              skippedRelations.anime.push(relation);
+            }
+          } catch (error) {
+            console.error("Error checking anime relation:", error);
+            skippedRelations.anime.push({
+              ...relation,
+              error: error.message
+            });
+          }
+        }
+      }
+
+      // Process manga relations
+      if (animeData.mangaRelations?.length > 0) {
+        console.log("Processing manga relations:", animeData.mangaRelations);
+        
+        for (const relation of animeData.mangaRelations) {
+          try {
+            console.log("Checking manga relation:", relation);
+            const existingMangaResponse = await axiosInstance.post('/mangas/check-by-database', { anilistId: relation.anilistId });
+            
+            if (existingMangaResponse.data === true) {
+              console.log("Found existing manga in database.");
+              const response = await axiosInstance.get(`/mangas/find-manga/${relation.anilistId}`);
+              mangaRelations.push({
+                ...response.data,
+                typeofRelation: RELATION_MAP[relation.typeofRelation]
+              });
+            } else {
+              console.log("Manga not found in database:", relation);
+              skippedRelations.manga.push(relation);
+            }
+          } catch (error) {
+            console.error("Error checking manga relation:", error);
+            skippedRelations.manga.push({
+              ...relation,
+              error: error.message
+            });
+          }
+        }
+      }
+      
+    } else {
+      console.log("No relations found in animeData:", animeData);
+    }
+
+    // Log skipped relations for debugging
+    if (skippedRelations.anime.length > 0 || skippedRelations.manga.length > 0) {
+      console.log('Skipped Relations:', skippedRelations);
+    }
+
+    // Update form data with the processed relations
     const updatedFormData = {
+      ...formData,
       anilistId: animeData.anilistId || '',
       nextEpisodeAiringAt: animeData.nextEpisodeAiringAt || '',
       titles: {
@@ -497,14 +596,14 @@ export default function AddAnime() {
         timeUntilAiring: animeData.nextAiringEpisode?.timeUntilAiring || '',
       },
       characters: animeData.characters || [],
-      animeRelations: animeData.animeRelations || [],
-      mangaRelations: animeData.mangaRelations || [],
+      animeRelations: animeRelations,
+      mangaRelations: mangaRelations,
       activityTimestamp: animeData.activityTimestamp || ''
     };
 
-    setSelectedGenres(updatedFormData.genres);
+    setSelectedGenres(animeData.genres);
 
-    console.log('AddAnime - Updated Form Data:', updatedFormData);
+    console.log("Final form data with relations:", updatedFormData);
     setFormData(updatedFormData);
     setActiveModal(null);
   };
@@ -1180,3 +1279,4 @@ export default function AddAnime() {
   );
   // #endregion ------------------------------------------------------------
 }
+

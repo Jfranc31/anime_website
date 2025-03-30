@@ -140,6 +140,25 @@ const fetchAnimeDataById = async (id) => {
           timeUntilAiring
           episode
         }
+        relations {
+          edges {
+            relationType(version: 2)
+            node {
+              id
+              type
+              title {
+                romaji
+                english
+                native
+              }
+              format
+              status
+              coverImage {
+                large
+              }
+            }
+          }
+        }
       }
     }
   `;
@@ -150,9 +169,76 @@ const fetchAnimeDataById = async (id) => {
       variables: { id }
     });
 
-    return response.data.data.Media;
+    console.log("AniList Raw Response:", response.data);
+    const media = response.data.data.Media;
+
+    // Process relations
+    if (media.relations?.edges) {
+      console.log("Found relations edges:", media.relations.edges);
+      const processedRelations = {
+        animeRelations: [],
+        mangaRelations: []
+      };
+
+      for (const edge of media.relations.edges) {
+        console.log("Processing relation edge:", edge);
+        const relation = {
+          anilistId: edge.node.id,
+          typeofRelation: edge.relationType,
+          titles: edge.node.title,
+          images: {
+            image: edge.node.coverImage?.large
+          },
+          format: edge.node.format,
+          status: edge.node.status,
+          type: edge.node.type
+        };
+
+        if (edge.node.type === 'ANIME') {
+          processedRelations.animeRelations.push(relation);
+        } else if (edge.node.type === 'MANGA') {
+          processedRelations.mangaRelations.push(relation);
+        }
+      }
+
+      media.relations = processedRelations;
+    }
+
+    // Transform the data
+    const transformedData = {
+      anilistId: media.id,
+      titles: media.title,
+      releaseData: {
+        releaseStatus: media.status,
+        startDate: media.startDate,
+        endDate: media.endDate
+      },
+      typings: {
+        Format: media.format,
+        Source: media.source,
+        CountryOfOrigin: media.countryOfOrigin
+      },
+      lengths: {
+        Episodes: media.episodes,
+        EpisodeDuration: media.duration
+      },
+      genres: media.genres,
+      description: media.description,
+      images: {
+        image: media.coverImage?.large,
+        border: media.bannerImage
+      },
+      nextAiringEpisode: media.nextAiringEpisode,
+      relations: media.relations // Make sure this is included
+    };
+
+    console.log("Transformed data with relations:", transformedData);
+    return transformedData;
   } catch (error) {
     console.error('Error fetching anime data from AniList:', error);
+    if (error.response) {
+      console.error('AniList API error response:', error.response.data);
+    }
     return null;
   }
 };
@@ -195,11 +281,29 @@ const fetchAnimeData = async (title) => {
             timeUntilAiring
             episode
           }
+          relations {
+            edges {
+              relationType(version: 2)
+              node {
+                id
+                type
+                title {
+                  romaji
+                  english
+                  native
+                }
+                format
+                status
+                coverImage {
+                  large
+                }
+              }
+            }
+          }
         }
       }
     }
   `;
-
   try {
     const response = await fetch(ANILIST_API, {
       method: 'POST',
@@ -212,9 +316,7 @@ const fetchAnimeData = async (title) => {
         variables: { search: title }
       })
     });
-
     const data = await response.json();
-
     if (data.errors) {
       const errorMessage = data.errors[0]?.message || 'Unknown AniList API error';
       if (errorMessage.includes('temporarily disabled')) {
@@ -222,12 +324,85 @@ const fetchAnimeData = async (title) => {
       }
       throw new Error(errorMessage);
     }
-
     if (!data.data?.Page?.media) {
       throw new Error('NO_RESULTS');
     }
+    
+    const mediaList = data.data.Page.media;
+    console.log("media list length:", mediaList.length);
+    
+    // Process each media item
+    const processedMediaList = mediaList.map(media => {
+      // Process relations for this specific media item
+      let processedRelations = {
+        animeRelations: [],
+        mangaRelations: []
+      };
 
-    return data.data.Page.media;
+      if (media.relations && media.relations.edges) {
+        console.log(`Processing relations for anime ID ${media.id}:`, media.relations.edges);
+        
+        for (const edge of media.relations.edges) {
+          console.log("Processing relation edge:", edge);
+          
+          if (!edge.node || !edge.node.id) {
+            console.log("Invalid relation node:", edge);
+            continue;
+          }
+          
+          const relation = {
+            anilistId: edge.node.id,
+            typeofRelation: edge.relationType,
+            titles: edge.node.title,
+            images: {
+              image: edge.node.coverImage?.large
+            },
+            format: edge.node.format,
+            status: edge.node.status,
+            type: edge.node.type
+          };
+          
+          if (edge.node.type === 'ANIME') {
+            processedRelations.animeRelations.push(relation);
+          } else if (edge.node.type === 'MANGA') {
+            processedRelations.mangaRelations.push(relation);
+          }
+        }
+      } else {
+        console.log(`No relations found for anime ID ${media.id}`);
+      }
+      
+      // Transform the data for this media item
+      return {
+        anilistId: media.id,
+        titles: media.title,
+        releaseData: {
+          releaseStatus: media.status,
+          startDate: media.startDate,
+          endDate: media.endDate
+        },
+        typings: {
+          Format: media.format,
+          Source: media.source,
+          CountryOfOrigin: media.countryOfOrigin
+        },
+        lengths: {
+          Episodes: media.episodes,
+          EpisodeDuration: media.duration
+        },
+        genres: media.genres,
+        description: media.description,
+        images: {
+          image: media.coverImage?.large,
+          border: media.bannerImage
+        },
+        nextAiringEpisode: media.nextAiringEpisode,
+        relations: processedRelations // Make sure relations are attached to each item
+      };
+    });
+    
+    console.log(`Processed ${processedMediaList.length} anime with relations`);
+    return processedMediaList;
   } catch (error) {
     console.error('Error fetching anime data from AniList:', error);
     throw error;
@@ -266,6 +441,25 @@ const fetchMangaDataById = async (id) => {
           large
         }
         bannerImage
+        relations {
+          edges {
+            relationType(version: 2)
+            node {
+              id
+              type
+              format
+              status
+              title {
+                romaji
+                english
+                native
+              }
+              coverImage {
+                large
+              }
+            }
+          }
+        }
       }
     }
   `;
@@ -276,7 +470,67 @@ const fetchMangaDataById = async (id) => {
       variables: { id }
     });
 
-    return response.data.data.Media;
+    const media = response.data.data.Media;
+    
+    // Process relations
+    if (media.relations?.edges) {
+      const processedRelations = {
+        animeRelations: [],
+        mangaRelations: []
+      };
+
+      for (const edge of media.relations.edges) {
+        const relation = {
+          anilistId: edge.node.id,
+          typeofRelation: edge.relationType,
+          titles: edge.node.title,
+          images: {
+            image: edge.node.coverImage?.large
+          },
+          format: edge.node.format,
+          status: edge.node.status,
+          type: edge.node.type
+        };
+
+        if (edge.node.type === 'ANIME') {
+          processedRelations.animeRelations.push(relation);
+        } else if (edge.node.type === 'MANGA') {
+          processedRelations.mangaRelations.push(relation);
+        }
+      }
+
+      media.relations = processedRelations;
+    }
+
+    // Transform the data
+    const transformedData = {
+      anilistId: media.id,
+      titles: media.title,
+      releaseData: {
+        releaseStatus: media.status,
+        startDate: media.startDate,
+        endDate: media.endDate
+      },
+      typings: {
+        Format: media.format,
+        Source: media.source,
+        CountryOfOrigin: media.countryOfOrigin
+      },
+      lengths: {
+        Chapters: media.chapters,
+        Volumes: media.volumes
+      },
+      genres: media.genres,
+      description: media.description,
+      images: {
+        image: media.coverImage?.large,
+        border: media.bannerImage
+      },
+      relations: media.relations // Make sure this is included
+    };
+
+    console.log("Transformed data with relations:", transformedData);
+    return transformedData;
   } catch (error) {
     console.error('Error fetching manga data from AniList:', error);
     return null;
@@ -316,6 +570,25 @@ const fetchMangaData = async (title) => {
             large
           }
           bannerImage
+          relations {
+            edges {
+              relationType(version: 2)
+              node {
+                id
+                type
+                title {
+                  romaji
+                  english
+                  native
+                }
+                format
+                status
+                coverImage {
+                  large
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -348,7 +621,78 @@ const fetchMangaData = async (title) => {
       throw new Error('NO_RESULTS');
     }
 
-    return data.data.Page.media;
+    const mediaList = data.data.Page.media;
+    console.log("media list length:", mediaList.length);
+
+    const processedMediaList = mediaList.map(media => {
+      let processedRelations = {
+        animeRelations: [],
+        mangaRelations: []
+      };
+
+      if (media.relations && media.relations.edges) {
+        console.log(`Processing relations for manga ID ${media.id}:`, media.relations.edges);
+
+        for (const edge of media.relations.edges) {
+          console.log("Processing relation edge:", edge);
+
+          if (!edge.node || !edge.node.id) {
+            console.log("Invalid relation node:", edge);
+            continue;
+          } 
+
+          const relation = {
+            anilistId: edge.node.id,
+            typeofRelation: edge.relationType,
+            titles: edge.node.title,
+            images: {
+              image: edge.node.coverImage?.large
+            },
+            format: edge.node.format,
+            status: edge.node.status,
+            type: edge.node.type
+          };
+          
+          if (edge.node.type === 'ANIME') {
+            processedRelations.animeRelations.push(relation);
+          } else if (edge.node.type === 'MANGA') {
+            processedRelations.mangaRelations.push(relation);
+          }
+        }
+      } else {
+        console.log(`No relations found for manga ID ${media.id}`);
+      }
+
+      // Transform the data for this media item
+      return {
+        anilistId: media.id,
+        titles: media.title,
+        releaseData: {
+          releaseStatus: media.status,
+          startDate: media.startDate,
+          endDate: media.endDate
+        },
+        typings: {
+          Format: media.format,
+          Source: media.source,
+          CountryOfOrigin: media.countryOfOrigin
+        },
+        lengths: {
+          Chapters: media.chapters,
+          Volumes: media.volumes
+        },
+        genres: media.genres,
+        description: media.description,
+        images: {
+          image: media.coverImage?.large,
+          border: media.bannerImage
+        },
+        relations: processedRelations // Make sure relations are attached to each item
+      };
+    });
+
+    console.log(`Processed ${processedMediaList.length} manga with relations`);
+    return processedMediaList;
   } catch (error) {
     console.error('Error fetching manga data from AniList:', error);
     return error;

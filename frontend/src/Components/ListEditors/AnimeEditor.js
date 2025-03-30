@@ -93,6 +93,7 @@ const AnimeEditor = ({
       const endpoint = isInUserList ? 'updateAnime' : 'addAnime';
       const payload = {
         animeId: anime._id,
+        anilistId: anime.anilistId,
         status: userProgress.status || 'Planning',
         currentEpisode: userProgress.currentEpisode || 0,
       };

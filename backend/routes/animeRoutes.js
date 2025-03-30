@@ -6,7 +6,9 @@
 import express from "express";
 import {
   getAllAnimes,
+  checkForAnime,
   getAnimeInfo,
+  findAnimeInfo,
   createAnime,
   updateAnime,
   createAnimeFromAnilist,
@@ -19,7 +21,11 @@ const router = express.Router();
 
 router.get("/animes", getAllAnimes);
 
+router.post("/check-by-database", checkForAnime);
+
 router.get("/anime/:id", getAnimeInfo);
+
+router.get("/find-anime/:id", findAnimeInfo);
 
 router.post("/addanime", createAnime);
 

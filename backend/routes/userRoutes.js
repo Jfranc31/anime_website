@@ -27,9 +27,13 @@ import {
   getAllUsers,
   uploadAvatar,
   updateTitle,
-  updateCharacterName
+  updateCharacterName,
+  syncUserList,
+  deleteAllLists
 } from "../controllers/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniListConnection, syncAniListData, getAniListUserLists } from '../services/anilistAuthService.js';
+import UserModel from '../Models/userModel.js';
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
@@ -71,5 +75,162 @@ router.put("/:userId/characterName", authMiddleware, updateCharacterName);
 
 // Avatar routes
 router.post('/:userId/upload-avatar', upload.single('avatar'), uploadAvatar);
+
+// Get AniList authorization URL
+router.get('/anilist/auth', (req, res) => {
+  const authUrl = getAuthorizationUrl();
+  res.json({ url: authUrl });
+});
+
+// Handle AniList OAuth callback
+router.post('/anilist/callback', async (req, res) => {
+  try {
+    const { code, userId } = req.body;
+
+    if (!code || !userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters'
+      });
+    }
+
+    // Exchange code for access token
+    const accessToken = await getAccessToken(code);
+
+    if (!accessToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'Failed to obtain access token'
+      });
+    }
+
+    // Get AniList user info
+    const anilistUser = await getAniListUserInfo(accessToken);
+
+    if (!anilistUser) {
+      return res.status(400).json({
+        success: false,
+        error: 'Failed to get AniList user info'
+      });
+    }
+
+    // Update user with AniList information
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        anilist: {
+          connected: true,
+          userId: anilistUser.id,
+          accessToken: accessToken,
+          username: anilistUser.name
+        }
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Error connecting AniList account:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to connect AniList account'
+    });
+  }
+});
+
+// Disconnect AniList account
+router.post('/:userId/anilist/disconnect', authMiddleware, async (req, res) => {
+  try {
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      req.params.userId,
+      {
+        anilist: {
+          connected: false,
+          userId: null,
+          accessToken: null,
+          username: null
+        }
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Error disconnecting AniList account:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to disconnect AniList account'
+    });
+  }
+});
+
+// Validate AniList connection
+router.get('/:userId/anilist/validate', authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.userId);
+    if (!user?.anilist?.accessToken) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No AniList connection found' 
+      });
+    }
+
+    const anilistUser = await validateAniListConnection(user.anilist.accessToken);
+    
+    res.json({
+      success: true,
+      anilistUser
+    });
+  } catch (error) {
+    console.error('Error validating AniList connection:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to validate AniList connection'
+    });
+  }
+});
+
+// Sync AniList data
+router.post('/:userId/anilist/sync', authMiddleware, syncUserList);
+
+// Get AniList user lists
+router.get('/:userId/anilist/lists', authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.userId);
+    if (!user?.anilist?.accessToken) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No AniList connection found' 
+      });
+    }
+
+    const anilistData = await getAniListUserLists(user.anilist.accessToken);
+    
+    res.json({
+      success: true,
+      data: {
+        username: anilistData.user,
+        statistics: anilistData.statistics,
+        animeLists: anilistData.animeLists,
+        mangaLists: anilistData.mangaLists
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching AniList lists:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch AniList lists'
+    });
+  }
+});
+
+// Delete all lists
+router.delete('/:userId/lists', authMiddleware, deleteAllLists);
 
 export default router;

@@ -102,6 +102,7 @@ const MangaEditor = ({
       const endpoint = isInUserList ? 'updateManga' : 'addManga';
       const payload = {
         mangaId: manga._id,
+        anilistId: manga.anilistId,
         status: userProgress.status || 'Planning',
         currentChapter: userProgress.currentChapter || 0,
         currentVolume: userProgress.currentVolume || 0

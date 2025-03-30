@@ -19,6 +19,10 @@ import { runScheduledAnimeUpdates, runScheduledMangaUpdates, runScheduledAiringU
 // Creating an Express application
 const app = express();
 
+// Increase the payload size limit - add these lines before other middleware
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 // Middleware to parse JSON requests
 app.use(express.json());
 
@@ -266,8 +270,8 @@ app.listen(8080, () => {
 
 // Initialize all schedulers
 console.log('Initializing scheduled tasks...');
-runScheduledAnimeUpdates('0 23 * * *');     // Daily at 11 PM
-runScheduledMangaUpdates('0 23 * * *');     // Daily at 11 PM
+runScheduledAnimeUpdates('0 */11 * * *');     // Daily at 11 PM
+runScheduledMangaUpdates('0 */11 * * *');     // Daily at 11 PM
 runScheduledAiringUpdates('15 * * * *');    // Every 15 minutes
 console.log('Scheduled tasks registered.');
 

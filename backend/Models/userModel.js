@@ -25,16 +25,24 @@ const userSchema = new mongoose.Schema({
       animeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "AnimeModel",
+        required: true
+      },
+      anilistId: {
+        type: Number
       },
       status: {
         type: String,
         enum: ["Watching", "Completed", "Planning"],
+        default: 'Planning'
       },
-      currentEpisode: Number,
+      currentEpisode: {
+        type: Number,
+        default: 0
+      },
       activityTimestamp: {
-        type: Date,
-        default: Date.now,
-      },
+        type: Number,
+        default: Date.now
+      }
     },
   ],
   mangas: [
@@ -43,6 +51,9 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "MangaModel",
         required: true
+      },
+      anilistId: {
+        type: Number
       },
       status: {
         type: String,
@@ -58,7 +69,7 @@ const userSchema = new mongoose.Schema({
         default: 0
       },
       activityTimestamp: {
-        type: Date,
+        type: Number,
         default: Date.now
       }
     }
@@ -87,6 +98,28 @@ const userSchema = new mongoose.Schema({
     enum: ['romaji-western', 'romaji', 'native'],
     default: 'romaji-western', // Set a default value
   },
+  anilist: {
+    connected: {
+      type: Boolean,
+      default: false
+    },
+    userId: {
+      type: Number
+    },
+    accessToken: {
+      type: String
+    },
+    username: {
+      type: String
+    }
+  },
+});
+
+// Remove any existing index on mangas.anilistId
+userSchema.index({ 'mangas.anilistId': 1 }, { 
+  unique: true, 
+  sparse: true,
+  partialFilterExpression: { 'mangas.anilistId': { $type: 'number' } }  // Only index non-null values
 });
 
 // Creating the 'UserModel' using the schema

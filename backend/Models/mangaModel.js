@@ -168,7 +168,9 @@ const mangaSchema = new mongoose.Schema({
   },
   anilistId: {
     type: Number,
-    unique: true
+    required: true,
+    unique: true,
+    index: true
   },
 });
 

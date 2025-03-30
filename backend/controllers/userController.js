@@ -9,6 +9,9 @@ import MangaModel from "../Models/mangaModel.js";
 import bcrypt from "bcrypt";
 import multer from 'multer';
 import path from 'path';
+import { syncAniListData } from '../services/anilistAuthService.js';
+import mongoose from 'mongoose';
+const { ObjectId } = mongoose.Types;
 
 /**
  * @function registerUser
@@ -76,8 +79,6 @@ const loginUser = async (req, res) => {
         avatar: user.avatar,
         title: user.title,
         CharacterName: user.CharacterName,
-        animes: user.animes,
-        mangas: user.mangas,
       };
 
       res.cookie("userInfo", JSON.stringify(userForCookie), {
@@ -86,7 +87,6 @@ const loginUser = async (req, res) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        domain: "localhost",
       });
 
       return res.status(200).json({ message: "Login Successful", user });
@@ -129,7 +129,7 @@ const getUserInfo = async (req, res) => {
  */
 const addAnime = async (req, res) => {
   const { userId } = req.params;
-  var { animeId, status, currentEpisode } = req.body;
+  var { animeId, anilistId, status, currentEpisode } = req.body;
 
   try {
     // Find the user
@@ -148,7 +148,7 @@ const addAnime = async (req, res) => {
       currentEpisode = anime.lengths?.Episodes || '';
     }
 
-    user.animes.push({ animeId, status, currentEpisode });
+    user.animes.push({ animeId, anilistId, status, currentEpisode });
 
     // Save the updated user
     await user.save();
@@ -175,7 +175,7 @@ const addAnime = async (req, res) => {
  */
 const addManga = async (req, res) => {
   const { userId } = req.params;
-  var { mangaId, status, currentChapter, currentVolume } = req.body;
+  var { mangaId, anilistId, status, currentChapter, currentVolume } = req.body;
 
   try {
     // find the user
@@ -194,7 +194,7 @@ const addManga = async (req, res) => {
       currentChapter = manga.lengths.chapters;
     }
 
-    user.mangas.push({ mangaId, status, currentChapter, currentVolume });
+    user.mangas.push({ mangaId, anilistId, status, currentChapter, currentVolume });
 
     // Save the updated user
     await user.save();
@@ -458,51 +458,46 @@ const removeManga = async (req, res) => {
   const mangaId = req.body.mangaId;
 
   try {
+    // First find the user
     const user = await UserModel.findById(userId);
     if (!user) {
-      console.log('User not found:', userId);
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
     }
 
-    // Ensure both IDs are strings for comparison
+    // Find the index of the manga to remove
     const mangaIndex = user.mangas.findIndex(
-      (userManga) => {
-        if (!userManga || !userManga.mangaId) {
-          console.log('Invalid manga entry:', userManga);
-          return false;
-        }
-        return userManga.mangaId.toString() === mangaId;
-      }
+      manga => manga.mangaId.toString() === mangaId
     );
 
-    if (mangaIndex !== -1) {
-      user.mangas.splice(mangaIndex, 1);
-      await user.save();
-
-      const updatedUser = await UserModel.findById(userId);
-      return res.json({
-        success: true,
-        message: "Manga removed successfully",
-        user: updatedUser,
-      });
-    } else {
+    if (mangaIndex === -1) {
       return res.status(404).json({ 
         success: false, 
         message: "Manga not found in user list",
-        mangaId,
-        userMangas: user.mangas.map(m => ({
-          id: m.mangaId?.toString(),
-          status: m.status
-        }))
+        mangaId
       });
     }
+
+    // Remove the manga from the array
+    user.mangas.splice(mangaIndex, 1);
+
+    // Save the user document
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Manga removed successfully",
+      user
+    });
+
   } catch (error) {
     console.error("Error removing manga:", error);
     return res.status(500).json({ 
       success: false, 
       message: "Internal server error",
-      error: error.message,
-      stack: error.stack
+      error: error.message
     });
   }
 };
@@ -691,6 +686,236 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+const syncUserList = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.userId);
+    if (!user?.anilist?.accessToken) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No AniList connection found' 
+      });
+    }
+
+    const anilistData = await syncAniListData(user.anilist.accessToken);
+    
+    const addedAnime = [];
+    const skippedAnime = [];
+    const updatedAnime = [];
+
+    // Process anime list
+    for (const animeEntry of anilistData.anime) {
+      try {
+        const status = animeEntry.status.toLowerCase();
+        const progress = animeEntry.progress || 0;
+        
+        // First check if this anime exists in our database
+        let animeInDatabase = await AnimeModel.findOne({ 
+          anilistId: animeEntry.mediaId 
+        });
+
+        if (!animeInDatabase) {
+          skippedAnime.push({
+            title: animeEntry.title.userPreferred,
+            anilistId: animeEntry.mediaId
+          });
+          continue;
+        }
+
+        // Check if user already has this anime
+        const existingUserAnime = user.animes.find(
+          anime => anime.anilistId === animeEntry.mediaId
+        );
+
+        if (existingUserAnime) {
+          // Update existing entry if progress changed
+          if (existingUserAnime.currentEpisode !== progress) {
+            existingUserAnime.currentEpisode = progress;
+            existingUserAnime.status = status === 'completed' ? 'Completed' : 
+                                     status === 'current' ? 'Watching' : 'Planning';
+            existingUserAnime.activityTimestamp = Date.now();
+            
+            updatedAnime.push({
+              title: animeEntry.title.userPreferred,
+              anilistId: animeEntry.mediaId
+            });
+          }
+        } else {
+          // Add new entry
+          user.animes.push({
+            animeId: animeInDatabase._id,
+            anilistId: animeEntry.mediaId,
+            status: status === 'completed' ? 'Completed' : 
+                    status === 'current' ? 'Watching' : 'Planning',
+            currentEpisode: progress,
+            activityTimestamp: Date.now()
+          });
+
+          addedAnime.push({
+            title: animeEntry.title.userPreferred,
+            anilistId: animeEntry.mediaId
+          });
+        }
+      } catch (error) {
+        console.error('Error processing anime:', animeEntry, error);
+        skippedAnime.push({
+          title: animeEntry.title?.userPreferred || 'Unknown',
+          anilistId: animeEntry.mediaId,
+          error: error.message
+        });
+      }
+    }
+
+    // Process manga list
+    const addedManga = [];
+    const skippedManga = [];
+    const updatedManga = [];
+
+    for (const mangaEntry of anilistData.manga) {
+      try {
+        const status = mangaEntry.status.toLowerCase();
+        const progress = mangaEntry.progress || 0;
+        const volumeProgress = mangaEntry.progressVolumes || 0;
+
+        // First check if this manga exists in our database
+        let mangaInDatabase = await MangaModel.findOne({ 
+          anilistId: mangaEntry.mediaId 
+        });
+
+        if (!mangaInDatabase) {
+          skippedManga.push({
+            title: mangaEntry.title.userPreferred,
+            anilistId: mangaEntry.mediaId
+          });
+          continue;
+        }
+
+        // Check if user already has this manga
+        const existingUserManga = user.mangas.find(
+          manga => manga.anilistId === mangaEntry.mediaId
+        );
+
+        if (existingUserManga) {
+          // Update existing entry if progress changed
+          if (existingUserManga.currentChapter !== progress || 
+              existingUserManga.currentVolume !== volumeProgress) {
+            existingUserManga.currentChapter = progress;
+            existingUserManga.currentVolume = volumeProgress;
+            existingUserManga.status = status === 'completed' ? 'Completed' : 
+                                     status === 'current' ? 'Reading' : 'Planning';
+            existingUserManga.activityTimestamp = Date.now();
+            
+            updatedManga.push({
+              title: mangaEntry.title.userPreferred,
+              anilistId: mangaEntry.mediaId
+            });
+          }
+        } else {
+          // Add new entry
+          user.mangas.push({
+            mangaId: mangaInDatabase._id,
+            anilistId: mangaEntry.mediaId,
+            status: status === 'completed' ? 'Completed' : 
+                    status === 'current' ? 'Reading' : 'Planning',
+            currentChapter: progress,
+            currentVolume: volumeProgress,
+            activityTimestamp: Date.now()
+          });
+
+          addedManga.push({
+            title: mangaEntry.title.userPreferred,
+            anilistId: mangaEntry.mediaId
+          });
+        }
+      } catch (error) {
+        console.error('Error processing manga:', mangaEntry, error);
+        skippedManga.push({
+          title: mangaEntry.title?.userPreferred || 'Unknown',
+          anilistId: mangaEntry.mediaId,
+          error: error.message
+        });
+      }
+    }
+
+    // Save all changes
+    await user.save();
+
+    // Update last sync timestamp
+    user.anilist.lastSync = Date.now();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Successfully synced with AniList',
+      data: {
+        anime: {
+          added: addedAnime,
+          updated: updatedAnime,
+          skipped: skippedAnime
+        },
+        manga: {
+          added: addedManga,
+          updated: updatedManga,
+          skipped: skippedManga
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error syncing AniList data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync AniList data',
+      details: error.message
+    });
+  }
+};
+
+const deleteAllLists = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Verify user authorization
+    if (req.user._id.toString() !== userId) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Not authorized to modify this user\'s lists' 
+      });
+    }
+
+    // Update user document to clear both lists
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          animes: [],
+          mangas: []
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'All lists deleted successfully' ,
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Error deleting user lists:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error deleting lists', 
+      error: error.message 
+    });
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -706,5 +931,7 @@ export {
   getAllUsers,
   uploadAvatar,
   updateTitle,
-  updateCharacterName
+  updateCharacterName,
+  syncUserList,
+  deleteAllLists
 };

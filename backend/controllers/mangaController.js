@@ -27,6 +27,28 @@ const getAllManga = async (req, res) => {
   }
 };
 
+const checkForManga = async (req, res) => {
+  try {
+    const { anilistId } = req.body;
+
+    console.log("checking for manga: ", anilistId);
+
+    if (!anilistId || isNaN(Number(anilistId))) {
+      return res.status(400).json({ message: "invalid anilistId"});
+    }
+
+    const manga = await MangaModel.findOne({ anilistId: Number(anilistId) });
+
+    if (!manga) {
+      return res.status(200).json(false);
+    }
+    res.status(200).json(true);
+  } catch (error) {
+    console.error("Error checking if manga exists: ", error.message);
+    res.status(500).json({ message: "internal Server Error" });
+  }
+};
+
 /**
  * @function getMangaInfo
  * @description Get information about a specific manga.
@@ -38,6 +60,20 @@ const getMangaInfo = async (req, res) => {
   try {
     const mangaID = req.params.id;
     const manga = await MangaModel.findById(mangaID);
+    if (!manga) {
+      return res.status(404).json({ message: "Manga not found" });
+    }
+    res.json(manga);
+  } catch (error) {
+    console.error("Error fetching manga for page: ", error);
+    res.status(500).json({ message: "internal Server Error" });
+  }
+};
+
+const findMangaInfo = async (req, res) => {
+  try {
+    const anilistId = req.params.id;
+    const manga = await MangaModel.findOne({ anilistId });
     if (!manga) {
       return res.status(404).json({ message: "Manga not found" });
     }
@@ -590,43 +626,43 @@ const createMangaFromAnilist = async (req, res) => {
     };
 
     const mangaList = anilistResults.map((anilistData) => ({
-      anilistId: anilistData.id.toString(),
+      anilistId: anilistData.anilistId,
       titles: {
-        romaji: anilistData.title?.romaji || '',
-        english: anilistData.title?.english || '',
-        native: anilistData.title?.native || ''
+        romaji: anilistData.titles?.romaji || '',
+        english: anilistData.titles?.english || '',
+        native: anilistData.titles?.native || ''
       },
       releaseData: {
-        releaseStatus: statusMap[anilistData.status] || 'Currently Releasing',
+        releaseStatus: statusMap[anilistData.releaseData.releaseStatus] || 'Currently Releasing',
         startDate: {
-          year: anilistData.startDate?.year?.toString() || '',
-          month: anilistData.startDate?.month?.toString() || '',
-          day: anilistData.startDate?.day?.toString() || ''
+          year: anilistData.releaseData.startDate?.year?.toString() || '',
+          month: anilistData.releaseData.startDate?.month?.toString() || '',
+          day: anilistData.releaseData.startDate?.day?.toString() || ''
         },
         endDate: {
-          year: anilistData.endDate?.year?.toString() || '',
-          month: anilistData.endDate?.month?.toString() || '',
-          day: anilistData.endDate?.day?.toString() || ''
+          year: anilistData.releaseData.endDate?.year?.toString() || '',
+          month: anilistData.releaseData.endDate?.month?.toString() || '',
+          day: anilistData.releaseData.endDate?.day?.toString() || ''
         }
       },
       typings: {
-        Format: formatMap[anilistData.format] || 'Manga',
-        Source: sourceMap[anilistData.source] || 'Original',
-        CountryOfOrigin: countryMap[anilistData.countryOfOrigin] || 'Japan'
+        Format: formatMap[anilistData.typings.Format] || 'Manga',
+        Source: sourceMap[anilistData.typings.Source] || 'Original',
+        CountryOfOrigin: countryMap[anilistData.typings.CountryOfOrigin] || 'Japan'
       },
       lengths: {
-        Chapters: anilistData.chapters?.toString() || '',
-        Volumes: anilistData.volumes?.toString() || ''
+        Chapters: anilistData.lengths.Chapters?.toString() || '',
+        Volumes: anilistData.lengths.Volumes?.toString() || ''
       },
       genres: anilistData.genres || [],
       description: anilistData.description || '',
       images: {
-        image: anilistData.coverImage?.large || '',
-        border: anilistData?.bannerImage
+        image: anilistData.images?.image || '',
+        border: anilistData?.images?.border || ''
       },
       characters: [],
-      mangaRelations: [],
-      animeRelations: [],
+      mangaRelations: anilistData.relations?.mangaRelations || [],
+      animeRelations: anilistData.relations?.animeRelations || [],
       activityTimestamp: Date.now()
     }));
 
@@ -703,7 +739,9 @@ const updateMangaAnilist = async (req, res) => {
 
 export {
   getAllManga,
+  checkForManga,
   getMangaInfo,
+  findMangaInfo,
   createManga,
   updateManga,
   createMangaFromAnilist,

@@ -155,30 +155,41 @@ const Home = () => {
       const anime = activity.animeDetails;
       if (anime?.nextAiringEpisode?.airingAt) {
         const timeUntilAiring = calculateTimeUntilAiring(anime.nextAiringEpisode.airingAt);
+        const maxEpisodes = parseInt(anime.lengths.Episodes) || Infinity;
         
         if (timeUntilAiring <= 0) {
           const WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
           const weeksSinceAiring = Math.floor(Math.abs(timeUntilAiring) / WEEK_IN_SECONDS) + 1;
-          const newEpisode = anime.nextAiringEpisode.episode + weeksSinceAiring;
-          const newAiringAt = anime.nextAiringEpisode.airingAt + (weeksSinceAiring * WEEK_IN_SECONDS);
+          const newEpisode = Math.min(
+            anime.nextAiringEpisode.episode + weeksSinceAiring,
+            maxEpisodes
+          );
           
-          updatedTimes[activity.animeId] = {
-            airingAt: newAiringAt,
-            episode: newEpisode,
-            timeUntilAiring: calculateTimeUntilAiring(newAiringAt)
-          };
+          // Only update if we haven't reached the max episodes
+          if (newEpisode <= maxEpisodes) {
+            const newAiringAt = anime.nextAiringEpisode.airingAt + (weeksSinceAiring * WEEK_IN_SECONDS);
+            
+            updatedTimes[activity.animeId] = {
+              airingAt: newAiringAt,
+              episode: newEpisode,
+              timeUntilAiring: calculateTimeUntilAiring(newAiringAt)
+            };
+          }
         } else {
-          updatedTimes[activity.animeId] = {
-            airingAt: anime.nextAiringEpisode.airingAt,
-            episode: anime.nextAiringEpisode.episode,
-            timeUntilAiring
-          };
+          // Only show next episode if it's not beyond the max episodes
+          if (anime.nextAiringEpisode.episode <= maxEpisodes) {
+            updatedTimes[activity.animeId] = {
+              airingAt: anime.nextAiringEpisode.airingAt,
+              episode: anime.nextAiringEpisode.episode,
+              timeUntilAiring
+            };
+          }
         }
       }
     });
     
     setAiringTimes(updatedTimes);
-  }, [watchingAnime, calculateTimeUntilAiring])
+  }, [watchingAnime, calculateTimeUntilAiring]);
 
   const handleIncrementWatchCount = async (id, type) => {
     if (type === 'anime') {
@@ -340,11 +351,20 @@ const Home = () => {
             </div>
             {hoveredCard === activity.animeId && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                {getAnimeById(activity.animeId)?.releaseData.releaseStatus === 'Currently Releasing' && 
-                  activity.currentEpisode < getAnimeById(activity.animeId)?.nextAiringEpisode.episode - 1 && (
-                    <h3>
-                      {getAnimeById(activity.animeId)?.nextAiringEpisode.episode - 1 - activity.currentEpisode} Episodes Behind
-                    </h3>
+                {getAnimeById(activity.animeId)?.releaseData.releaseStatus === 'Currently Releasing' && (
+                  (() => {
+                    const anime = getAnimeById(activity.animeId);
+                    const maxEpisodes = parseInt(anime?.lengths.Episodes) || Infinity;
+                    const latestAiredEpisode = Math.min(
+                      (anime?.nextAiringEpisode?.episode || 1) - 1,
+                      maxEpisodes
+                    );
+                    const episodesBehind = Math.max(0, latestAiredEpisode - activity.currentEpisode);
+                    
+                    return episodesBehind > 0 ? (
+                      <h3>{episodesBehind} Episodes Behind</h3>
+                    ) : null;
+                  })()
                 )}
                 <h4>{getTitle(getAnimeById(activity.animeId)?.titles)}</h4>
                 <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>

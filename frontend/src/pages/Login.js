@@ -42,7 +42,7 @@ export const Login = () => {
       setUserData(res.data.user);
 
       Cookies.set('userInfo', JSON.stringify(res.data.user), {
-        expires: 1,
+        expires: 29,
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

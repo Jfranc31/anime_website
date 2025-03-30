@@ -31,6 +31,7 @@ import './themes.module.css';
 import UserManagement from './Components/Admin/UserManagement';
 import Settings from './pages/Settings';
 import Loader from './constants/Loader.js';
+import AniListCallback from './Components/AniListCallback';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -93,6 +94,7 @@ function App() {
                     <Route path="/anime/:id" element={<AnimeDetails />} />
                     <Route path="/manga/:id" element={<MangaDetails />} />
                     <Route path="/characters/:id" element={<CharacterDetails />} />
+                    <Route path="/auth/anilist/callback" element={<AniListCallback />} />
                     <Route
                       path="/"
                       element={userData && userData._id ? <Home /> : <Login />}

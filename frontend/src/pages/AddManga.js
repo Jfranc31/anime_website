@@ -93,6 +93,21 @@ const AVAILABLE_RELATION = [
   'Contains',
   'Other',
 ];
+
+const RELATION_MAP = {
+  "PREQUEL": "Prequel",
+  "SEQUEL": "Sequel",
+  "ADAPTATION": "Adaptation",
+  "SOURCE": "Source",
+  "SIDE_STORY": "Child",
+  "CHARACTER": "Child",
+  "SUMMARY": "Child",
+  "ALTERNATIVE": "Alternative",
+  "SPIN_OFF": "Child",
+  "OTHER": "Other",
+  "COMPILATION": "Compilation",
+  "CONTAINS": "Contains"
+};
 // #endregion --------------------------------------------------------------
 
 // #region Initial Form State ----------------------------------------------
@@ -444,12 +459,95 @@ export default function AddManga() {
     }
   };
 
-  const handleMangaSelected = (mangaData) => {
+  const handleMangaSelected = async (mangaData) => {
     console.log('AddManga - Received Data:', mangaData);
 
+    // Start fetching characters
     handleAddingAniListCharacters(mangaData.anilistId);
 
+    // Process relations if they exist
+    let animeRelations = [];
+    let mangaRelations = [];
+    let skippedRelations = {
+      anime: [],
+      manga: []
+    };
+
+    // First check if we have relations data
+    if (mangaData.animeRelations || mangaData.mangaRelations) {
+      console.log("Found relations in mangaData:", mangaData);
+
+      // Process anime relations
+      if (mangaData.animeRelations?.length > 0) {
+        console.log("Processing anime relations:", mangaData.animeRelations);
+        
+        for (const relation of mangaData.animeRelations) {
+          try {
+            console.log("Checking anime relation:", relation);
+            const existingAnimeResponse = await axiosInstance.post('/animes/check-by-database', { anilistId: relation.anilistId });
+            
+            if (existingAnimeResponse.data === true) {
+              console.log("Found existing anime in database.");
+              const response = await axiosInstance.get(`/animes/find-anime/${relation.anilistId}`);
+              animeRelations.push({
+                ...response.data,
+                typeofRelation: RELATION_MAP[relation.typeofRelation]
+              });
+            } else {
+              console.log("Anime not found in database:", relation);
+              skippedRelations.anime.push(relation);
+            }
+          } catch (error) {
+            console.error("Error checking anime relation:", error);
+            skippedRelations.anime.push({
+              ...relation,
+              error: error.message
+            });
+          }
+        }
+      }
+
+      // Process manga relations
+      if (mangaData.mangaRelations?.length > 0) {
+        console.log("Processing manga relations:", mangaData.mangaRelations);
+        
+        for (const relation of mangaData.mangaRelations) {
+          try {
+            console.log("Checking manga relation:", relation);
+            const existingMangaResponse = await axiosInstance.post('/mangas/check-by-database', { anilistId: relation.anilistId });
+            
+            if (existingMangaResponse.data === true) {
+              console.log("Found existing manga in database.");
+              const response = await axiosInstance.get(`/mangas/find-manga/${relation.anilistId}`);
+              mangaRelations.push({
+                ...response.data,
+                typeofRelation: RELATION_MAP[relation.typeofRelation]
+              });
+            } else {
+              console.log("Manga not found in database:", relation);
+              skippedRelations.manga.push(relation);
+            }
+          } catch (error) {
+            console.error("Error checking manga relation:", error);
+            skippedRelations.manga.push({
+              ...relation,
+              error: error.message
+            });
+          }
+        }
+      }
+      
+    } else {
+      console.log("No relations found in mangaData:", mangaData);
+    }
+
+    // Log skipped relations for debugging
+    if (skippedRelations.anime.length > 0 || skippedRelations.manga.length > 0) {
+      console.log('Skipped Relations:', skippedRelations);
+    }
+
     const updatedFormData = {
+      ...formData,
       anilistId: mangaData.anilistId || '',
       titles: {
         romaji: mangaData.titles?.romaji || '',
@@ -485,12 +583,12 @@ export default function AddManga() {
         border: mangaData.images?.border || DEFAULT_BORDER,
       },
       characters: mangaData.characters || [],
-      mangaRelations: mangaData.mangaRelations || [],
-      animeRelations: mangaData.animeRelations || [],
+      animeRelations: animeRelations,
+      mangaRelations: mangaRelations,
       activityTimestamp: mangaData.activityTimestamp || '',
     };
 
-    setSelectedGenres(updatedFormData.genres);
+    setSelectedGenres(mangaData.genres);
 
     console.log('AddManga - Updated Form Data:', updatedFormData);
     setFormData(updatedFormData);

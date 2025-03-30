@@ -6,7 +6,9 @@
 import express from "express";
 import {
   getAllManga,
+  checkForManga,
   getMangaInfo,
+  findMangaInfo,
   createManga,
   updateManga,
   createMangaFromAnilist,
@@ -19,7 +21,11 @@ const router = express.Router();
 
 router.get("/mangas", getAllManga);
 
+router.post("/check-by-database", checkForManga);
+
 router.get("/manga/:id", getMangaInfo);
+
+router.get("/find-manga/:id", findMangaInfo);
 
 router.post("/addmanga", createManga);
 
