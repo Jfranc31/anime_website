@@ -5,7 +5,7 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({
       message: 'Validation Error',
       details: err.errors
-    });
+      });
   }
 
   if (err.name === 'CastError') {

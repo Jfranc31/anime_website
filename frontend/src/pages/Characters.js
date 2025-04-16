@@ -91,9 +91,9 @@ const Characters = () => {
 
     switch (userData.characterName) {
       case 'romaji':
-        return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
-      case 'romaji-western':
         return [surName, middleName, givenName].filter(Boolean).join(' ') || nativeName;
+      case 'romaji-western':
+        return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
       case 'native':
         return nativeName || [givenName, middleName, surName].filter(Boolean).join(' ');
       default:
@@ -107,9 +107,9 @@ const Characters = () => {
     const nativeName = (names.nativeName || '').trim();
 
     if (userData.characterName === 'romaji-western') {
-      return (surName || givenName || nativeName).toLowerCase();
+      return (givenName || surName || nativeName).toLowerCase();
     }
-    return (givenName || surName || nativeName).toLowerCase();
+    return (surName || givenName || nativeName).toLowerCase();
   }, [userData.characterName]);
 
   // Filter and sort character list

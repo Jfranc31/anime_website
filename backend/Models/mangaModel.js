@@ -132,9 +132,10 @@ const mangaSchema = new mongoose.Schema({
           'Parent',
           'Child',
           "Alternative",
-          "Compilations",
+          "Compilation",
           "Contains",
           "Other",
+          "Character"
         ],
       },
     },
@@ -155,9 +156,10 @@ const mangaSchema = new mongoose.Schema({
           'Parent',
           'Child',
           "Alternative",
-          "Compilations",
+          "Compilation",
           "Contains",
           "Other",
+          "Character"
         ],
       },
     },

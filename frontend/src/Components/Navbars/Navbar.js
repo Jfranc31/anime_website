@@ -1,5 +1,4 @@
-// Navbar.js
-import React, { useContext, useState, useRef } from 'react';
+import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import navbarStyles from '../../styles/components/navbar.module.css';
 import data from '../../Context/ContextApi';
@@ -10,9 +9,30 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isBrowseMenuOpen, setBrowseMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const { userData } = useContext(data);
   const profileRef = useRef(null);
   const browseRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show navbar if scrolling up or at the top of the page
+      if (currentScrollY < lastScrollY || currentScrollY < 70) {
+        setIsVisible(true);
+      } else {
+        // Hide navbar if scrolling down and not at the top
+        setIsVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const toggleMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -46,7 +66,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className={navbarStyles.top}>
+      <div className={`${navbarStyles.top} ${isVisible ? navbarStyles.visible : navbarStyles.hidden}`}>
         <div className={navbarStyles.logo}>AniManga</div>
         <div className={navbarStyles.Navbar}>
           {userData?._id && (

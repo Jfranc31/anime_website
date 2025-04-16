@@ -20,7 +20,6 @@ const Settings = () => {
   const [anilistData, setAnilistData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [error, setError] = useState(null);
   const [syncStatus, setSyncStatus] = useState({
     isLoading: false,
     progress: {
@@ -35,12 +34,10 @@ const Settings = () => {
   
       try {
         setIsLoading(true);
-        setError(null);
         const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
         setUserAnimeList(response.animes);
         setUserMangaList(response.mangas);
       } catch (err) {
-        setError('Failed to load user list. Please try again later.');
         setUserAnimeList([]);
         setUserMangaList([]);
       } finally {
@@ -52,7 +49,7 @@ const Settings = () => {
       if (userData?._id && animeList?.length && mangaList?.length) {
         fetchUserList();
       }
-  }, [userData?._id, animeList, fetchUserList]);
+  }, [userData?._id, animeList, mangaList, fetchUserList]);
 
   const handleThemeChange = async (newTheme) => {
     try {
@@ -368,24 +365,33 @@ const Settings = () => {
               )}
 
               {/* Add sync results display */}
-              {!syncStatus.isLoading && syncStatus.progress.anime.added + 
-                syncStatus.progress.anime.updated + 
-                syncStatus.progress.manga.added + 
-                syncStatus.progress.manga.updated > 0 && (
+              {!syncStatus.isLoading && (
                 <div className={settingsStyles.syncResults}>
                   <h4>Sync Results:</h4>
                   <div className={settingsStyles.syncStats}>
                     <div>
                       <h5>Anime:</h5>
-                      <p>Added: {syncStatus.progress.anime.added.length}</p>
-                      <p>Updated: {syncStatus.progress.anime.updated.length}</p>
-                      <p>Skipped: {syncStatus.progress.anime.skipped.length}</p>
+                      <p>Added: {Array.isArray(syncStatus.progress.anime.added) ? 
+                        syncStatus.progress.anime.added.length : 
+                        syncStatus.progress.anime.added}</p>
+                      <p>Updated: {Array.isArray(syncStatus.progress.anime.updated) ? 
+                        syncStatus.progress.anime.updated.length : 
+                        syncStatus.progress.anime.updated}</p>
+                      <p>Skipped: {Array.isArray(syncStatus.progress.anime.skipped) ? 
+                        syncStatus.progress.anime.skipped.length : 
+                        syncStatus.progress.anime.skipped}</p>
                     </div>
                     <div>
                       <h5>Manga:</h5>
-                      <p>Added: {syncStatus.progress.manga.added.length}</p>
-                      <p>Updated: {syncStatus.progress.manga.updated.length}</p>
-                      <p>Skipped: {syncStatus.progress.manga.skipped.length}</p>
+                      <p>Added: {Array.isArray(syncStatus.progress.manga.added) ? 
+                        syncStatus.progress.manga.added.length : 
+                        syncStatus.progress.manga.added}</p>
+                      <p>Updated: {Array.isArray(syncStatus.progress.manga.updated) ? 
+                        syncStatus.progress.manga.updated.length : 
+                        syncStatus.progress.manga.updated}</p>
+                      <p>Skipped: {Array.isArray(syncStatus.progress.manga.skipped) ? 
+                        syncStatus.progress.manga.skipped.length : 
+                        syncStatus.progress.manga.skipped}</p>
                     </div>
                   </div>
                 </div>

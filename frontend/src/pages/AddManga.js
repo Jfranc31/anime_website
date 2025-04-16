@@ -89,9 +89,10 @@ const AVAILABLE_RELATION = [
   'Parent',
   'Child',
   'Alternative',
-  'Compilations',
+  'Compilation',
   'Contains',
   'Other',
+  'Character'
 ];
 
 const RELATION_MAP = {
@@ -99,14 +100,15 @@ const RELATION_MAP = {
   "SEQUEL": "Sequel",
   "ADAPTATION": "Adaptation",
   "SOURCE": "Source",
+  "PARENT": "Parent",
   "SIDE_STORY": "Child",
-  "CHARACTER": "Child",
   "SUMMARY": "Child",
   "ALTERNATIVE": "Alternative",
   "SPIN_OFF": "Child",
   "OTHER": "Other",
   "COMPILATION": "Compilation",
-  "CONTAINS": "Contains"
+  "CONTAINS": "Contains",
+  "CHARACTER": "Character"
 };
 // #endregion --------------------------------------------------------------
 
@@ -1095,7 +1097,7 @@ export default function AddManga() {
               />
               <div className={addPageStyles.selectedCharacterInfo}>
                 <p className={addPageStyles.selectedCharacterName}>
-                  {relation.titles.english || ''}
+                  {relation.titles.english || relation.titles.romaji}
                 </p>
                 <select
                   id={`animeRole-${index}`}
@@ -1132,7 +1134,7 @@ export default function AddManga() {
               />
               <div className={addPageStyles.selectedCharacterInfo}>
                 <p className={addPageStyles.selectedCharacterName}>
-                  {relation.titles.english || ''}
+                  {relation.titles.english || relation.titles.romaji}
                 </p>
                 <select
                   id={`mangaRole-${index}`}

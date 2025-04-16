@@ -6,6 +6,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  padding-top: 100px;
 }
 
 .sidebar {
@@ -536,7 +537,7 @@
 .syncResults {
   margin-top: 1rem;
   padding: 1rem;
-  background-color: #f5f5f5;
+  background-color: var(--text-secondary);
   border-radius: 4px;
 }
 
@@ -552,11 +553,12 @@
 
 .syncStats h5 {
   margin-bottom: 0.5rem;
-  color: #666;
+  color: var(--text-primary);
 }
 
 .syncStats p {
   margin: 0.25rem 0;
+  color: var(--text-primary);
 }
 
 .syncError {

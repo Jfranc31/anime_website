@@ -89,9 +89,10 @@ const AVAILABLE_RELATION = [
   'Parent',
   'Child',
   'Alternative',
-  'Compilations',
+  'Compilation',
   'Contains',
   'Other',
+  "Character"
 ];
 // #endregion --------------------------------------------------------------
 
@@ -398,7 +399,6 @@ export const UpdateAnime = ({ match }) => {
       const existingCharacterIds = new Set(formData.characters.map(char => char.anilistId));
 
       console.log(`Starting import of ${totalCharacters} characters`);
-      let processed = 0;
       let added = 0;
       let skipped = 0;
       let failed = 0;
@@ -411,7 +411,7 @@ export const UpdateAnime = ({ match }) => {
           // Skip if character already exists in formData
           if (existingCharacterIds.has(character.node.id)) {
             console.log(`Skipping duplicate character: ${character.node.id}`);
-            skipped++;
+            setCharactersRemaining(charactersRemaining - 1);
             continue;
           }
 
@@ -434,7 +434,7 @@ export const UpdateAnime = ({ match }) => {
             }]
 
             handleSelectExistingCharacter(existingCharacter);
-            added++;
+            setCharactersRemaining(charactersRemaining - 1);
           } else {
             // Character needs to be created
             await new Promise(resolve => setTimeout(resolve, 5000)); // Longer delay for new characters
@@ -455,15 +455,12 @@ export const UpdateAnime = ({ match }) => {
                 role: formattedRole
               };
               handleAddingCharacter(addCharacter);
-              added++;
+              setCharactersRemaining(charactersRemaining - 1);
             }
           }
         } catch (error) {
           console.error(`Error processing character ${character.node.id}:`, error);
           failed++;
-        } finally {
-          processed++;
-          setCharactersRemaining(totalCharacters - processed);
         }
       }
 

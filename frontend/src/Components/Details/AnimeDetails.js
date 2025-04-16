@@ -317,15 +317,20 @@ const AnimeDetails = () => {
   };
 
   const getFullName = (names) => {
+    const givenName = names.givenName || '';
+    const middleName = names.middleName || '';
+    const surName = names.surName || '';
+    const nativeName = names.nativeName || '';
+
     switch (userData.characterName) {
       case 'romaji':
-        return `${names.givenName} ${names.surName}`;
+        return [surName, middleName, givenName].filter(Boolean).join(' ') || nativeName;
       case 'romaji-western':
-        return `${names.surName} ${names.givenName}`;
+        return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
       case 'native':
-        return `${names.nativeName || ''}`;
+        return nativeName || [givenName, middleName, surName].filter(Boolean).join(' ');
       default:
-        return `${names.givenName} ${names.surName}`;
+        return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
     }
   };
 

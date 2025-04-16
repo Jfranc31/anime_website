@@ -11,6 +11,7 @@ export function getReverseRelationType(relationType) {
     Contains: "Compilation",
     Compilation: "Contains",
     Other: "Other",
+    Character: "Character"
   };
 
   return reverseRelationMap[relationType] || null;

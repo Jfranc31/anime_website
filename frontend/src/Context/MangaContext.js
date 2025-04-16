@@ -17,13 +17,13 @@ export const MangaProvider = ({ children }) => {
         setError(null);
         const response = await axiosInstance.get('/mangas/mangas');
         setMangaList(response.data);
-      } catch (error) {
+    } catch (error) {
         console.error('Error fetching manga list:', error);
         setError(error.response?.data?.message || 'Unable to load manga list. Please try again later.');
         setMangaList([]);
-      } finally {
+    } finally {
         setIsLoading(false);
-      }
+    }
     };
 
     fetchData();

@@ -88,9 +88,10 @@ const AVAILABLE_RELATION = [
   'Parent',
   'Child',
   'Alternative',
-  'Compilations',
+  'Compilation',
   'Contains',
-  'Other'
+  'Other',
+  "Character"
 ];
 // #endregion --------------------------------------------------------------
 

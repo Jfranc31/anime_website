@@ -84,9 +84,9 @@ const Home = () => {
   }, [userData._id]);
 
   useEffect(() => {
-    fetchActivities('anime', 1, false);
-    fetchActivities('manga', 1, false);
-    fetchUserList();
+      fetchActivities('anime', 1, false);
+      fetchActivities('manga', 1, false);
+      fetchUserList();
   }, [userData._id, fetchActivities, fetchUserList]);
 
   const getAnimeById = useCallback((animeId) => {

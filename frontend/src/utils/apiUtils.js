@@ -4,7 +4,7 @@ export const fetchWithErrorHandling = async (url, options = {}) => {
   try {
     const response = await axios({
       url,
-      ...options,
+        ...options,
       withCredentials: true
     });
     return response.data;
@@ -12,4 +12,4 @@ export const fetchWithErrorHandling = async (url, options = {}) => {
     console.error(`Error fetching from ${url}:`, error);
     throw error;
   }
-}; 
+};

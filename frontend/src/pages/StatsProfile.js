@@ -11,40 +11,6 @@ const Stats = () => {
   const { mangaList } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
-  const [hasMoreAnime, setHasMoreAnime] = useState(true);
-  const [hasMoreManga, setHasMoreManga] = useState(true);
-  const [loadingAnime, setLoadingAnime] = useState(false);
-  const [loadingManga, setLoadingManga] = useState(false);
-  const [animeActivities, setAnimeActivities] = useState([]);
-  const [mangaActivities, setMangaActivities] = useState([]);
-  
-  const fetchActivities = useCallback(async (type, page, append = false) => {
-    const setLoading = type === 'anime' ? setLoadingAnime : setLoadingManga;
-    const setActivities = type === 'anime' ? setAnimeActivities : setMangaActivities;
-    const setHasMore = type === 'anime' ? setHasMoreAnime : setHasMoreManga;
-  
-    try {
-      setLoading(true);
-      const response = await fetchWithErrorHandling(
-        `/latest-activities/${userData._id}?page=${page}&limit=8&type=${type}`
-      );
-      
-      const sortedActivities = response.activities.sort(
-        (a, b) => new Date(b.activityTimestamp) - new Date(a.activityTimestamp)
-      );
-  
-      setActivities(prev => 
-        append ? [...prev, ...sortedActivities] : sortedActivities
-      );
-      setHasMore(response.pagination.hasMore);
-    } catch (error) {
-      if (!append) {
-        setActivities([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [userData._id]);
   
   const fetchUserList = useCallback(async () => {
     try {
@@ -58,10 +24,8 @@ const Stats = () => {
   }, [userData._id]);
   
   useEffect(() => {
-    fetchActivities('anime', 1, false);
-    fetchActivities('manga', 1, false);
     fetchUserList();
-  }, [userData._id, fetchActivities, fetchUserList]);
+  }, [userData._id, fetchUserList]);
   
   // Anime stats calculations
   const animeStatusCounts = useMemo(() => {

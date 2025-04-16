@@ -3,6 +3,7 @@
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
+  margin-top: 70px;
   background: var(--container-bg);
 }
 

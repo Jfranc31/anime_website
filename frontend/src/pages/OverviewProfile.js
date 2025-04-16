@@ -12,20 +12,13 @@ const Overview = () => {
   const { mangaList } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
-  const [hasMoreAnime, setHasMoreAnime] = useState(true);
-  const [hasMoreManga, setHasMoreManga] = useState(true);
-  const [loadingAnime, setLoadingAnime] = useState(false);
-  const [loadingManga, setLoadingManga] = useState(false);
   const [animeActivities, setAnimeActivities] = useState([]);
   const [mangaActivities, setMangaActivities] = useState([]);
 
   const fetchActivities = useCallback(async (type, page, append = false) => {
-    const setLoading = type === 'anime' ? setLoadingAnime : setLoadingManga;
     const setActivities = type === 'anime' ? setAnimeActivities : setMangaActivities;
-    const setHasMore = type === 'anime' ? setHasMoreAnime : setHasMoreManga;
 
     try {
-    setLoading(true);
     const response = await fetchWithErrorHandling(
         `/latest-activities/${userData._id}?page=${page}&limit=8&type=${type}`
     );
@@ -37,13 +30,10 @@ const Overview = () => {
     setActivities(prev => 
         append ? [...prev, ...sortedActivities] : sortedActivities
     );
-    setHasMore(response.pagination.hasMore);
     } catch (error) {
     if (!append) {
         setActivities([]);
     }
-    } finally {
-    setLoading(false);
     }
   }, [userData._id]);
 

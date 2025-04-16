@@ -599,7 +599,7 @@ const createMangaFromAnilist = async (req, res) => {
     // Map AniList format to our format
     const formatMap = {
       'MANGA': 'Manga',
-      'LIGHT NOVEL': 'Light Novel',
+      'NOVEL': 'Light Novel',
       'ONE_SHOT': 'One Shot'
     };
 

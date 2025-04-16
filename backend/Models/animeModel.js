@@ -55,7 +55,7 @@ const animeSchema = new mongoose.Schema({
   typings: {
     Format: {
       type: String,
-      enum: ["TV", "TV Short", "Movie", "Special", "OVA", "ONA", "Music"],
+      enum: ["TV", "TV Short", "Movie", "Special", "OVA", "ONA", "Music", "Unknown"],
     },
     Source: {
       type: String,
@@ -132,7 +132,8 @@ const animeSchema = new mongoose.Schema({
           "Alternative",
           "Compilations",
           "Contains",
-          "Other"
+          "Other",
+          "Character"
         ],
       },
     },
@@ -156,6 +157,7 @@ const animeSchema = new mongoose.Schema({
           "Contains",
           "Compilation",
           "Other",
+          "Character"
         ],
       },
     },

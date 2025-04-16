@@ -221,9 +221,9 @@ const CharacterDetails = () => {
 
     switch (type) {
       case 'romaji':
-        return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
-      case 'romaji-western':
         return [surName, middleName, givenName].filter(Boolean).join(' ') || nativeName;
+      case 'romaji-western':
+        return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
       case 'native':
         return nativeName || [givenName, middleName, surName].filter(Boolean).join(' ');
       default:

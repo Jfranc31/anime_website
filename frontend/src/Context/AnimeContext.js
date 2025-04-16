@@ -17,13 +17,13 @@ export const AnimeProvider = ({ children }) => {
         setError(null);
         const response = await axiosInstance.get('/animes/animes');
         setAnimeList(response.data);
-      } catch (error) {
+    } catch (error) {
         console.error('Error fetching anime list:', error);
         setError(error.response?.data?.message || 'Unable to load anime list. Please try again later.');
         setAnimeList([]);
-      } finally {
+    } finally {
         setIsLoading(false);
-      }
+    }
     };
 
     fetchData();

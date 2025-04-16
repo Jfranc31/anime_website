@@ -72,10 +72,10 @@
 }
 
 .top {
-  position: relative;
+  position: fixed; /* Fixed position to stay at top of viewport */
   top: 0;
   left: 0;
-  width: auto;
+  width: 100%; /* Full width */
   max-width: 100%;
   height: 70px;
   background: rgba(25, 30, 39, 0.5);
@@ -83,8 +83,22 @@
   justify-content: center;
   align-items: center;
   padding: 0px 30px;
-  z-index: 100;
-  transition: background-color 0.5s;
+  z-index: 1000; /* Increased z-index to ensure it's on top */
+  transition: transform 0.3s ease, background-color 0.5s; /* Faster transition */
+  box-sizing: border-box;
+}
+
+/* Visible state class - explicitly position at top */
+.visible {
+  transform: translateY(0);
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Hidden state class - hide upward */
+.hidden {
+  transform: translateY(-100%);
+  /* Don't set visibility:hidden as it prevents the transition */
 }
 
 .top:hover {
@@ -326,4 +340,3 @@
   background: rgba(255, 255, 255, 0.1);
   margin: 4px 8px;
 }
-

@@ -14,9 +14,9 @@ const LAYOUTS = {
   };
   
   const STATUS_TYPES = {
-    WATCHING: 'watching',
-    PLANNING: 'planning',
-    COMPLETED: 'completed'
+    WATCHING: 'Watching',
+    PLANNING: 'Planning',
+    COMPLETED: 'Completed'
   };
 
 const AnimeProfile = () => {
@@ -69,14 +69,8 @@ const AnimeProfile = () => {
         const list = userAnimeList;
         if (!list?.length) return [];
         
-        const statusMap = {
-          [STATUS_TYPES.WATCHING]: 'Watching',
-          [STATUS_TYPES.PLANNING]: 'Planning',
-          [STATUS_TYPES.COMPLETED]: 'Completed'
-        };
-        
         return list
-          .filter((item) => item.status === statusMap[statusType])
+          .filter((item) => item.status === statusType)
           .map((item) => ({
             ...item,
             mediaDetails: getMediaById(item.animeId),
@@ -110,9 +104,9 @@ const AnimeProfile = () => {
             )
           );
     
-          const endpoint = `/users/${userData._id}/update${'Anime'}`;
+          const endpoint = `/users/${userData._id}/updateAnime`;
           await axiosInstance.post(endpoint, {
-            ['animeId']: id,
+            animeId: id,
             status: currentItem.status,
             [progressField]: newProgress
           });

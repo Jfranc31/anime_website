@@ -112,7 +112,7 @@ const MangaProfile = () => {
     
           const endpoint = `/users/${userData._id}/update${'Manga'}`;
           await axiosInstance.post(endpoint, {
-            ['mangaId']: id,
+            mangaId: id,
             status: currentItem.status,
             [progressField]: newProgress,
             currentVolume: currentItem.currentVolume
