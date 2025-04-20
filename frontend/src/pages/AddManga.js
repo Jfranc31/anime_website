@@ -165,6 +165,13 @@ export default function AddManga() {
   const [activeModal, setActiveModal] = useState(null);
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
   const [remainingCharacters, setRemainingCharacters] = useState(0);
+  const [characterStatus, setCharacterStatus] = useState({
+    total: 0,
+    existing: 0,
+    created: 0,
+    failed: 0,
+    details: []
+  });
   // #endregion ------------------------------------------------------------
 
   // #region Modal Handlers ------------------------------------------------
@@ -346,116 +353,122 @@ export default function AddManga() {
 
   const handleAddingAniListCharacters = async (anilistId) => {
     setIsLoadingCharacters(true);
+    let characters = [];
     try {
       const response = await axiosInstance.get(`mangas/searchCharacters/${anilistId}/MANGA`);
-
-      const characters = response.data;
-      const existingCharacters = [];
-      const charactersToCreate = [];
+      characters = response.data;
+      
+      // Initialize status at the start
+      setCharacterStatus({
+        total: characters.length,
+        existing: 0,
+        created: 0,
+        failed: 0,
+        details: []
+      });
       setRemainingCharacters(characters.length);
 
-      console.log("characters: ", characters);
-
-      // Separate characters into existing and new
-      await Promise.all(characters.map(async (character) => {
-        const characterId = character.node.id;
-
-        // Add a small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
-
-        // Check if character exists in database
-        const existingCharacterResponse = await axiosInstance.post('/characters/check-by-database', { anilistId: characterId });
-
-        if (existingCharacterResponse.data === true) {
-          // Fetch full character details
-          const characterInfoResponse = await axiosInstance.get(`/characters/find-character/${characterId}`);
-
-          // Capitalize first letter of role
-          const formattedRole = character.role.charAt(0) + character.role.slice(1).toLowerCase();
-
-          existingCharacters.push({
-            ...characterInfoResponse.data,
-            role: formattedRole
+      for (const character of characters) {
+        try {
+          const existingCharacterResponse = await axiosInstance.post(`/characters/check-by-database`, {
+            anilistId: character.node.id
           });
 
-        } else {
-          // Characters not in database will be created
-          charactersToCreate.push(character);
-        }
-      }));
+          if (existingCharacterResponse.data === true) {
+            const characterInfoResponse = await axiosInstance.get(`/characters/find-character/${character.node.id}`);
+            const formattedRole = character.role.charAt(0) + character.role.slice(1).toLowerCase();
+            const existingCharacter = {
+              ...characterInfoResponse.data,
+              role: formattedRole,
+              mangaName: formData.titles
+            };
 
-      // Use existing handleSelectExistingCharacter method
-      if (existingCharacters.length > 0) {
-        console.log("Existing Characters being added: ", existingCharacters);
-        handleSelectExistingCharacter(existingCharacters);
-        setRemainingCharacters((prev) => prev - existingCharacters.length);
-      }
+            handleSelectExistingCharacter([existingCharacter]);
 
-      // Create new characters
-      for (const characterToCreate of charactersToCreate) {
-
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Longer delay for new characters
-
-        // Fetch full character details from AniList
-        const characterDetailsResponse = await axiosInstance.get(`/characters/search/${characterToCreate.node.id}`)
-        .catch((error) => {
-          if(error.response?.data?.message === "Character not found") {
-            console.log(`Skipping as character does not exist`);
-            setRemainingCharacters((prev) => prev - 1);
-            return null;
+            setCharacterStatus(prev => ({
+              ...prev,
+              existing: prev.existing + 1,
+              details: [...prev.details, {
+                id: characterInfoResponse.data._id,
+                anilistId: character.node.id,
+                name: `${characterInfoResponse.data.names?.givenName || ''} ${characterInfoResponse.data.names?.surName || ''}`,
+                status: 'existing',
+                role: formattedRole
+              }]
+            }));
           } else {
-            throw error;
-          }
-        });
+            // Character doesn't exist, create new
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Rate limiting
 
-        if (!characterDetailsResponse) {
-          continue; // Skip the rest of the loop iteration if character is not found
-        }
+            const characterDetailsResponse = await axiosInstance.get(`/characters/search/${character.node.id}`)
+              .catch(error => {
+                if (error.response?.data?.message === "Character not found") {
+                  return null;
+                } else {
+                  throw error;
+                }
+              });
 
-        // Capitalize first letter of role
-        const formattedRole = characterToCreate.role.charAt(0) + characterToCreate.role.slice(1).toLowerCase();
-
-        const characterToAdd = {
-          ...characterDetailsResponse.data,
-          animes: [],
-          mangas: []
-        };
-
-        console.log('Character being added:', characterToAdd);
-
-        const res = await axiosInstance.post('/characters/addcharacter', characterToAdd)
-          .catch((error) => {
-            if (error.response?.data?.message === "This character is already registered") {
-              console.log(`Skipping character ${characterToAdd.names?.givenName} as it is already registered.`);
-              return null;
-            } else {
-              throw error;
+            if (!characterDetailsResponse) {
+              continue;
             }
-          });
 
-        if (res?.data) {
-          const addCharacter = {
-            ...res.data,
-            role: formattedRole
-          };
+            const formattedRole = character.role.charAt(0) + character.role.slice(1).toLowerCase();
+            const characterToAdd = {
+              ...characterDetailsResponse.data,
+              animes: [],
+              mangas: []
+            };
 
-          // Use handleAddingCharacter for each new character
-          handleAddingCharacter(addCharacter);
-          setRemainingCharacters((prev) => prev - 1);
-        } else {
-          continue;
+            const res = await axiosInstance.post('/characters/addcharacter', characterToAdd);
+            
+            if (res?.data) {
+              const addedCharacter = {
+                ...res.data,
+                role: formattedRole
+              };
+
+              handleAddingCharacter(addedCharacter);
+              setCharacterStatus(prev => ({
+                ...prev,
+                created: prev.created + 1,
+                details: [...prev.details, {
+                  id: res.data._id,
+                  anilistId: characterToAdd.anilistId,
+                  name: `${characterToAdd.names?.givenName || ''} ${characterToAdd.names?.surName || ''}`,
+                  status: 'created',
+                  role: formattedRole,
+                  timestamp: new Date().toISOString()
+                }]
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('Error processing character:', error);
+          setCharacterStatus(prev => ({
+            ...prev,
+            failed: prev.failed + 1,
+            details: [...prev.details, {
+              anilistId: character.node.id,
+              status: 'failed',
+              error: error.message,
+              timestamp: new Date().toISOString()
+            }]
+          }));
         }
-
-        console.log('Number of characters left to add: ', remainingCharacters);
+        setRemainingCharacters(prev => prev - 1);
       }
 
     } catch (error) {
-      console.error('Error adding characters: ', error);
-      console.error('Error response data:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      if (error.response?.data === "This character is already registered") {
-        console.log(`Character with AniList ID ${anilistId} is already registered.`);
-      }
+      console.error('Error in character processing:', error);
+      setCharacterStatus(prev => ({
+        ...prev,
+        failed: prev.failed + (characters?.length || 0),
+        details: [...prev.details, {
+          error: 'Batch processing failed: ' + error.message,
+          timestamp: new Date().toISOString()
+        }]
+      }));
     } finally {
       setIsLoadingCharacters(false);
     }
@@ -1028,6 +1041,13 @@ export default function AddManga() {
             <Loader text={`Adding characters... ${remainingCharacters} left to add`} />
           </div>
         )}
+
+        <div className={addPageStyles.characterStatus}>
+          <p>Total Characters: {characterStatus.total}</p>
+          <p>Existing Characters: {characterStatus.existing}</p>
+          <p>Created Characters: {characterStatus.created}</p>
+          <p>Failed: {characterStatus.failed}</p>
+        </div>
 
         <div className={addPageStyles.characters}>
           {formData.characters.map((character, index) => (

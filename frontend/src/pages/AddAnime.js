@@ -379,14 +379,17 @@ export default function AddAnime() {
       // Process characters one by one instead of batch checking
       for (const character of characters) {
         try {
-          // Check if character exists individually
-          const existingCharacterResponse = await axiosInstance.get(`/characters/find-character/${character.node.id}`);
-          
-          if (existingCharacterResponse.data) {
+          // Check if character exists in database
+          const existingCharacterResponse = await axiosInstance.post('/characters/check-by-database', {
+            anilistId: character.node.id
+          });
+           
+          if (existingCharacterResponse.data === true) {
             // Character exists
+            const characterInfoResponse = await axiosInstance.get(`/characters/find-character/${character.node.id}`);
             const formattedRole = character.role.charAt(0) + character.role.slice(1).toLowerCase();
             const existingCharacter = {
-              ...existingCharacterResponse.data,
+              ...characterInfoResponse.data,
               role: formattedRole,
               animeName: formData.titles
             };
@@ -397,9 +400,9 @@ export default function AddAnime() {
               ...prev,
               existing: prev.existing + 1,
               details: [...prev.details, {
-                id: existingCharacterResponse.data._id,
+                id: characterInfoResponse.data._id,
                 anilistId: character.node.id,
-                name: `${existingCharacterResponse.data.names?.givenName || ''} ${existingCharacterResponse.data.names?.surName || ''}`,
+                name: `${characterInfoResponse.data.names?.givenName || ''} ${characterInfoResponse.data.names?.surName || ''}`,
                 status: 'existing',
                 role: formattedRole
               }]
@@ -1058,15 +1061,16 @@ export default function AddAnime() {
         {/* Add loader here */}
         {isLoadingCharacters && (
           <div>
-            <Loader text={`Adding characters... ${remainingCharacters} left to add`} />
-            <div className={addPageStyles.characterStatus}>
-              <p>Total Characters: {characterStatus.total}</p>
-              <p>Existing Characters: {characterStatus.existing}</p>
-              <p>Created Characters: {characterStatus.created}</p>
-              <p>Failed: {characterStatus.failed}</p>
-            </div>
+            <Loader text={`Adding characters... ${remainingCharacters} left to add`} /> 
           </div>
         )}
+
+        <div className={addPageStyles.characterStatus}>
+          <p>Total Characters: {characterStatus.total}</p>
+          <p>Existing Characters: {characterStatus.existing}</p>
+          <p>Created Characters: {characterStatus.created}</p>
+          <p>Failed: {characterStatus.failed}</p>
+        </div>
 
         <div className={addPageStyles.characters}>
           {formData.characters.map((character, index) => (

@@ -78,13 +78,13 @@ function App() {
   return (
     <Router>
       <data.Provider value={{ userData, setUserData }}>
-        <ThemeProvider>
+      <ThemeProvider>
           <div className="App">
             <ScrollToTop />
             <Navbar />
-            <AnimeProvider>
-              <MangaProvider>
-                <CharacterProvider>
+          <AnimeProvider>
+            <MangaProvider>
+              <CharacterProvider>
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -157,12 +157,12 @@ function App() {
                     />
                     <Route path="/settings" element={userData?._id ? <Settings /> : <Navigate to="/login" />} />
                   </Routes>
-                </CharacterProvider>
-              </MangaProvider>
-            </AnimeProvider>
+              </CharacterProvider>
+            </MangaProvider>
+          </AnimeProvider>
             <Footer />
           </div>
-        </ThemeProvider>
+      </ThemeProvider>
       </data.Provider>
     </Router>
   );

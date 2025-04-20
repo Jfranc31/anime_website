@@ -12,15 +12,15 @@ export const AnimeProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
+    try {
         setIsLoading(true);
-        setError(null);
+      setError(null);
         const response = await axiosInstance.get('/animes/animes');
         setAnimeList(response.data);
     } catch (error) {
-        console.error('Error fetching anime list:', error);
-        setError(error.response?.data?.message || 'Unable to load anime list. Please try again later.');
-        setAnimeList([]);
+      console.error('Error fetching anime list:', error);
+      setError(error.response?.data?.message || 'Unable to load anime list. Please try again later.');
+      setAnimeList([]);
     } finally {
         setIsLoading(false);
     }
