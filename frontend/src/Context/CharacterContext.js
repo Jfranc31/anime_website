@@ -1,29 +1,28 @@
 // src/context/CharacterContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axiosInstance from '../utils/axiosConfig';
 
 export const CharacterContext = createContext();
 
 export const CharacterProvider = ({ children }) => {
   const [characterList, setCharacterList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // fetch data from your API
-        const response = await fetch(
-          'http://localhost:8080/characters/characters',
-          {
-            credentials: 'include',
-          }
-        );
-
-        const data = await response.json();
-
-        // Update the characterList in the context
-        setCharacterList(data);
+        setIsLoading(true);
+        setError(null);
+        const response = await axiosInstance.get('/characters/characters');
+        setCharacterList(response.data);
       } catch (error) {
         console.error('Error fetching character list:', error);
+        setError(error.response?.data?.message || 'Unable to load character list. PLease try again later.');
+        setCharacterList([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -36,6 +35,8 @@ export const CharacterProvider = ({ children }) => {
         setCharacterList,
         selectedCharacterId,
         setSelectedCharacterId,
+        isLoading,
+        error
       }}
     >
       {children}
