@@ -268,8 +268,9 @@ app.use('/public', express.static(path.join(__dirname, '../frontend/public')));
         listen
 =============================*/
 // Starting the Express server
-app.listen(8080, () => {
-  console.log("Server is running at port 8080");
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server is running at port ${PORT}`);
 });
 
 // Initialize all schedulers
