@@ -15,7 +15,8 @@ import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
 import cookieParser from "cookie-parser";
 import { runScheduledAnimeUpdates, runScheduledMangaUpdates, runScheduledAiringUpdates } from './services/scheduledUpdates.js';
-
+// Middleware for Cross-Origin Resource Sharing (CORS)
+import cors from "cors";
 // Creating an Express application
 const app = express();
 
@@ -29,19 +30,15 @@ app.use(express.json());
 // Middleware to parse URL-encoded requests
 app.use(express.urlencoded({ extended: false }));
 
-// Middleware for Cross-Origin Resource Sharing (CORS)
-import cors from "cors";
-
 // Allow your Vercel frontend
 const allowedOrigins = [
-  'http://localhost:3000',
-  'https://anime-website-alpha.vercel.app',
-  'https://anime-website-1mo67mn1r-davidfranco923-gmailcoms-projects.vercel.app'
+  'https://anime-website-ngy1mx2nu-davidfranco923-gmailcoms-projects.vercel.app', // your Vercel frontend
+  'http://localhost:3000', // optional for local dev
 ];
 
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
       // Allow requests with no origin like mobile apps or curl
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
