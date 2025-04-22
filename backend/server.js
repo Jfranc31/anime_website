@@ -33,11 +33,22 @@ app.use(express.urlencoded({ extended: false }));
 import cors from "cors";
 
 // Allow your Vercel frontend
-const allowedOrigins = ['https://anime-website-alpha.vercel.app'];
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://anime-website-alpha.vercel.app',
+  'https://anime-website-1mo67mn1r-davidfranco923-gmailcoms-projects.vercel.app'
+];
 
 app.use(
   cors({
-    origin: "http://localhost:3000" || allowedOrigins.includes(origin),
+    origin: (origin, callback) => {
+      // Allow requests with no origin like mobile apps or curl
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
