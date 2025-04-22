@@ -31,9 +31,13 @@ app.use(express.urlencoded({ extended: false }));
 
 // Middleware for Cross-Origin Resource Sharing (CORS)
 import cors from "cors";
+
+// Allow your Vercel frontend
+const allowedOrigins = ['https://anime-website-alpha.vercel.app'];
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3000" || allowedOrigins.includes(origin),
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
