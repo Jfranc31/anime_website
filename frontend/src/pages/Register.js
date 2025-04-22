@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import registerStyles from '../styles/pages/register.module.css';
 
 const Register = () => {
@@ -59,7 +59,7 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('/users/register', {
+      const response = await axiosInstance.post('/users/register', {
         username: user.username,
         email: user.email,
         password: user.password

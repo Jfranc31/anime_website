@@ -1,7 +1,7 @@
 // src/Components/Searches/CharacterSearch.js
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import searchStyles from '../../styles/components/search.module.css';
 
 export default function CharacterSearch({ onCharacterSelected, onClose }) {
@@ -13,7 +13,7 @@ export default function CharacterSearch({ onCharacterSelected, onClose }) {
   const searchCharacters = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/characters/searchcharacters', {
+      const response = await axiosInstance.get('/characters/searchcharacters', {
         params: { query: searchTerm },
       });
       console.log('Character Data Response: ', response);

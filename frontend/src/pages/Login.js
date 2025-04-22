@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import Cookies from 'js-cookie';
 import data from '../Context/ContextApi';
 import { useNavigate } from 'react-router-dom';
@@ -32,7 +32,7 @@ export const Login = () => {
 
     setIsLoading(true);
     try {
-      const res = await axios.post('http://localhost:8080/users/login', user, {
+      const res = await axiosInstance.post('/users/login', user, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',

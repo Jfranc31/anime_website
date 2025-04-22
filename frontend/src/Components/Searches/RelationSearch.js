@@ -1,7 +1,7 @@
 // src/Components/Searches/RelationSearch.js
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import searchStyles from '../../styles/components/search.module.css';
 /**
  * Functional component for relation search.
@@ -52,8 +52,8 @@ export default function RelationSearch({
   }, [searchQuery, searchType, handleSearch]);
 
   const searchRelations = async (query, contentType) => {
-    return axios.get(
-      `http://localhost:8080/searchrelations?query=${query}&contentType=${contentType}`
+    return axiosInstance.get(
+      `/searchrelations?query=${query}&contentType=${contentType}`
     );
   };
 

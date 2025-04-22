@@ -1,7 +1,7 @@
 // src/components/CreateCharacter.js
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import createCharacterStyles from './CreateCharacter.module.css';
 import { AnilistCharacterSearch } from './Searches/AnilistCharacterSearch';
 
@@ -155,8 +155,8 @@ export default function CreateCharacter({ onCharacterCreated, onClose }) {
 
     try {
       // Make API call to create character
-      const res = await axios.post(
-        'http://localhost:8080/characters/addcharacter',
+      const res = await axiosInstance.post(
+        '/characters/addcharacter',
         characterData
       );
 

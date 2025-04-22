@@ -6,7 +6,7 @@ import { useMangaContext } from '../Context/MangaContext';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 import { useTheme } from '../Context/ThemeContext';
 import AvatarUpload from '../Context/AvatarUpload';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import Cookies from 'js-cookie';
 
 const Settings = () => {
@@ -58,7 +58,7 @@ const Settings = () => {
         throw new Error('No authentication token found');
       }
 
-      await axios.put(`/users/${userData._id}/theme`,
+      await axiosInstance.put(`/users/${userData._id}/theme`,
         { theme: newTheme },
         {
           headers: {
@@ -95,7 +95,7 @@ const Settings = () => {
       }
 
       // Update the user settings in the backend
-      await axios.put(`/users/${userData._id}/${type}`, {
+      await axiosInstance.put(`/users/${userData._id}/${type}`, {
         [type]: value,
       }, {
         headers: {
@@ -119,7 +119,7 @@ const Settings = () => {
 
   const handleAniListConnect = async () => {
     try {
-      const response = await axios.get('/users/anilist/auth');
+      const response = await axiosInstance.get('/users/anilist/auth');
       const { url } = response.data;
 
       if (!url) {
@@ -144,7 +144,7 @@ const Settings = () => {
           window.removeEventListener('message', messageHandler);
           
           try {
-            const response = await axios.post('/users/anilist/callback', {
+            const response = await axiosInstance.post('/users/anilist/callback', {
               code: event.data.code,
               userId: userData._id
             }, {
@@ -177,7 +177,7 @@ const Settings = () => {
 
   const handleAniListDisconnect = async () => {
     try {
-      const response = await axios.post(`/users/${userData._id}/anilist/disconnect`, {}, {
+      const response = await axiosInstance.post(`/users/${userData._id}/anilist/disconnect`, {}, {
         headers: {
           'Authorization': `Bearer ${JSON.parse(Cookies.get('userInfo'))._id}`
         }
@@ -206,7 +206,7 @@ const Settings = () => {
         error: null
       });
 
-      const response = await axios.post(`/users/${userData._id}/anilist/sync`, {}, {
+      const response = await axiosInstance.post(`/users/${userData._id}/anilist/sync`, {}, {
         headers: {
           'Authorization': `Bearer ${JSON.parse(Cookies.get('userInfo'))._id}`
         }
@@ -235,7 +235,7 @@ const Settings = () => {
   const fetchAniListData = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(
+      const response = await axiosInstance.get(
         `/users/${userData._id}/anilist/lists`,
         {
           headers: {
@@ -289,7 +289,7 @@ const Settings = () => {
   const handleConfirmDelete = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.delete(
+      const response = await axiosInstance.delete(
         `/users/${userData._id}/lists`,
         {
           headers: {

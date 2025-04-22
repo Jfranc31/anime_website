@@ -2,7 +2,7 @@
 
 import React, { useContext } from 'react';
 // import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import { useTheme } from '../../Context/ThemeContext';
 import footerStyles from '../../styles/components/footer.module.css';
 import data from '../../Context/ContextApi';
@@ -24,7 +24,7 @@ const Footer = () => {
         throw new Error('No authentication token found');
       }
 
-      await axios.put(`/users/${userData._id}/theme`,
+      await axiosInstance.put(`/users/${userData._id}/theme`,
         { theme: newTheme },
         {
           headers: {

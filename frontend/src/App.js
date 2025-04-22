@@ -12,7 +12,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { useLocation } from 'react-router-dom';
 import data from './Context/ContextApi';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from './utils/axiosConfig.js';
 import Cookies from 'js-cookie';
 import AnimeDetails from './Components/Details/AnimeDetails';
 import MangaDetails from './Components/Details/MangaDetails';
@@ -53,9 +53,9 @@ function App() {
 
   useEffect(() => {
     // Configure axios defaults
-    axios.defaults.baseURL = 'http://localhost:8080';
-    axios.defaults.withCredentials = true;
-    axios.defaults.headers.common['Content-Type'] = 'application/json';
+    axiosInstance.defaults.baseURL = 'http://localhost:8080';
+    axiosInstance.defaults.withCredentials = true;
+    axiosInstance.defaults.headers.common['Content-Type'] = 'application/json';
 
     // Check for existing cookie
     const storedUserData = Cookies.get('userInfo');

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import data from './ContextApi'; // Import your context
 import Cookies from 'js-cookie';
 import settingsStyle from '../styles/pages/Settings.module.css';
@@ -28,7 +28,7 @@ const AvatarUpload = ({ userId }) => {
     formData.append('avatar', file);
 
     try {
-      const response = await axios.post(`http://localhost:8080/users/${userId}/upload-avatar`, formData, {
+      const response = await axiosInstance.post(`/users/${userId}/upload-avatar`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

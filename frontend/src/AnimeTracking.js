@@ -1,6 +1,6 @@
 // /components/AnimeTracking.js
 import React, { useState } from 'react';
-import axios from 'axios';
+import axiosInstance from './utils/axiosConfig';
 
 const AnimeTracking = ({ animeId, userId }) => {
   const [status, setStatus] = useState('');
@@ -8,8 +8,8 @@ const AnimeTracking = ({ animeId, userId }) => {
 
   const handleUpdateShow = () => {
     // Make a request to update the show for the user
-    axios
-      .post(`http://localhost:8080/users/${userId}/updateAnime`, {
+    axiosInstance
+      .post(`/users/${userId}/updateAnime`, {
         animeId,
         status,
         currentEpisode: parseInt(currentEpisode),

@@ -1,8 +1,8 @@
-import axios from 'axios';
+import axiosInstance from './axiosConfig';
 
 export const fetchWithErrorHandling = async (url, options = {}) => {
   try {
-    const response = await axios({
+    const response = await axiosInstance({
       url,
         ...options,
       withCredentials: true

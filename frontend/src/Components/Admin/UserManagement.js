@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import Cookies from 'js-cookie';
 import styles from '../../styles/components/user_management.module.css';
+import axiosInstance from '../../utils/axiosConfig';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -25,7 +25,7 @@ const UserManagement = () => {
         throw new Error('No authentication token found');
       }
 
-      const response = await axios.get('/users', {
+      const response = await axiosInstance.get('/users', {
         headers: {
           'Authorization': `Bearer ${JSON.parse(userInfo)._id}`
         }
@@ -42,7 +42,7 @@ const UserManagement = () => {
   const makeAdmin = async (userId) => {
     try {
       const userInfo = Cookies.get('userInfo');
-      await axios.put(`/users/${userId}/make-admin`, {}, {
+      await axiosInstance.put(`/users/${userId}/make-admin`, {}, {
         headers: {
           'Authorization': `Bearer ${JSON.parse(userInfo)._id}`
         }

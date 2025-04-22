@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from './utils/axiosConfig';
 
 const AnimeNotes = ({ animeId }) => {
   const [notes, setNotes] = useState('');
@@ -7,8 +7,8 @@ const AnimeNotes = ({ animeId }) => {
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8080/anime/${animeId}/notes`
+        const response = await axiosInstance.get(
+          `/anime/${animeId}/notes`
         );
         setNotes(response.data.notes);
       } catch (error) {
@@ -21,7 +21,7 @@ const AnimeNotes = ({ animeId }) => {
 
   const handleSaveNotes = async () => {
     try {
-      await axios.put(`http://localhost:8080/anime/${animeId}/notes`, {
+      await axiosInstance.put(`/anime/${animeId}/notes`, {
         notes,
       });
       console.log('Notes saved successfully');

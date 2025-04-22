@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig.js';
 import '../styles/pages/Profile.jsx';
 
 const AniListAuth = ({ userId }) => {
@@ -10,7 +10,7 @@ const AniListAuth = ({ userId }) => {
   const connectToAniList = async () => {
     try {
       // Get the authorization URL from your backend
-      const response = await axios.get('http://localhost:8080/users/anilist/auth');
+      const response = await axiosInstance.get('/users/anilist/auth');
       const { url } = response.data;
 
       // Open AniList auth in a popup window
@@ -27,13 +27,13 @@ const AniListAuth = ({ userId }) => {
 
       // Listen for the callback
       window.addEventListener('message', async (event) => {
-        if (event.origin === 'http://localhost:3000') { // Your frontend URL
+        if (event.origin === 'http://localhost:3000' || 'https://anime-website-ngy1mx2nu-davidfranco923-gmailcoms-projects.vercel.app') { // Your frontend URL
           const { code } = event.data;
           
           if (code) {
             try {
               // Send the code to your backend
-              const response = await axios.post('http://localhost:8080/users/anilist/callback', {
+              const response = await axiosInstance.post('/users/anilist/callback', {
                 code,
                 userId
               });
@@ -58,7 +58,7 @@ const AniListAuth = ({ userId }) => {
   // Function to disconnect from AniList
   const disconnectFromAniList = async () => {
     try {
-      const response = await axios.post(`http://localhost:8080/users/${userId}/anilist/disconnect`);
+      const response = await axiosInstance.post(`/users/${userId}/anilist/disconnect`);
       
       if (response.data.success) {
         console.log('Successfully disconnected from AniList!');
@@ -72,7 +72,7 @@ const AniListAuth = ({ userId }) => {
   // Function to sync AniList data
   const syncAniListData = async () => {
     try {
-      const response = await axios.post(`http://localhost:8080/users/${userId}/anilist/sync`);
+      const response = await axiosInstance.post(`/users/${userId}/anilist/sync`);
       
       if (response.data.success) {
         console.log('Successfully synced AniList data!');
