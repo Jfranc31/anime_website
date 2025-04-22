@@ -45,7 +45,7 @@ export const Login = () => {
         expires: 29,
         path: '/',
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'None',
       });
 
       navigate('/');

@@ -83,9 +83,9 @@ const loginUser = async (req, res) => {
 
       res.cookie("userInfo", JSON.stringify(userForCookie), {
         maxAge: 29 * 24 * 60 * 60 * 1000,
-        httpOnly: false,
+        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: 'None',
         path: "/",
       });
 
