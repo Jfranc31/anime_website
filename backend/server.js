@@ -33,6 +33,7 @@ app.use(express.urlencoded({ extended: false }));
 // Allow your Vercel frontend
 const allowedOrigins = [
   'https://anime-website-alpha.vercel.app/', // your Vercel frontend
+  'https://anime-website-git-main-davidfranco923-gmailcoms-projects.vercel.app',
   'http://localhost:3000', // optional for local dev
 ];
 

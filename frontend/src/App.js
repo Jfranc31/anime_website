@@ -52,12 +52,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Configure axios defaults
-    axiosInstance.defaults.baseURL = 'http://localhost:8080';
-    axiosInstance.defaults.withCredentials = true;
-    axiosInstance.defaults.headers.common['Content-Type'] = 'application/json';
-
-    // Check for existing cookie
+    // Just check for stored user info (axios is already configured in axiosConfig.js)
     const storedUserData = Cookies.get('userInfo');
     if (storedUserData) {
       try {
