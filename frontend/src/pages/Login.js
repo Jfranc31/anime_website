@@ -11,6 +11,7 @@ export const Login = () => {
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const { setUserData } = useContext(data);
   const navigate = useNavigate();
 
@@ -20,17 +21,18 @@ export const Login = () => {
       ...prev,
       [name]: value,
     }));
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!user.email || !user.password) {
-      alert('Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
-
+    
     setIsLoading(true);
+    
     try {
       const res = await axiosInstance.post('/users/login', user, {
         withCredentials: true,
@@ -38,19 +40,47 @@ export const Login = () => {
           'Content-Type': 'application/json',
         },
       });
-
-      setUserData(res.data.user);
-
-      Cookies.set('userInfo', JSON.stringify(res.data.user), {
+      
+      // Create objects for different storage mechanisms
+      const userForCookies = {
+        email: res.data.user.email,
+        name: res.data.user.username,
+        _id: res.data.user._id, // Changed from 'id' to '_id' to match App.js
+        role: res.data.user.role,
+      };
+      
+      const userForLocalStorage = {
+        theme: res.data.user.theme,
+        avatar: res.data.user.avatar,
+        title: res.data.user.title,
+        CharacterName: res.data.user.CharacterName,
+      };
+      
+      // Create a merged object for the context
+      const mergedUserData = {
+        ...userForCookies,
+        ...userForLocalStorage
+      };
+      
+      // Update context with all user data
+      setUserData(mergedUserData);
+      
+      // Store authentication data in cookies
+      Cookies.set('userInfo', JSON.stringify(userForCookies), {
         expires: 29,
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'None',
+        partitioned: true,
       });
-
+      
+      // Store preferences in localStorage
+      localStorage.setItem('userPreferences', JSON.stringify(userForLocalStorage));
+      
+      // Navigate to home page
       navigate('/');
     } catch (error) {
-      alert(error.response?.data?.message || 'Login failed');
+      setError(error.response?.data?.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +90,7 @@ export const Login = () => {
     <div className={loginStyles.loginWrapper}>
       <div className={loginStyles.container}>
         <h1 className={loginStyles.title}>Login</h1>
+        {error && <div className={loginStyles.errorMessage}>{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className={loginStyles.inputGroup}>
             <label htmlFor="email">Email</label>
@@ -74,7 +105,6 @@ export const Login = () => {
               placeholder="Enter your email"
             />
           </div>
-
           <div className={loginStyles.inputGroup}>
             <label htmlFor="password">Password</label>
             <input
@@ -88,7 +118,6 @@ export const Login = () => {
               placeholder="Enter your password"
             />
           </div>
-
           <div className={loginStyles.btnContainer}>
             <button
               className={loginStyles.btn}
@@ -111,3 +140,5 @@ export const Login = () => {
     </div>
   );
 };
+
+export default Login;

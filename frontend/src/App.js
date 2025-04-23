@@ -52,17 +52,35 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Just check for stored user info (axios is already configured in axiosConfig.js)
+    // Create a merged user data object
+    let mergedUserData = {};
+    
+    // Check for stored user info from cookies
     const storedUserData = Cookies.get('userInfo');
     if (storedUserData) {
       try {
         const parsedUserData = JSON.parse(storedUserData);
-        setUserData(parsedUserData);
+        mergedUserData = { ...mergedUserData, ...parsedUserData };
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         Cookies.remove('userInfo');
       }
     }
+    
+    // Load user preferences from localStorage and merge them
+    const storedPreferences = localStorage.getItem('userPreferences');
+    if (storedPreferences) {
+      try {
+        const parsedPreferences = JSON.parse(storedPreferences);
+        mergedUserData = { ...mergedUserData, ...parsedPreferences };
+      } catch (error) {
+        console.error('Error parsing stored user preferences:', error);
+        localStorage.removeItem('userPreferences');
+      }
+    }
+    
+    // Set the merged data to state
+    setUserData(mergedUserData);
     setLoading(false);
   }, []);
 
@@ -73,13 +91,13 @@ function App() {
   return (
     <Router>
       <data.Provider value={{ userData, setUserData }}>
-      <ThemeProvider>
+        <ThemeProvider>
           <div className="App">
             <ScrollToTop />
             <Navbar />
-          <AnimeProvider>
-            <MangaProvider>
-              <CharacterProvider>
+            <AnimeProvider>
+              <MangaProvider>
+                <CharacterProvider>
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -92,23 +110,15 @@ function App() {
                     <Route path="/auth/anilist/callback" element={<AniListCallback />} />
                     <Route
                       path="/"
-                      element={userData && userData._id ? <Home /> : <Login />}
+                      element={userData && userData._id ? <Home /> : <Navigate to="/login" />}
                     />
                     <Route
                       path="/profile/*"
-                      element={userData && userData._id ? <Profile /> : <Login />}
+                      element={userData && userData._id ? <Profile /> : <Navigate to="/login" />}
                     />
                     <Route
                       path="/add/*"
-                      element={userData && userData._id ? <AddSection /> : <Login />}
-                    />
-                    <Route
-                      path="/anime/:id"
-                      element={userData && userData._id ? <AnimeDetails /> : <Animes />}
-                    />
-                    <Route
-                      path="/manga/:id"
-                      element={userData && userData._id ? <MangaDetails /> : <Mangas />}
+                      element={userData && userData._id ? <AddSection /> : <Navigate to="/login" />}
                     />
                     <Route
                       path="/anime/:id/update"
@@ -152,12 +162,12 @@ function App() {
                     />
                     <Route path="/settings" element={userData?._id ? <Settings /> : <Navigate to="/login" />} />
                   </Routes>
-              </CharacterProvider>
-            </MangaProvider>
-          </AnimeProvider>
+                </CharacterProvider>
+              </MangaProvider>
+            </AnimeProvider>
             <Footer />
           </div>
-      </ThemeProvider>
+        </ThemeProvider>
       </data.Provider>
     </Router>
   );

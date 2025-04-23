@@ -7,7 +7,6 @@ import { fetchWithErrorHandling } from '../utils/apiUtils';
 import { useTheme } from '../Context/ThemeContext';
 import AvatarUpload from '../Context/AvatarUpload';
 import axiosInstance from '../utils/axiosConfig';
-import Cookies from 'js-cookie';
 
 const Settings = () => {
   const { userData, setUserData } = useContext(data);
@@ -15,7 +14,7 @@ const Settings = () => {
   const { mangaList } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
-  const [activeTab, setActiveTab] =useState('Profile');
+  const [activeTab, setActiveTab] = useState('Profile');
   const { theme, setTheme } = useTheme();
   const [anilistData, setAnilistData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,40 +28,57 @@ const Settings = () => {
     error: null
   });
 
+  // Function to update user preferences in localStorage
+  const updateUserPreferences = (key, value) => {
+    try {
+      // Get current preferences from localStorage
+      const prefsString = localStorage.getItem('userPreferences');
+      const preferences = prefsString ? JSON.parse(prefsString) : {};
+      
+      // Update with new value
+      preferences[key] = value;
+      
+      // Save back to localStorage
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating user preferences:', error);
+      return false;
+    }
+  };
+
   const fetchUserList = useCallback(async () => {
-      if (!userData?._id) return;
-  
-      try {
-        setIsLoading(true);
-        const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-        setUserAnimeList(response.animes);
-        setUserMangaList(response.mangas);
-      } catch (err) {
-        setUserAnimeList([]);
-        setUserMangaList([]);
-      } finally {
-        setIsLoading(false);
-      }
+    if (!userData?._id) return;
+
+    try {
+      setIsLoading(true);
+      const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
+      setUserAnimeList(response.animes);
+      setUserMangaList(response.mangas);
+    } catch (err) {
+      console.error('Error fetching user list:', err);
+      setUserAnimeList([]);
+      setUserMangaList([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [userData?._id]);
 
   useEffect(() => {
-      if (userData?._id && animeList?.length && mangaList?.length) {
-        fetchUserList();
-      }
+    if (userData?._id && animeList?.length && mangaList?.length) {
+      fetchUserList();
+    }
   }, [userData?._id, animeList, mangaList, fetchUserList]);
 
   const handleThemeChange = async (newTheme) => {
     try {
-      const userInfo = Cookies.get('userInfo');
-      if (!userInfo) {
-        throw new Error('No authentication token found');
-      }
-
+      // Update theme in backend
       await axiosInstance.put(`/users/${userData._id}/theme`,
         { theme: newTheme },
         {
           headers: {
-            'Authorization': `Bearer ${JSON.parse(userInfo)._id}`
+            'Authorization': `Bearer ${userData._id}`
           }
         }
       );
@@ -70,13 +86,13 @@ const Settings = () => {
       // Update theme in context
       setTheme(newTheme);
 
-      // Update theme in cookie
-      const parsedUserInfo = JSON.parse(userInfo);
-      parsedUserInfo.theme = newTheme;
-      Cookies.set('userInfo', JSON.stringify(parsedUserInfo));
+      // Update theme in localStorage
+      updateUserPreferences('theme', newTheme);
 
-      // Update theme in userData context
-      setUserData({...userData, theme: newTheme});
+      // Update theme in userData context if needed
+      if (userData.theme !== newTheme) {
+        setUserData({...userData, theme: newTheme});
+      }
 
     } catch (error) {
       console.error('Error updating theme:', error);
@@ -89,17 +105,12 @@ const Settings = () => {
 
   const handleLanguageChange = async (type, value) => {
     try {
-      const userInfo = Cookies.get('userInfo');
-      if (!userInfo) {
-        throw new Error('No authentication token found');
-      }
-
       // Update the user settings in the backend
       await axiosInstance.put(`/users/${userData._id}/${type}`, {
         [type]: value,
       }, {
         headers: {
-          'Authorization': `Bearer ${JSON.parse(userInfo)._id}`
+          'Authorization': `Bearer ${userData._id}`
         }
       });
 
@@ -107,13 +118,11 @@ const Settings = () => {
       const updatedUserData = { ...userData, [type]: value };
       setUserData(updatedUserData);
 
-      // Update the userInfo cookie
-      const parsedUserInfo = JSON.parse(userInfo);
-      parsedUserInfo[type] = value; // Update the specific language setting
-      Cookies.set('userInfo', JSON.stringify(parsedUserInfo));
+      // Update the setting in localStorage
+      updateUserPreferences(type, value);
 
     } catch (error) {
-      console.error('Error updating language settings:', error);
+      console.error(`Error updating ${type} setting:`, error);
     }
   };
 
@@ -139,7 +148,7 @@ const Settings = () => {
       );
 
       const messageHandler = async (event) => {
-        if (event.origin === 'http://localhost:3000' && event.data.code) {
+        if ((event.origin === window.location.origin || event.origin === 'http://localhost:3000') && event.data.code) {
           // Remove the event listener immediately to prevent duplicate handling
           window.removeEventListener('message', messageHandler);
           
@@ -149,15 +158,12 @@ const Settings = () => {
               userId: userData._id
             }, {
               headers: {
-                'Authorization': `Bearer ${JSON.parse(Cookies.get('userInfo'))._id}`
+                'Authorization': `Bearer ${userData._id}`
               }
             });
 
             if (response.data.success) {
-              setUserData(response.data.user);
-              const userInfo = JSON.parse(Cookies.get('userInfo'));
-              userInfo.anilist = response.data.user.anilist;
-              Cookies.set('userInfo', JSON.stringify(userInfo));
+              setUserData({...userData, anilist: response.data.user.anilist});
               popup.close();
             }
           } catch (error) {
@@ -179,16 +185,12 @@ const Settings = () => {
     try {
       const response = await axiosInstance.post(`/users/${userData._id}/anilist/disconnect`, {}, {
         headers: {
-          'Authorization': `Bearer ${JSON.parse(Cookies.get('userInfo'))._id}`
+          'Authorization': `Bearer ${userData._id}`
         }
       });
       
       if (response.data.success) {
-        setUserData(response.data.user);
-        // Update userInfo cookie
-        const userInfo = JSON.parse(Cookies.get('userInfo'));
-        userInfo.anilist = response.data.user.anilist;
-        Cookies.set('userInfo', JSON.stringify(userInfo));
+        setUserData({...userData, anilist: response.data.user.anilist});
       }
     } catch (error) {
       console.error('Error disconnecting from AniList:', error);
@@ -208,7 +210,7 @@ const Settings = () => {
 
       const response = await axiosInstance.post(`/users/${userData._id}/anilist/sync`, {}, {
         headers: {
-          'Authorization': `Bearer ${JSON.parse(Cookies.get('userInfo'))._id}`
+          'Authorization': `Bearer ${userData._id}`
         }
       });
       
@@ -239,7 +241,7 @@ const Settings = () => {
         `/users/${userData._id}/anilist/lists`,
         {
           headers: {
-            'Authorization': `Bearer ${JSON.parse(Cookies.get('userInfo'))._id}`
+            'Authorization': `Bearer ${userData._id}`
           }
         }
       );
@@ -282,7 +284,6 @@ const Settings = () => {
   );
 
   const handleDeleteAllLists = () => {
-    console.log('Delete button clicked');
     setShowConfirmModal(true);
   };
 
@@ -293,7 +294,7 @@ const Settings = () => {
         `/users/${userData._id}/lists`,
         {
           headers: {
-            'Authorization': `Bearer ${JSON.parse(Cookies.get('userInfo'))._id}`
+            'Authorization': `Bearer ${userData._id}`
           }
         }
       );
@@ -305,6 +306,9 @@ const Settings = () => {
           animeList: [],
           mangaList: []
         });
+        // Refresh lists
+        setUserAnimeList([]);
+        setUserMangaList([]);
       }
     } catch (error) {
       console.error('Error deleting lists:', error);
@@ -504,7 +508,7 @@ const Settings = () => {
       <section className={settingsStyles.section}>
         <h2>Titles</h2>
         <select
-          value={userData.title}
+          value={userData.title || 'romaji'}
           onChange={(e) => handleLanguageChange('title', e.target.value)}
         >
           <option value="romaji">Romaji (Shingeki no Kyojin)</option>
@@ -516,7 +520,7 @@ const Settings = () => {
       <section className={settingsStyles.section}>
         <h2>Character Names</h2>
         <select
-          value={userData.characterName}
+          value={userData.characterName || 'romaji-western'}
           onChange={(e) => handleLanguageChange('characterName', e.target.value)}
         >
           <option value="romaji-western">Romaji, Western Order (Killua Zoldyck)</option>
