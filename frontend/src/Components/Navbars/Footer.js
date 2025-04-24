@@ -17,18 +17,33 @@ const Footer = () => {
     window.location.href = '/login';
   };
 
+  const updateUserPreferences = (key, value) => {
+    try {
+      // Get current preferences from localStorage
+      const prefsString = localStorage.getItem('userPreferences');
+      const preferences = prefsString ? JSON.parse(prefsString) : {};
+      
+      // Update with new value
+      preferences[key] = value;
+      
+      // Save back to localStorage
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating user preferences:', error);
+      return false;
+    }
+  };
+
   const handleThemeChange = async (newTheme) => {
     try {
-      const userInfo = Cookies.get('userInfo');
-      if (!userInfo) {
-        throw new Error('No authentication token found');
-      }
-
+      // Update theme in backend
       await axiosInstance.put(`/users/${userData._id}/theme`,
         { theme: newTheme },
         {
           headers: {
-            'Authorization': `Bearer ${JSON.parse(userInfo)._id}`
+            'Authorization': `Bearer ${userData._id}`
           }
         }
       );
@@ -36,13 +51,13 @@ const Footer = () => {
       // Update theme in context
       setTheme(newTheme);
 
-      // Update theme in cookie
-      const parsedUserInfo = JSON.parse(userInfo);
-      parsedUserInfo.theme = newTheme;
-      Cookies.set('userInfo', JSON.stringify(parsedUserInfo));
+      // Update theme in localStorage
+      updateUserPreferences('theme', newTheme);
 
-      // Update theme in userData context
-      setUserData({...userData, theme: newTheme});
+      // Update theme in userData context if needed
+      if (userData.theme !== newTheme) {
+        setUserData({...userData, theme: newTheme});
+      }
 
     } catch (error) {
       console.error('Error updating theme:', error);
