@@ -7,11 +7,17 @@ import UserModel from "../Models/userModel.js";
 import AnimeModel from "../Models/animeModel.js";
 import MangaModel from "../Models/mangaModel.js";
 import bcrypt from "bcrypt";
-import multer from 'multer';
-import path from 'path';
 import { syncAniListData } from '../services/anilistAuthService.js';
 import mongoose from 'mongoose';
 const { ObjectId } = mongoose.Types;
+
+// Initialize GridFS stream
+let gfs;
+mongoose.connection.once('open', () => {
+  gfs = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+    bucketName: 'avatars'
+  });
+});
 
 /**
  * @function registerUser
@@ -642,19 +648,6 @@ const updateCharacterName = async (req, res) => {
   }
 };
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Ensure this directory exists
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
-const upload = multer({ storage });
-
-// Endpoint to upload avatar
 const uploadAvatar = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -664,24 +657,68 @@ const uploadAvatar = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Log the uploaded file
-    console.log('Uploaded file:', req.file);
-
     // Ensure the file exists
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    user.avatar = `/public/${req.file.filename}`; // Save the path to the avatar
-    console.log('Avatar path set to:', user.avatar); // Log the avatar path
+    // If user already has an avatar, delete the old one
+    if (user.avatar && user.avatar.fileId) {
+      try {
+        await gfs.delete(new mongoose.Types.ObjectId(user.avatar.fileId));
+      } catch (err) {
+        console.log('Error deleting old avatar, may not exist:', err);
+        // Continue even if delete fails
+      }
+    }
 
-    // Attempt to save the updated user
-    await user.save(); // Save the updated user
-
-    console.log('After save:', user); // Log after saving
-    res.status(200).json({ message: 'Avatar updated successfully', avatar: user.avatar });
+    // Set the new avatar info
+    user.avatar = {
+      fileId: req.file.id,
+      filename: req.file.filename,
+      uploadDate: req.file.uploadDate
+    };
+    
+    await user.save();
+    
+    // Construct the URL for the frontend to use
+    const avatarUrl = `/api/users/${userId}/avatar`;
+    
+    res.status(200).json({ 
+      message: 'Avatar updated successfully', 
+      avatar: avatarUrl 
+    });
   } catch (error) {
     console.error('Error uploading avatar:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+const getAvatar = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.userId);
+    
+    if (!user || !user.avatar || !user.avatar.fileId) {
+      return res.status(404).json({ message: 'Avatar not found' });
+    }
+    
+    // Find the file by ID
+    const file = await gfs.find({ _id: new mongoose.Types.ObjectId(user.avatar.fileId) }).toArray();
+    
+    if (!file || file.length === 0) {
+      return res.status(404).json({ message: 'Avatar file not found' });
+    }
+    
+    // Set the appropriate content type
+    res.set('Content-Type', 'image/jpeg');
+    
+    // Create a download stream
+    const downloadStream = gfs.openDownloadStream(new mongoose.Types.ObjectId(user.avatar.fileId));
+    
+    // Pipe the file to the response
+    downloadStream.pipe(res);
+  } catch (error) {
+    console.error('Error retrieving avatar:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
@@ -930,6 +967,7 @@ export {
   updateTheme,
   getAllUsers,
   uploadAvatar,
+  getAvatar,
   updateTitle,
   updateCharacterName,
   syncUserList,

@@ -12,7 +12,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { useLocation } from 'react-router-dom';
 import data from './Context/ContextApi';
 import { useEffect, useState } from 'react';
-import axiosInstance from './utils/axiosConfig.js';
 import Cookies from 'js-cookie';
 import AnimeDetails from './Components/Details/AnimeDetails';
 import MangaDetails from './Components/Details/MangaDetails';

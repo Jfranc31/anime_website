@@ -26,6 +26,7 @@ import {
   updateTheme,
   getAllUsers,
   uploadAvatar,
+  getAvatar,
   updateTitle,
   updateCharacterName,
   syncUserList,
@@ -34,6 +35,7 @@ import {
 import authMiddleware from "../middleware/authMiddleware.js";
 import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniListConnection, syncAniListData, getAniListUserLists } from '../services/anilistAuthService.js';
 import UserModel from '../Models/userModel.js';
+import upload from '../utils/gridfsStorage.js';
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
@@ -74,7 +76,8 @@ router.put("/:userId/title", authMiddleware, updateTitle);
 router.put("/:userId/characterName", authMiddleware, updateCharacterName);
 
 // Avatar routes
-router.post('/:userId/upload-avatar', upload.single('avatar'), uploadAvatar);
+router.post('/:userId/upload-avatar', authMiddleware, upload.single('avatar'), uploadAvatar);
+router.get('/:userId/avatar', getAvatar);
 
 // Get AniList authorization URL
 router.get('/anilist/auth', (req, res) => {

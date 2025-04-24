@@ -85,8 +85,9 @@ const userSchema = new mongoose.Schema({
     default: 'user'
   },
   avatar: {
-    type: String,
-    default: '/public/default-avatar.png',
+    fileId: mongoose.Schema.Types.ObjectId,
+    filename: String,
+    uploadDate: Date
   },
   title: {
     type: String,

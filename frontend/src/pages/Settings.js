@@ -234,28 +234,28 @@ const Settings = () => {
     }
   };
 
-  const fetchAniListData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axiosInstance.get(
-        `/users/${userData._id}/anilist/lists`,
-        {
-          headers: {
-            'Authorization': `Bearer ${userData._id}`
-          }
-        }
-      );
+  // const fetchAniListData = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     const response = await axiosInstance.get(
+  //       `/users/${userData._id}/anilist/lists`,
+  //       {
+  //         headers: {
+  //           'Authorization': `Bearer ${userData._id}`
+  //         }
+  //       }
+  //     );
 
-      if (response.data.success) {
-        setAnilistData(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching AniList data:', error);
-      alert('Failed to fetch AniList data. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     if (response.data.success) {
+  //       setAnilistData(response.data.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching AniList data:', error);
+  //     alert('Failed to fetch AniList data. Please try again.');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const renderProfileSection = () => (
     <div className={settingsStyles.content}>
