@@ -136,7 +136,7 @@ const Navbar = () => {
             >
               <div className={navbarStyles.profileIcon}>
                 <img
-                  src={`http://localhost:8080${userData?.avatar || DEFAULT_AVATAR}`}
+                  src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar || DEFAULT_AVATAR}`}
                   alt="Profile"
                   className={navbarStyles.avatarImage}
                 />

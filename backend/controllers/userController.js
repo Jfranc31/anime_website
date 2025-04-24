@@ -93,6 +93,7 @@ const loginUser = async (req, res) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: 'None',
         path: "/",
+        partitioned: true,
       });
 
       return res.status(200).json({ message: "Login Successful", user });
@@ -657,15 +658,26 @@ const uploadAvatar = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Ensure the file exists
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const fileSize = file.size;
+    const fileType = file.mimetype;
+
+    if (fileSize > 1024 * 1024 * 5) { // 5MB limit
+      return res.status(400).json({ error: 'File size exceeds 5MB limit' });
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/gif'].includes(fileType)) {
+      return res.status(400).json({ error: 'Invalid file type' });
     }
 
     // If user already has an avatar, delete the old one
     if (user.avatar && user.avatar.fileId) {
       try {
-        await gfs.delete(new mongoose.Types.ObjectId(user.avatar.fileId));
+        await gfs.delete(mongoose.Types.ObjectId(user.avatar.fileId));
       } catch (err) {
         console.log('Error deleting old avatar, may not exist:', err);
         // Continue even if delete fails
@@ -674,9 +686,9 @@ const uploadAvatar = async (req, res) => {
 
     // Set the new avatar info
     user.avatar = {
-      fileId: req.file.id,
-      filename: req.file.filename,
-      uploadDate: req.file.uploadDate
+      fileId: file.id,
+      filename: file.filename,
+      uploadDate: file.uploadDate
     };
     
     await user.save();
@@ -685,8 +697,8 @@ const uploadAvatar = async (req, res) => {
     const avatarUrl = `/api/users/${userId}/avatar`;
     
     res.status(200).json({ 
-      message: 'Avatar updated successfully', 
-      avatar: avatarUrl 
+      message: 'Avatar updated successfully',
+      avatar: avatarUrl
     });
   } catch (error) {
     console.error('Error uploading avatar:', error);
@@ -703,7 +715,7 @@ const getAvatar = async (req, res) => {
     }
     
     // Find the file by ID
-    const file = await gfs.find({ _id: new mongoose.Types.ObjectId(user.avatar.fileId) }).toArray();
+    const file = await gfs.find({ _id: mongoose.Types.ObjectId(user.avatar.fileId) }).toArray();
     
     if (!file || file.length === 0) {
       return res.status(404).json({ message: 'Avatar file not found' });
@@ -713,7 +725,7 @@ const getAvatar = async (req, res) => {
     res.set('Content-Type', 'image/jpeg');
     
     // Create a download stream
-    const downloadStream = gfs.openDownloadStream(new mongoose.Types.ObjectId(user.avatar.fileId));
+    const downloadStream = gfs.openDownloadStream(mongoose.Types.ObjectId(user.avatar.fileId));
     
     // Pipe the file to the response
     downloadStream.pipe(res);
