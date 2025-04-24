@@ -37,18 +37,6 @@ import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniLis
 import UserModel from '../Models/userModel.js';
 import upload from '../utils/gridfsStorage.js';
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../frontend/public')); // Save to public directory
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`); // Use a unique filename
-  },
-});
-
-const upload = multer({ storage });
-
 const router = express.Router();
 
 router.get('/', authMiddleware, getAllUsers);
