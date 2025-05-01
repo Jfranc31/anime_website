@@ -136,8 +136,9 @@ const Home = () => {
   const getMangaById = useCallback(() => null, []);
 
   const getTitle = useCallback((titles) => {
+    if (!titles) return '';
     const preference = userData?.title || 'english';
-    return titles[preference] || titles.english || titles.romaji || titles.native;
+    return titles[preference] || titles.english || titles.romaji || titles.native || '';
   }, [userData?.title]);
 
   const watchingAnime = useMemo(() => {
@@ -152,8 +153,8 @@ const Home = () => {
         animeDetails: userAnime.animeDetails
       }))
       .sort((a, b) => {
-        const titleA = getTitle(a.animeDetails.titles) || '';
-        const titleB = getTitle(b.animeDetails.titles) || '';
+        const titleA = getTitle(a.animeDetails?.titles) || '';
+        const titleB = getTitle(b.animeDetails?.titles) || '';
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       });
   }, [userAnimeList, getTitle]);
@@ -171,8 +172,8 @@ const Home = () => {
         mangaDetails: userManga.mangaDetails
       }))
       .sort((a, b) => {
-        const titleA = getTitle(a.mangaDetails.titles) || '';
-        const titleB = getTitle(b.mangaDetails.titles) || '';
+        const titleA = getTitle(a.mangaDetails?.titles) || '';
+        const titleB = getTitle(b.mangaDetails?.titles) || '';
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       });
   }, [userMangaList, getTitle]);
