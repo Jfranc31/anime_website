@@ -19,10 +19,26 @@ import { updateMangaFromAnilist, compareMangaData } from "../services/updateServ
  */
 const getAllManga = async (req, res) => {
   try {
-    const mangas = await MangaModel.find({});
-    res.json(mangas);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [mangas, total] = await Promise.all([
+      MangaModel.find({})
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      MangaModel.countDocuments({})
+    ]);
+
+    res.json({
+      mangas,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
   } catch (error) {
-    console.error("Error fetching mangas:,", error);
+    console.error("Error fetching mangas:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

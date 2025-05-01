@@ -14,11 +14,15 @@ import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import { runScheduledAnimeUpdates, runScheduledMangaUpdates, runScheduledAiringUpdates } from './services/scheduledUpdates.js';
 // Middleware for Cross-Origin Resource Sharing (CORS)
 import cors from "cors";
 // Creating an Express application
 const app = express();
+
+// Add compression middleware
+app.use(compression());
 
 // Increase the payload size limit - add these lines before other middleware
 app.use(express.json({ limit: '50mb' }));

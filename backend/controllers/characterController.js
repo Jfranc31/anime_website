@@ -17,8 +17,24 @@ import { fetchCharacterData } from "../services/anilistService.js";
  */
 const getAllCharacters = async (req, res) => {
   try {
-    const characters = await CharacterModel.find({});
-    res.json(characters);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [characters, total] = await Promise.all([
+      CharacterModel.find({})
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      CharacterModel.countDocuments({})
+    ]);
+
+    res.json({
+      characters,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
   } catch (error) {
     console.error("Error fetching characters:", error);
     res.status(500).json({ message: "Internal Server Error" });

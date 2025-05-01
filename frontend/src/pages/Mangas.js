@@ -30,6 +30,11 @@ const Mangas = () => {
   const [loadingStates, setLoadingStates] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mangas, setMangas] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalMangas, setTotalMangas] = useState(0);
+  const limit = 20;
 
   const observer = useRef();
   const filteredMangasRef = useRef([]);
@@ -75,23 +80,26 @@ const Mangas = () => {
     }
   }, [userData.title]);
 
-  const fetchMangas = useCallback(async () => {
+  const fetchMangas = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/mangas');
-      setMangaList(response.data);
+      const response = await axiosInstance.get(`/api/manga?page=${currentPage}&limit=${limit}`);
+      const { mangas, total, pages } = response.data;
+      setMangas(mangas);
+      setTotalPages(pages);
+      setTotalMangas(total);
+      setError(null);
     } catch (err) {
-      setError('Failed to load mangas');
-      console.error('Error:', err);
+      console.error('Error fetching mangas:', err);
+      setError('Failed to fetch mangas');
     } finally {
       setLoading(false);
     }
-  }, [setMangaList]);
+  };
 
-  // Initial fetch
   useEffect(() => {
     fetchMangas();
-  }, [fetchMangas]);
+  }, [currentPage]);
 
   // Add event listeners for manga updates
   useEffect(() => {
@@ -359,6 +367,10 @@ const Mangas = () => {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
   return (
     <div className={browseStyles.browseContainer}>
       <div className={browseStyles.filterContainer}>
@@ -484,6 +496,22 @@ const Mangas = () => {
           </div>
         </div>
       )}
+
+      <div className="pagination">
+        <button 
+          onClick={() => handlePageChange(currentPage - 1)} 
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button 
+          onClick={() => handlePageChange(currentPage + 1)} 
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };

@@ -24,6 +24,11 @@ const Characters = () => {
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCharacters, setTotalCharacters] = useState(0);
+  const limit = 20;
 
   const observer = useRef();
   const filteredCharactersRef = useRef([]);
@@ -82,16 +87,26 @@ const Characters = () => {
   const fetchCharacters = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/characters');
-      setCharacters(response.data);
-      setCharacterList(response.data);
+      const response = await axiosInstance.get(`/api/characters?page=${currentPage}&limit=${limit}`);
+      const { characters, total, pages } = response.data;
+      setCharacters(characters);
+      setTotalPages(pages);
+      setTotalCharacters(total);
+      setError(null);
     } catch (err) {
-      setError('Failed to load characters');
-      console.error('Error:', err);
+      console.error('Error fetching characters:', err);
+      setError('Failed to fetch characters');
     } finally {
-      setIsInitialLoading(false);
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchCharacters();
+  }, [currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
   };
 
   const getFullName = useCallback((names) => {
@@ -266,6 +281,22 @@ const Characters = () => {
             </ul>
           </div>
         )}
+      </div>
+
+      <div className="pagination">
+        <button 
+          onClick={() => handlePageChange(currentPage - 1)} 
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button 
+          onClick={() => handlePageChange(currentPage + 1)} 
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

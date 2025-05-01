@@ -19,8 +19,24 @@ import { updateAnimeFromAnilist, compareAnimeData, FORMAT_MAP } from "../service
  */
 const getAllAnimes = async (req, res) => {
   try {
-    const animes = await AnimeModel.find({});
-    res.json(animes);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [animes, total] = await Promise.all([
+      AnimeModel.find({})
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      AnimeModel.countDocuments({})
+    ]);
+
+    res.json({
+      animes,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
   } catch (error) {
     console.error("Error fetching animes:", error);
     res.status(500).json({ message: "Internal Server Error" });
