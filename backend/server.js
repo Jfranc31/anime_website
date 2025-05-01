@@ -19,6 +19,7 @@ import compression from "compression";
 import { runScheduledAnimeUpdates, runScheduledMangaUpdates, runScheduledAiringUpdates } from './services/scheduledUpdates.js';
 // Middleware for Cross-Origin Resource Sharing (CORS)
 import cors from "cors";
+
 // Creating an Express application
 const app = express();
 

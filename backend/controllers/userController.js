@@ -979,6 +979,13 @@ const deleteAllLists = async (req, res) => {
   }
 };
 
+/**
+ * @function getUserAnimeStatuses
+ * @description Get all anime statuses for a user
+ * @param {Object} req - Express request object with user ID
+ * @param {Object} res - Express response object
+ * @return {Object} - Map of anime IDs to their statuses
+ */
 export const getUserAnimeStatuses = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1001,6 +1008,13 @@ export const getUserAnimeStatuses = async (req, res) => {
   }
 };
 
+/**
+ * @function getUserMangaStatuses
+ * @description Get all manga statuses for a user
+ * @param {Object} req - Express request object with user ID
+ * @param {Object} res - Express response object
+ * @return {Object} - Map of manga IDs to their statuses
+ */
 export const getUserMangaStatuses = async (req, res) => {
   try {
     const { userId } = req.params;
