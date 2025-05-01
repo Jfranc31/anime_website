@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useUser } from './ContextApi';
 import axiosInstance from '../utils/axiosConfig';
-import styles from '../styles/components/AvatarUpload.module.css';
+import styles from '../styles/components/upload.module.css';
 import settingsStyle from '../styles/pages/Settings.module.css';
-import Cookies from 'js-cookie';
 
 const AvatarUpload = () => {
   const { userData, refreshUserData } = useUser();
