@@ -1,5 +1,6 @@
 import './App.css';
 import './index.css';
+import React, { useEffect } from 'react';
 import Profile from './pages/Profile';
 import LoginPage from './pages/Login';
 import Register from './pages/Register';
