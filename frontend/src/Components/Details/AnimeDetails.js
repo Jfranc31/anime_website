@@ -3,7 +3,7 @@
  * Description: React component for rendering details of an anime.
  */
 
-import React, { useEffect, useState, useContext, useMemo } from 'react';
+import React, { useEffect, useState, useContext, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
@@ -61,7 +61,7 @@ const AnimeDetails = () => {
   });
   const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
 
-  // Move useMemo here, before any conditional returns
+  // Move useMemo before conditional returns
   const sortedCharacters = useMemo(() => {
     return pageData.characters.sort((a, b) => {
       const rolePriority = ['Main', 'Supporting', 'Background'];
@@ -71,52 +71,63 @@ const AnimeDetails = () => {
     });
   }, [pageData.characters]);
 
+  // Memoize the user's anime status check
+  const updateUserAnimeStatus = useCallback(() => {
+    if (userData?._id && pageData.animeDetails?._id) {
+      const isAdded = userData.animes?.some(
+        (anime) => anime.animeId === pageData.animeDetails._id
+      );
+      const existingAnimeIndex = userData.animes?.findIndex(
+        (anime) => anime.animeId.toString() === pageData.animeDetails._id.toString()
+      );
+
+      updatePageData({
+        isAnimeAdded: isAdded,
+        ...(existingAnimeIndex !== -1 && {
+          userProgress: {
+            status: userData.animes[existingAnimeIndex].status,
+            currentEpisode: userData.animes[existingAnimeIndex].currentEpisode,
+          }
+        })
+      });
+    }
+  }, [userData?._id, pageData.animeDetails?._id, userData?.animes]);
+
+  // Fetch initial data only when component mounts or ID changes
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [animeResponse, userResponse] = await Promise.all([
+          axiosInstance.get(`/animes/anime/${id}`),
+          userData?._id ? axiosInstance.get(`/users/${userData._id}/current`) : null
+        ]);
+        
+        updatePageData({
+          animeDetails: animeResponse.data
+        });
+
+        if (userResponse) {
+          setUserData(userResponse.data);
+        }
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      }
+    };
+
+    fetchInitialData();
+  }, [id]); // Only depend on id changes
+
+  // Separate effect for user status updates
+  useEffect(() => {
+    updateUserAnimeStatus();
+  }, [updateUserAnimeStatus]);
+
   const updatePageData = (updates) => {
     setPageData(prev => ({
       ...prev,
       ...updates
     }));
   };
-
-  const fetchInitialData = async () => {
-    try {
-      const [animeResponse, userResponse] = await Promise.all([
-        axiosInstance.get(`/animes/anime/${id}`),
-        userData?._id ? axiosInstance.get(`/users/${userData._id}/current`) : null
-      ]);
-      
-      updatePageData({
-        animeDetails: animeResponse.data,
-        isAnimeAdded: userResponse ? userResponse.data.animes?.some(
-          (anime) => anime.animeId === id
-        ) : false
-      });
-      if (userResponse) {
-        const currentUser = userResponse.data;
-        setUserData(currentUser);
-        const existingAnimeIndex = currentUser?.animes?.findIndex(
-          (anime) => anime.animeId.toString() === id.toString()
-        );
-
-        if (currentUser && existingAnimeIndex !== -1) {
-          updatePageData({
-            userProgress: {
-              status:
-                currentUser.animes[existingAnimeIndex].status,
-              currentEpisode:
-                currentUser.animes[existingAnimeIndex].currentEpisode,
-            },
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching initial data:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchInitialData();
-  }, [id, userData, setUserData]);
 
   const fetchCharacterDetails = async () => {
     updatePageData({ loading: true });
@@ -285,15 +296,6 @@ const AnimeDetails = () => {
       controller.abort();
     };
   }, [pageData.animeDetails]);
-
-  useEffect(() => {
-    if (userData?._id && pageData.animeDetails?._id) {
-      const isAdded = userData.animes?.some(
-        (anime) => anime.animeId === pageData.animeDetails._id
-      );
-      updatePageData({ isAnimeAdded: isAdded });
-    }
-  }, [userData, pageData.animeDetails]);
 
   if (!pageData.animeDetails) {
     return <SkeletonDetails/>;
