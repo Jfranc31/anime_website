@@ -1225,7 +1225,7 @@ export const UpdateAnime = ({ match }) => {
           {formData.mangaRelations.map((relation, index) => (
             <div key={index} className={addPageStyles.selectedCharacter}>
               <img
-                src={relation.images.image}
+                src={relation.images?.image}
                 alt={`Manga Relation ${index + 1}`}
                 className={addPageStyles.selectedCharacterImage}
               />
