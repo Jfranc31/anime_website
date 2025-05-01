@@ -4,7 +4,6 @@ import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 import { useUser } from '../Context/ContextApi';
-import axiosInstance from '../utils/axiosConfig';
 
 const Stats = () => {
   const { userData } = useUser();
@@ -12,46 +11,30 @@ const Stats = () => {
   const { mangaList } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
-  const [stats, setStats] = useState({
-    anime: { watching: 0, completed: 0, planning: 0 },
-    manga: { reading: 0, completed: 0, planning: 0 }
-  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   const fetchUserList = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-      setUserAnimeList(data.animes);
-      setUserMangaList(data.mangas);
+      setUserAnimeList(data.animes || []);
+      setUserMangaList(data.mangas || []);
     } catch (error) {
+      console.error('Error fetching user list:', error);
+      setError('Failed to load user data');
       setUserAnimeList([]);
       setUserMangaList([]);
+    } finally {
+      setLoading(false);
     }
   }, [userData._id]);
   
   useEffect(() => {
-    fetchUserList();
-  }, [userData._id, fetchUserList]);
-  
-  useEffect(() => {
     if (userData?._id) {
-      fetchStats();
+      fetchUserList();
     }
-  }, [userData?._id]);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get(`/users/${userData._id}/stats`);
-      setStats(response.data);
-    } catch (err) {
-      setError('Failed to load statistics');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [userData?._id, fetchUserList]);
   
   // Anime stats calculations
   const animeStatusCounts = useMemo(() => {
@@ -251,116 +234,115 @@ const Stats = () => {
     );
   };
 
-  // Function to render stat cards
   const renderStatCard = (title, value, className) => (
     <div className={`${profileStyles.statCard} ${className || ''}`}>
       <h3>{title}</h3>
-      <div className={profileStyles.statValue}>{value}</div>
+      <p>{value}</p>
     </div>
   );
 
   if (!userData) {
-    return <div className={profileStyles.noUser}>Please log in to view your stats.</div>;
+    return <div className={profileStyles.noUser}>Please log in to view your profile.</div>;
+  }
+
+  if (loading) {
+    return <div className={profileStyles.loading}>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className={profileStyles.error}>{error}</div>;
   }
 
   return (
     <div className={profileStyles.profilePage}>
-      <div className={profileStyles.statsContainer}>
-        <h1>Your Statistics</h1>
-        
-        {/* Overview Stats */}
-        <section className={profileStyles.statsSection}>
-          <h2>Overview</h2>
-          <div className={profileStyles.statsGrid}>
-            {renderStatCard("Total Anime", userAnimeList.length || 0, profileStyles.animeCard)}
-            {renderStatCard("Total Manga", userMangaList.length || 0, profileStyles.mangaCard)}
-            {renderStatCard("Episodes Watched", animeProgressStats.episodesWatched, profileStyles.episodesCard)}
-            {renderStatCard("Chapters Read", mangaProgressStats.chaptersRead, profileStyles.chaptersCard)}
-          </div>
-        </section>
-        
-        {/* Anime Stats */}
-        <section className={profileStyles.statsSection}>
-          <h2>Anime Statistics</h2>
-          
-          <div className={profileStyles.statSubsection}>
-            <h3>Status Distribution</h3>
-            <div className={profileStyles.statsGrid}>
-              {renderStatCard("Watching", animeStatusCounts.watching, profileStyles.watchingCard)}
-              {renderStatCard("Completed", animeStatusCounts.completed, profileStyles.completedCard)}
-              {renderStatCard("Planning", animeStatusCounts.planning, profileStyles.planningCard)}
+      <div className={profileStyles.profileHeader}>
+        <div className={profileStyles.userInfo}>
+          <div className={profileStyles.avatarContainer}>
+            <div className={profileStyles.avatar}>
+              <img
+                src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar}`}
+                alt="Profile"
+              />
             </div>
           </div>
-          
-          <div className={profileStyles.statSubsection}>
-            <h3>Format Distribution</h3>
+          <div className={profileStyles.userDetails}>
+            <h1>{userData.username}</h1>
+          </div>
+        </div>
+        <div className={profileStyles.contentSection}>
+          <div className={profileStyles.statsSection}>
+            <h2>Anime Statistics</h2>
             <div className={profileStyles.statsGrid}>
-              {renderStatCard("TV", animeFormatCounts.tv, profileStyles.tvCard)}
-              {renderStatCard("Movies", animeFormatCounts.movie, profileStyles.movieCard)}
-              {renderStatCard("OVA/ONA", animeFormatCounts.ova + animeFormatCounts.ona, profileStyles.ovaCard)}
-              {renderStatCard("Specials", animeFormatCounts.special, profileStyles.specialCard)}
+              {renderStatCard('Watching', animeStatusCounts.watching)}
+              {renderStatCard('Completed', animeStatusCounts.completed)}
+              {renderStatCard('Planning', animeStatusCounts.planning)}
+            </div>
+            <div className={profileStyles.progressSection}>
+              {renderProgressBar(
+                animeProgressStats.episodesWatched,
+                animeProgressStats.totalPossibleEpisodes,
+                'Episodes Watched'
+              )}
+              {renderProgressBar(
+                animeProgressStats.completedSeries,
+                animeProgressStats.seriesWithProgress,
+                'Series Completed'
+              )}
+            </div>
+            <div className={profileStyles.formatStats}>
+              <h3>Format Distribution</h3>
+              <div className={profileStyles.formatGrid}>
+                {Object.entries(animeFormatCounts).map(([format, count]) => (
+                  count > 0 && (
+                    <div key={format} className={profileStyles.formatItem}>
+                      <span>{format.replace('_', ' ')}</span>
+                      <span>{count}</span>
+                    </div>
+                  )
+                ))}
+              </div>
             </div>
           </div>
-          
-          <div className={profileStyles.statSubsection}>
-            <h3>Completion Progress</h3>
-            {renderProgressBar(
-              animeProgressStats.episodesWatched, 
-              animeProgressStats.totalPossibleEpisodes,
-              "Episodes Watched"
-            )}
-            
-            {renderProgressBar(
-              animeProgressStats.completedSeries,
-              userAnimeList.length || 0,
-              "Series Completed"
-            )}
-          </div>
-        </section>
-        
-        {/* Manga Stats */}
-        <section className={profileStyles.statsSection}>
-          <h2>Manga Statistics</h2>
-          
-          <div className={profileStyles.statSubsection}>
-            <h3>Status Distribution</h3>
+
+          <div className={profileStyles.statsSection}>
+            <h2>Manga Statistics</h2>
             <div className={profileStyles.statsGrid}>
-              {renderStatCard("Reading", mangaStatusCounts.reading, profileStyles.readingCard)}
-              {renderStatCard("Completed", mangaStatusCounts.completed, profileStyles.completedCard)}
-              {renderStatCard("Planning", mangaStatusCounts.planning, profileStyles.planningCard)}
+              {renderStatCard('Reading', mangaStatusCounts.reading)}
+              {renderStatCard('Completed', mangaStatusCounts.completed)}
+              {renderStatCard('Planning', mangaStatusCounts.planning)}
+            </div>
+            <div className={profileStyles.progressSection}>
+              {renderProgressBar(
+                mangaProgressStats.chaptersRead,
+                mangaProgressStats.totalPossibleChapters,
+                'Chapters Read'
+              )}
+              {renderProgressBar(
+                mangaProgressStats.volumesRead,
+                mangaProgressStats.totalPossibleVolumes,
+                'Volumes Read'
+              )}
+              {renderProgressBar(
+                mangaProgressStats.completedSeries,
+                mangaProgressStats.seriesWithProgress,
+                'Series Completed'
+              )}
+            </div>
+            <div className={profileStyles.formatStats}>
+              <h3>Format Distribution</h3>
+              <div className={profileStyles.formatGrid}>
+                {Object.entries(mangaFormatCounts).map(([format, count]) => (
+                  count > 0 && (
+                    <div key={format} className={profileStyles.formatItem}>
+                      <span>{format.replace('_', ' ')}</span>
+                      <span>{count}</span>
+                    </div>
+                  )
+                ))}
+              </div>
             </div>
           </div>
-          
-          <div className={profileStyles.statSubsection}>
-            <h3>Format Distribution</h3>
-            <div className={profileStyles.statsGrid}>
-              {renderStatCard("Manga", mangaFormatCounts.manga, profileStyles.mangaFormatCard)}
-              {renderStatCard("Light Novels", mangaFormatCounts.light_novel, profileStyles.novelCard)}
-              {renderStatCard("One-shots", mangaFormatCounts.oneShot, profileStyles.oneshotCard)}
-            </div>
-          </div>
-          
-          <div className={profileStyles.statSubsection}>
-            <h3>Completion Progress</h3>
-            {renderProgressBar(
-              mangaProgressStats.chaptersRead,
-              mangaProgressStats.totalPossibleChapters,
-              "Chapters Read"
-            )}
-            
-            {renderProgressBar(
-              mangaProgressStats.completedSeries,
-              userMangaList.length || 0,
-              "Series Completed"
-            )}
-            
-            {renderProgressBar(
-              mangaProgressStats.volumesRead,
-              mangaProgressStats.totalPossibleVolumes,
-              "Volumes Read"
-            )}
-          </div>
-        </section>
+        </div>
       </div>
     </div>
   );
