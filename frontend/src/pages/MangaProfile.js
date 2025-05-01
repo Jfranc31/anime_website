@@ -41,8 +41,9 @@ const MangaProfile = () => {
             setIsLoading(true);
             setError(null);
             const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-            setUserMangaList(response.mangas);
+            setUserMangaList(response.mangas || []);
         } catch (err) {
+            console.error('Error fetching user list:', err);
             setError('Failed to load user list. Please try again later.');
             setUserMangaList([]);
         } finally {
@@ -61,13 +62,13 @@ const MangaProfile = () => {
     ), [mangaList]);
 
     const getTitle = useCallback((titles) => {
+        if (!titles) return '';
         const preference = userData?.title || 'english';
-        return titles[preference] || titles.english || titles.romaji || titles.native;
+        return titles[preference] || titles.english || titles.romaji || titles.native || '';
     }, [userData?.title]);
 
     const filteredMediaList = useMemo(() => {
-        const list = userMangaList;
-        if (!list?.length) return [];
+        if (!userMangaList?.length) return [];
         
         const statusMap = {
             [STATUS_TYPES.READING]: 'Reading',
@@ -75,95 +76,94 @@ const MangaProfile = () => {
             [STATUS_TYPES.COMPLETED]: 'Completed'
         };
         
-        return list
+        return userMangaList
             .filter((item) => item.status === statusMap[statusType])
             .map((item) => ({
-            ...item,
-            mediaDetails: getMediaById(item.mangaId),
+                ...item,
+                mediaDetails: getMediaById(item.mangaId),
             }))
+            .filter(item => item.mediaDetails) // Filter out items with no media details
             .sort((a, b) => {
-            const titleA = getTitle(a.mediaDetails?.titles) || '';
-            const titleB = getTitle(b.mediaDetails?.titles) || '';
-    
-            return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
+                const titleA = getTitle(a.mediaDetails?.titles) || '';
+                const titleB = getTitle(b.mediaDetails?.titles) || '';
+                return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
             });
     }, [userMangaList, statusType, getMediaById, getTitle]);
 
     const handleProgressUpdate = async (id, newProgress) => {
-        const currentList = userMangaList;
-        const currentItem = currentList.find(item => 
-          item.mangaId === id
-        );
-    
-        if (!currentItem || !userData?._id) return;
-    
-        const updateList = setUserMangaList;
-        const progressField = 'currentChapter';
+        if (!userData?._id) return;
+        
+        const currentItem = userMangaList.find(item => item.mangaId === id);
+        if (!currentItem) return;
     
         try {
-          // Optimistic update
-          updateList(prevList =>
-            prevList.map(item =>
-              item.mangaId === id
-                ? { ...item, [progressField]: newProgress }
-                : item
-            )
-          );
+            // Optimistic update
+            setUserMangaList(prevList =>
+                prevList.map(item =>
+                    item.mangaId === id
+                        ? { ...item, currentChapter: newProgress }
+                        : item
+                )
+            );
     
-          const endpoint = `/users/${userData._id}/update${'Manga'}`;
-          await axiosInstance.post(endpoint, {
-            mangaId: id,
-            status: currentItem.status,
-            [progressField]: newProgress,
-            currentVolume: currentItem.currentVolume
-          });
+            await axiosInstance.post(`/users/${userData._id}/updateManga`, {
+                mangaId: id,
+                status: currentItem.status,
+                currentChapter: newProgress,
+                currentVolume: currentItem.currentVolume
+            });
         } catch (err) {
-          setError(`Failed to update manga progress. Please try again.`);
-          fetchUserList(); // Revert changes on error
+            console.error('Error updating progress:', err);
+            setError('Failed to update manga progress. Please try again.');
+            fetchUserList(); // Revert changes on error
         }
     };
 
     const handleTopRightButtonClick = (type, media) => {
-        if (type === 'manga') {
+        if (type === 'manga' && media) {
             setSelectedMangaForEdit(media);
             setIsMangaEditorOpen(true);
-        };
+        }
     };
 
     const onMangaDelete = (mangaId) => {
+        if (!mangaId) return;
+        
         setUserMangaList(prev => prev.filter(manga => manga.mangaId !== mangaId));
         refreshUserData(prev => {
-          if (!prev?.mangas) return prev;
-          return {
-            ...prev,
-            mangas: prev.mangas.filter(manga => manga.mangaId !== mangaId)
-          };
+            if (!prev?.mangas) return prev;
+            return {
+                ...prev,
+                mangas: prev.mangas.filter(manga => manga.mangaId !== mangaId)
+            };
         });
         setIsMangaEditorOpen(false);
     };
 
     const onMangaUpdate = (updatedManga) => {
-        // Update the manga in the userMangaList
+        if (!updatedManga?.mangaId) return;
+        
         setUserMangaList(prev =>
-          prev.map(manga =>
-            manga.mangaId === updatedManga.mangaId
-              ? { ...manga, ...updatedManga}
-              : manga
-          )
+            prev.map(manga =>
+                manga.mangaId === updatedManga.mangaId
+                    ? { ...manga, ...updatedManga }
+                    : manga
+            )
         );
     
-        // Update userData if needed
         refreshUserData(prev => {
-          if(!prev?.mangas) return prev;
-          return {
-            ...prev,
-            mangas: prev.mangas.map(manga => 
-              manga.mangaId === updatedManga.mangaId
-                ? { ...manga, ...updatedManga }
-                : manga
-            )
-          };
+            if (!prev?.mangas) return prev;
+            return {
+                ...prev,
+                mangas: prev.mangas.map(manga => 
+                    manga.mangaId === updatedManga.mangaId
+                        ? { ...manga, ...updatedManga }
+                        : manga
+                )
+            };
         });
+        
+        setIsMangaEditorOpen(false);
     };
 
     const renderColumnHeaders = () => {
@@ -180,7 +180,7 @@ const MangaProfile = () => {
 
     if (!userData) {
         return <div className={profileStyles.noUser}>Please log in to view your profile.</div>;
-    };
+    }
 
     return (
         <div className={profileStyles.profilePage}>
@@ -189,7 +189,7 @@ const MangaProfile = () => {
                     <div className={profileStyles.avatarContainer}>
                         <div className={profileStyles.avatar}>
                             <img
-                                src={`http://localhost:8080${userData?.avatar}`}
+                                src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar}`}
                                 alt="Profile"
                             />
                         </div>
@@ -203,13 +203,13 @@ const MangaProfile = () => {
                         <div className={profileStyles.layoutControls}>
                             {Object.values(LAYOUTS).map((layout) => (
                                 <button
-                                key={layout}
-                                onClick={() => setGridLayout(layout)}
-                                className={`${profileStyles.layoutButton} ${
-                                    gridLayout === layout ? profileStyles.activeLayout : ''
-                                }`}
+                                    key={layout}
+                                    onClick={() => setGridLayout(layout)}
+                                    className={`${profileStyles.layoutButton} ${
+                                        gridLayout === layout ? profileStyles.activeLayout : ''
+                                    }`}
                                 >
-                                {layout.charAt(0).toUpperCase() + layout.slice(1)}
+                                    {layout.charAt(0).toUpperCase() + layout.slice(1)}
                                 </button>
                             ))}
                         </div>
@@ -217,21 +217,21 @@ const MangaProfile = () => {
 
                     <div className={profileStyles.statusTabs}>
                         {Object.values(STATUS_TYPES).map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setStatusType(status)}
-                            className={`${profileStyles.statusTab} ${
-                            statusType === status ? profileStyles.activeStatus : ''
-                            }`}
-                        >
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </button>
+                            <button
+                                key={status}
+                                onClick={() => setStatusType(status)}
+                                className={`${profileStyles.statusTab} ${
+                                    statusType === status ? profileStyles.activeStatus : ''
+                                }`}
+                            >
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </button>
                         ))}
                     </div>
 
                     {error && (
                         <div className={profileStyles.error}>
-                        {error}
+                            {error}
                         </div>
                     )}
 
@@ -243,38 +243,36 @@ const MangaProfile = () => {
                             <div className={`${profileStyles.contentGrid} ${profileStyles[gridLayout]}`}>
                                 {filteredMediaList.map((item) => (
                                     <UserMangaCard 
-                                    key={item.mangaId}
-                                    manga={item.mediaDetails}
-                                    name={getTitle(item.mediaDetails.titles)}
-                                    layout={gridLayout}
-                                    onTopRightButtonClick={handleTopRightButtonClick}
-                                    userProgress={item.currentChapter}
-                                    userStatus={item.status}
-                                    onProgressUpdate={(newProgress) => 
-                                    handleProgressUpdate(item.mangaId, newProgress)
-                                    }
+                                        key={item.mangaId}
+                                        manga={item.mediaDetails}
+                                        name={getTitle(item.mediaDetails?.titles)}
+                                        layout={gridLayout}
+                                        onTopRightButtonClick={handleTopRightButtonClick}
+                                        userProgress={item.currentChapter}
+                                        userStatus={item.status}
+                                        onProgressUpdate={(newProgress) => 
+                                            handleProgressUpdate(item.mangaId, newProgress)
+                                        }
                                     />
                                 ))}
                             </div>
                         </div>
                     )}
                 </div>
-                {isMangaEditorOpen && (
-                    <div className={modalStyles.modalOverlay} onClick={handleMangaModalClose}>
-                    <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
+            </div>
+
+            {isMangaEditorOpen && selectedMangaForEdit && (
+                <div className={modalStyles.modalOverlay}>
+                    <div className={modalStyles.modalContent}>
                         <MangaEditor
-                        manga={selectedMangaForEdit}
-                        userId={userData._id}
-                        closeModal={handleMangaModalClose}
-                        onMangaDelete={onMangaDelete}
-                        onMangaUpdate={onMangaUpdate}
-                        setUserData={refreshUserData}
+                            manga={selectedMangaForEdit}
+                            onClose={handleMangaModalClose}
+                            onDelete={onMangaDelete}
+                            onUpdate={onMangaUpdate}
                         />
                     </div>
-                    </div>
-                )}
-
-            </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -38,15 +38,16 @@ const AnimeProfile = () => {
         if (!userData?._id) return;
     
         try {
-          setIsLoading(true);
-          setError(null);
-          const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-          setUserAnimeList(response.animes);
+            setIsLoading(true);
+            setError(null);
+            const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
+            setUserAnimeList(response.animes || []);
         } catch (err) {
-          setError('Failed to load user list. Please try again later.');
-          setUserAnimeList([]);
+            console.error('Error fetching user list:', err);
+            setError('Failed to load user list. Please try again later.');
+            setUserAnimeList([]);
         } finally {
-          setIsLoading(false);
+            setIsLoading(false);
         }
     }, [userData?._id]);
 
@@ -61,101 +62,98 @@ const AnimeProfile = () => {
     ), [animeList]);
 
     const getTitle = useCallback((titles) => {
+        if (!titles) return '';
         const preference = userData?.title || 'english';
-        return titles[preference] || titles.english || titles.romaji || titles.native;
+        return titles[preference] || titles.english || titles.romaji || titles.native || '';
     }, [userData?.title]);
 
     const filteredMediaList = useMemo(() => {
-        const list = userAnimeList;
-        if (!list?.length) return [];
+        if (!userAnimeList?.length) return [];
         
-        return list
-          .filter((item) => item.status === statusType)
-          .map((item) => ({
-            ...item,
-            mediaDetails: getMediaById(item.animeId),
-          }))
-          .sort((a, b) => {
-            const titleA = getTitle(a.mediaDetails?.titles) || '';
-            const titleB = getTitle(b.mediaDetails?.titles) || '';
-    
-            return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-          });
+        return userAnimeList
+            .filter((item) => item.status === statusType)
+            .map((item) => ({
+                ...item,
+                mediaDetails: getMediaById(item.animeId),
+            }))
+            .filter(item => item.mediaDetails) // Filter out items with no media details
+            .sort((a, b) => {
+                const titleA = getTitle(a.mediaDetails?.titles) || '';
+                const titleB = getTitle(b.mediaDetails?.titles) || '';
+                return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
+            });
     }, [userAnimeList, statusType, getMediaById, getTitle]);
 
     const handleProgressUpdate = async (id, newProgress) => {
-        const currentList = userAnimeList;
-        const currentItem = currentList.find(item => 
-          item.animeId === id
-        );
-    
-        if (!currentItem || !userData?._id) return;
-    
-        const updateList = setUserAnimeList;
-        const progressField = 'currentEpisode';
+        if (!userData?._id) return;
+        
+        const currentItem = userAnimeList.find(item => item.animeId === id);
+        if (!currentItem) return;
     
         try {
-          // Optimistic update
-          updateList(prevList =>
-            prevList.map(item =>
-              item.animeId === id
-                ? { ...item, [progressField]: newProgress }
-                : item
-            )
-          );
+            // Optimistic update
+            setUserAnimeList(prevList =>
+                prevList.map(item =>
+                    item.animeId === id
+                        ? { ...item, currentEpisode: newProgress }
+                        : item
+                )
+            );
     
-          const endpoint = `/users/${userData._id}/updateAnime`;
-          await axiosInstance.post(endpoint, {
-            animeId: id,
-            status: currentItem.status,
-            [progressField]: newProgress
-          });
+            await axiosInstance.post(`/users/${userData._id}/updateAnime`, {
+                animeId: id,
+                status: currentItem.status,
+                currentEpisode: newProgress
+            });
         } catch (err) {
-          setError(`Failed to update anime progress. Please try again.`);
-          fetchUserList(); // Revert changes on error
+            console.error('Error updating progress:', err);
+            setError('Failed to update anime progress. Please try again.');
+            fetchUserList(); // Revert changes on error
         }
     };
 
     const handleTopRightButtonClick = (type, media) => {
-        if (type === 'anime') {
-          setSelectedAnimeForEdit(media);
-          setIsAnimeEditorOpen(true);
-        };
+        if (type === 'anime' && media) {
+            setSelectedAnimeForEdit(media);
+            setIsAnimeEditorOpen(true);
+        }
     };
 
     const onAnimeDelete = (animeId) => {
+        if (!animeId) return;
+        
         setUserAnimeList(prev => prev.filter(anime => anime.animeId !== animeId));
         refreshUserData(prev => {
             if (!prev?.animes) return prev;
             return {
-            ...prev,
-            animes: prev.animes.filter(anime => anime.animeId !== animeId)
+                ...prev,
+                animes: prev.animes.filter(anime => anime.animeId !== animeId)
             };
         });
         setIsAnimeEditorOpen(false);
     };
 
     const onAnimeUpdate = (updatedAnime) => {
-        // Update the anime in the userAnimeList
+        if (!updatedAnime?.animeId) return;
+        
         setUserAnimeList(prev => 
-          prev.map(anime => 
-            anime.animeId === updatedAnime.animeId 
-              ? { ...anime, ...updatedAnime } 
-              : anime
-          )
+            prev.map(anime => 
+                anime.animeId === updatedAnime.animeId 
+                    ? { ...anime, ...updatedAnime } 
+                    : anime
+            )
         );
         
-        // Update userData if needed
         refreshUserData(prev => {
-          if (!prev?.animes) return prev;
-          return {
-            ...prev,
-            animes: prev.animes.map(anime => 
-              anime.animeId === updatedAnime.animeId 
-                ? { ...anime, ...updatedAnime } 
-                : anime
-            )
-          };
+            if (!prev?.animes) return prev;
+            return {
+                ...prev,
+                animes: prev.animes.map(anime => 
+                    anime.animeId === updatedAnime.animeId 
+                        ? { ...anime, ...updatedAnime } 
+                        : anime
+                )
+            };
         });
         
         setIsAnimeEditorOpen(false);
@@ -185,7 +183,7 @@ const AnimeProfile = () => {
                     <div className={profileStyles.avatarContainer}>
                         <div className={profileStyles.avatar}>
                             <img
-                                src={`http://localhost:8080${userData?.avatar}`}
+                                src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar}`}
                                 alt="Profile"
                             />
                         </div>
@@ -241,7 +239,7 @@ const AnimeProfile = () => {
                                     <UserAnimeCard 
                                     key={item.animeId}
                                     anime={item.mediaDetails}
-                                    name={getTitle(item.mediaDetails.titles)}
+                                    name={getTitle(item.mediaDetails?.titles)}
                                     layout={gridLayout}
                                     onTopRightButtonClick={handleTopRightButtonClick}
                                     userProgress={item.currentEpisode}
@@ -255,18 +253,16 @@ const AnimeProfile = () => {
                         </div>
                     )}
                 </div>
-                {isAnimeEditorOpen && (
-                    <div className={modalStyles.modalOverlay} onClick={handleAnimeModalClose}>
-                    <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
-                        <AnimeEditor
-                        anime={selectedAnimeForEdit}
-                        userId={userData._id}
-                        closeModal={handleAnimeModalClose}
-                        onAnimeDelete={onAnimeDelete}
-                        onAnimeUpdate={onAnimeUpdate}
-                        setUserData={refreshUserData}
-                        />
-                    </div>
+                {isAnimeEditorOpen && selectedAnimeForEdit && (
+                    <div className={modalStyles.modalOverlay}>
+                        <div className={modalStyles.modalContent}>
+                            <AnimeEditor
+                            anime={selectedAnimeForEdit}
+                            onClose={handleAnimeModalClose}
+                            onDelete={onAnimeDelete}
+                            onUpdate={onAnimeUpdate}
+                            />
+                        </div>
                     </div>
                 )}
 
