@@ -49,7 +49,7 @@ const CharacterDetails = () => {
 
   useEffect(() => {
     const fetchReferenceDetails = async () => {
-      try {
+    try {
         const animeReferences = await Promise.all(
           (characterDetails?.animes || []).map(async (reference) => {
             try {
@@ -93,7 +93,7 @@ const CharacterDetails = () => {
         );
 
         setReferencesDetails([...animeReferences, ...mangaReferences]);
-      } catch (error) {
+    } catch (error) {
         console.error('Error fetching references details:', error);
       }
     };
@@ -418,21 +418,21 @@ const CharacterDetails = () => {
                 typeof name === 'string' ? name : name // Keep spoilers as JSX
               )
               .reduce((acc, name, index, arr) => acc.concat(name, index < arr.length - 1 ? ', ' : ''), [])}
-          </div>
+            </div>
 
-          <div className={characterDetailsStyles.characterTabs}>
-            <button
+            <div className={characterDetailsStyles.characterTabs}>
+              <button
               className={`${characterDetailsStyles.tabButton} ${activeTab === 'about' ? characterDetailsStyles.active : ''}`}
               onClick={() => setActiveTab('about')}
-            >
-              About
-            </button>
-            <button
+              >
+                About
+              </button>
+              <button
               className={`${characterDetailsStyles.tabButton} ${activeTab === 'appearances' ? characterDetailsStyles.active : ''}`}
               onClick={() => setActiveTab('appearances')}
-            >
-              Appearances
-            </button>
+              >
+                Appearances
+              </button>
           </div>
         </div>
       </div>
