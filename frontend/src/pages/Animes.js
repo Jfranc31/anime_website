@@ -92,7 +92,19 @@ const Animes = () => {
   ]);
 
   useEffect(() => {
-    fetchUserAnimeStatuses();
+    const fetchUserStatuses = async () => {
+      try {
+        const response = await fetchWithErrorHandling(`/users/${userData._id}/anime-statuses`);
+        setUserAnimeStatuses(response || {});
+      } catch (error) {
+        console.error('Error fetching user anime statuses:', error);
+        setUserAnimeStatuses({});
+      }
+    };
+
+    if (userData?._id) {
+      fetchUserStatuses();
+    }
   }, [userData?._id]);
 
   const handlePageChange = (newPage) => {

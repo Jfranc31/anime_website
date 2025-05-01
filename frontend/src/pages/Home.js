@@ -79,8 +79,12 @@ const Home = () => {
   const fetchUserList = useCallback(async () => {
     try {
       const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-      setUserAnimeList(data.animes || []);
-      setUserMangaList(data.mangas || []);
+      // Ensure we have the complete list of anime and manga statuses
+      const animeData = await fetchWithErrorHandling(`/users/${userData._id}/anime-statuses`);
+      const mangaData = await fetchWithErrorHandling(`/users/${userData._id}/manga-statuses`);
+      
+      setUserAnimeList(animeData || []);
+      setUserMangaList(mangaData || []);
     } catch (error) {
       console.error('Error fetching user list:', error);
       setUserAnimeList([]);
