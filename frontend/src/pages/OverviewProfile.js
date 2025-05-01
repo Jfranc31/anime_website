@@ -85,29 +85,29 @@ const Overview = () => {
   const totalAnime = userAnimeList.length || 0;
   const totalManga = userMangaList.length || 0;
   
-  const animeStatusCounts = userAnimeList?.reduce((acc, item) => {
+  const animeStatusCounts = userAnimeList.reduce((acc, item) => {
     acc[item.status] = (acc[item.status] || 0) + 1;
     return acc;
-  }, {}) || {};
+  }, {});
   
-  const mangaStatusCounts = userMangaList?.reduce((acc, item) => {
+  const mangaStatusCounts = userMangaList.reduce((acc, item) => {
     acc[item.status] = (acc[item.status] || 0) + 1;
     return acc;
-  }, {}) || {};
+  }, {});
 
   const getTitle = useCallback((titles) => {
     const preference = userData?.title || 'english';
     return titles[preference] || titles.english || titles.romaji || titles.native;
   }, [userData?.title]);
   
-  const episodesWatched = userAnimeList?.reduce((sum, item) => 
-    sum + (item.currentEpisode || 0), 0) || 0;
+  const episodesWatched = userAnimeList.reduce((sum, item) => 
+    sum + (item.currentEpisode || 0), 0);
   
-  const chaptersRead = userMangaList?.reduce((sum, item) => 
-    sum + (item.currentChapter || 0), 0) || 0;
+  const chaptersRead = userMangaList.reduce((sum, item) => 
+    sum + (item.currentChapter || 0), 0);
     
   // Get recently updated items
-  const recentlyUpdatedAnime = [...(animeActivities || [])]
+  const recentlyUpdatedAnime = [...animeActivities]
     .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
     .slice(0, 4)
     .map(item => ({
@@ -115,7 +115,7 @@ const Overview = () => {
       details: animeList.find(anime => anime._id === item.animeId)
     }));
     
-  const recentlyUpdatedManga = [...(mangaActivities || [])]
+  const recentlyUpdatedManga = [...mangaActivities]
     .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
     .slice(0, 4)
     .map(item => ({
