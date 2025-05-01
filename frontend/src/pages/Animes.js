@@ -11,7 +11,7 @@ import { useUser } from '../Context/ContextApi';
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
-  const { user, setUser } = useUser();
+  const { userData, setUserData } = useUser();
   const [userAnimeStatuses, setUserAnimeStatuses] = useState({});
   const [searchInput, setSearchInput] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -34,7 +34,7 @@ const Animes = () => {
 
   const animeTitle = (titles) => {
     if (!titles) return 'Unknown Title';
-    switch (user?.preferences?.titleLanguage) {
+    switch (userData?.preferences?.titleLanguage) {
       case 'english':
         return titles.english || titles.romaji;
       case 'romaji':
@@ -64,9 +64,9 @@ const Animes = () => {
   };
 
   const fetchUserAnimeStatuses = async () => {
-    if (!user?._id) return;
+    if (!userData?._id) return;
     try {
-      const response = await axiosInstance.get(`/users/${user._id}/anime-statuses`);
+      const response = await axiosInstance.get(`/users/${userData._id}/anime-statuses`);
       setUserAnimeStatuses(response.data);
     } catch (err) {
       console.error('Error fetching user anime statuses:', err);
@@ -76,7 +76,7 @@ const Animes = () => {
   useEffect(() => {
     fetchAnimes();
     fetchUserAnimeStatuses();
-  }, [currentPage, user?._id]);
+  }, [currentPage, userData?._id]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -122,9 +122,9 @@ const Animes = () => {
             setIsAnimeEditorOpen(true);
           }}
           onStatusChange={async (newStatus) => {
-            if (!user?._id) return;
+            if (!userData?._id) return;
             try {
-              await axiosInstance.post(`/users/${user._id}/anime-status`, {
+              await axiosInstance.post(`/users/${userData._id}/anime-status`, {
                 animeId: anime._id,
                 status: newStatus
               });
@@ -245,13 +245,13 @@ const Animes = () => {
           <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
             <AnimeEditor
               anime={selectedAnimeForEdit}
-              userId={user?._id}
+              userId={userData?._id}
               closeModal={handleModalClose}
               onAnimeDelete={() => {
                 handleModalClose();
                 fetchAnimes();
               }}
-              setUser={setUser}
+              setUser={setUserData}
             />
           </div>
         </div>

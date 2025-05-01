@@ -11,7 +11,7 @@ import { useUser } from '../Context/ContextApi';
 
 const Mangas = () => {
   const { mangaList, setMangaList } = useMangaContext();
-  const { user, setUser } = useUser();
+  const { userData, setUserData } = useUser();
   const [userMangaStatuses, setUserMangaStatuses] = useState({});
   const [searchInput, setSearchInput] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -33,7 +33,7 @@ const Mangas = () => {
 
   const mangaTitle = (titles) => {
     if (!titles) return 'Unknown Title';
-    switch (user?.preferences?.titleLanguage) {
+    switch (userData?.preferences?.titleLanguage) {
       case 'english':
         return titles.english || titles.romaji;
       case 'romaji':
@@ -63,9 +63,9 @@ const Mangas = () => {
   };
 
   const fetchUserMangaStatuses = async () => {
-    if (!user?._id) return;
+    if (!userData?._id) return;
     try {
-      const response = await axiosInstance.get(`/users/${user._id}/manga-statuses`);
+      const response = await axiosInstance.get(`/users/${userData._id}/manga-statuses`);
       setUserMangaStatuses(response.data);
     } catch (err) {
       console.error('Error fetching user manga statuses:', err);
@@ -75,7 +75,7 @@ const Mangas = () => {
   useEffect(() => {
     fetchMangas();
     fetchUserMangaStatuses();
-  }, [currentPage, user?._id]);
+  }, [currentPage, userData?._id]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -121,9 +121,9 @@ const Mangas = () => {
             setIsMangaEditorOpen(true);
           }}
           onStatusChange={async (newStatus) => {
-            if (!user?._id) return;
+            if (!userData?._id) return;
             try {
-              await axiosInstance.post(`/users/${user._id}/manga-status`, {
+              await axiosInstance.post(`/users/${userData._id}/manga-status`, {
                 mangaId: manga._id,
                 status: newStatus
               });
@@ -231,13 +231,13 @@ const Mangas = () => {
           <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
             <MangaEditor
               manga={selectedMangaForEdit}
-              userId={user?._id}
+              userId={userData?._id}
               closeModal={handleModalClose}
               onMangaDelete={() => {
                 handleModalClose();
                 fetchMangas();
               }}
-              setUser={setUser}
+              setUser={setUserData}
             />
           </div>
         </div>
