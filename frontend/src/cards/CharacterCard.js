@@ -3,7 +3,7 @@
  * Description: React component for rendering a character card.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import cardsStyles from '../styles/components/cards.module.css';
 
@@ -17,6 +17,14 @@ function CharacterCard({ character, name }) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [imageSrc, setImageSrc] = useState('');
+
+  useEffect(() => {
+    // Reset states when character changes
+    setImageError(false);
+    setImageLoading(true);
+    setImageSrc(character.characterImage);
+  }, [character]);
 
   const handleImageError = () => {
     setImageError(true);
@@ -48,7 +56,7 @@ function CharacterCard({ character, name }) {
               </div>
             )}
             <img 
-              src={imageError ? getFallbackImage() : character.characterImage}
+              src={imageError ? getFallbackImage() : imageSrc}
               alt={character.names.givenName}
               onError={handleImageError}
               onLoad={handleImageLoad}

@@ -218,42 +218,22 @@ const Characters = () => {
 
   // Render list items with transitions
   const renderListItems = () => {
-    const items = [];
-
-    displayedCharacters.forEach((character, index) => {
-      const isLoading = loadingStates[character._id];
-      items.push(
-        <li
-          key={character._id}
-          ref={index === displayedCharacters.length - 1 ? lastCharacterElementRef : null}
-          className={`${browseStyles.listItem} ${isLoading ? browseStyles.loading : browseStyles.loaded}`}
-        >
-          {isLoading ? (
-            <SkeletonCard />
-          ) : (
-            <div className={browseStyles.fadeIn}>
-              <CharacterCard
-                character={character}
-                name={getFullName(character.names)}
-                setCharacterList={setCharacterList}
-              />
-            </div>
-          )}
+    if (isInitialLoading) {
+      return Array(limit).fill(0).map((_, index) => (
+        <li key={`skeleton-${index}`} className={browseStyles.listItem}>
+          <SkeletonCard />
         </li>
-      );
-    });
-
-    if ((isLoadingMore || isSearching) && hasMore) {
-      for (let i = 0; i < 4; i++) {
-        items.push(
-          <li key={`skeleton-more-${i}`} className={`${browseStyles.listItem} ${browseStyles.loading}`}>
-            <SkeletonCard />
-          </li>
-        );
-      }
+      ));
     }
 
-    return items;
+    return characters.map((character, index) => (
+      <li key={character._id} className={browseStyles.listItem}>
+        <CharacterCard
+          character={character}
+          name={getFullName(character.names)}
+        />
+      </li>
+    ));
   };
 
   const handlePageChange = (newPage) => {
@@ -345,10 +325,8 @@ const Characters = () => {
       </div>
 
       <div className={browseStyles.listSection}>
-        {displayedCharacters.length === 0 && !isInitialLoading && !isLoadingMore && !isSearching ? (
-          <div className={browseStyles.noResults}>
-            No characters found matching your criteria
-          </div>
+        {error ? (
+          <div className={browseStyles.errorMessage}>{error}</div>
         ) : (
           <div className={browseStyles.listContainer}>
             <ul className={browseStyles.list}>
