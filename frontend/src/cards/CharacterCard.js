@@ -39,13 +39,17 @@ function CharacterCard({ character, name }) {
       try {
         const imageId = getImageId(character.characterImage);
         if (imageId) {
-          const proxyUrl = `${axiosInstance.defaults.baseURL}/characters/image/${imageId}`;
-          setImageUrl(proxyUrl);
+          const response = await axiosInstance.get(`/characters/image/${imageId}`);
+          if (response.data?.dataUrl) {
+            setImageUrl(response.data.dataUrl);
+          } else {
+            throw new Error('No data URL received');
+          }
         } else {
           setImageUrl(character.characterImage);
         }
       } catch (err) {
-        console.error('Error setting up image URL:', err);
+        console.error('Error loading image:', err);
         setError('Failed to load image');
         setImageUrl(character.characterImage);
       } finally {
@@ -60,13 +64,7 @@ function CharacterCard({ character, name }) {
   const handleImageError = (e) => {
     console.error('Error loading character image:', e);
     setError('Failed to load image');
-    
-    // Try to extract the image ID again
-    const imageId = getImageId(character.characterImage);
-    if (imageId) {
-      // Try the direct AniList URL as a last resort
-      e.target.src = `https://s4.anilist.co/file/anilistcdn/character/large/${imageId}`;
-    }
+    setImageUrl(character.characterImage);
   };
 
   // Get the display name based on user preferences

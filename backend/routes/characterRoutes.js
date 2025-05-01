@@ -90,15 +90,12 @@ router.get('/image/:imageId', async (req, res) => {
       }
     });
 
-    // Set appropriate headers
-    res.set('Content-Type', response.headers['content-type'] || 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    
-    // Send the image data
-    res.send(response.data);
+    // Convert the image to base64
+    const base64Image = Buffer.from(response.data).toString('base64');
+    const dataUrl = `data:${response.headers['content-type'] || 'image/jpeg'};base64,${base64Image}`;
+
+    // Send the data URL
+    res.json({ dataUrl });
   } catch (error) {
     console.error('Error proxying image:', error);
     // Try alternative URL pattern if the first one fails
@@ -112,13 +109,11 @@ router.get('/image/:imageId', async (req, res) => {
         }
       });
 
-      res.set('Content-Type', altResponse.headers['content-type'] || 'image/jpeg');
-      res.set('Cache-Control', 'public, max-age=31536000');
-      res.set('Access-Control-Allow-Origin', '*');
-      res.set('Access-Control-Allow-Methods', 'GET');
-      res.set('Access-Control-Allow-Headers', 'Content-Type');
-      
-      res.send(altResponse.data);
+      // Convert the alternative image to base64
+      const base64Image = Buffer.from(altResponse.data).toString('base64');
+      const dataUrl = `data:${altResponse.headers['content-type'] || 'image/jpeg'};base64,${base64Image}`;
+
+      res.json({ dataUrl });
     } catch (altError) {
       console.error('Error with alternative image URL:', altError);
       res.status(404).json({ message: 'Image not found' });
