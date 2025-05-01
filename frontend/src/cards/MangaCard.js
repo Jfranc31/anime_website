@@ -12,6 +12,7 @@ import { useUser } from '../Context/ContextApi';
  * Functional component representing a manga card.
  * @param {Object} props - Props passed to the component.
  * @param {Object} props.manga - Manga object containing details like titles, images, etc.
+ * @param {string} props.title - The title of the manga.
  * @param {Function} props.onTopRightButtonClick - Callback function for top-right button click.
  * @param {Function} props.onAddToLibrary - Callback function for adding manga to library.
  * @param {Function} props.handleGenreClick - Callback function for genre click.
@@ -19,7 +20,7 @@ import { useUser } from '../Context/ContextApi';
  */
 function MangaCard({
   manga,
-  name,
+  title,
   onTopRightButtonClick,
   onAddToLibrary,
   hideTopRightButton = false,
@@ -37,7 +38,7 @@ function MangaCard({
       const height = titleRef.current.scrollHeight;
       setTitleHeight(height);
     }
-  }, [manga.titles.english]);
+  }, [title]);
 
   const renderStatusIndicator = () => {
     if (!status) return null;
@@ -134,7 +135,7 @@ function MangaCard({
               <div className={cardsStyles.titleWrapper}>
                 {renderStatusIndicator()}
                 <div className={cardsStyles.mangaTitle} ref={titleRef}>
-                  {name}
+                  {title}
                 </div>
               </div>
             </Link>
@@ -182,7 +183,7 @@ function MangaCard({
                   <div className={cardsStyles.titleWrapper}>
                     {renderStatusIndicator()}
                     <div className={cardsStyles.mangaTitle} ref={titleRef}>
-                      {name}
+                      {title}
                     </div>
                   </div>
                 </Link>

@@ -12,6 +12,7 @@ import { useUser } from '../Context/ContextApi';
  * Functional component representing an anime card.
  * @param {Object} props - Props passed to the component.
  * @param {Object} props.anime - Anime object containing details like titles, images, etc.
+ * @param {string} props.title - The title of the anime.
  * @param {Function} props.onTopRightButtonClick - Callback function for top-right button click.
  * @param {Function} props.onAddToLibrary - Callback function for adding anime to library.
  * @param {Function} props.handleGenreClick - Callback function for genre click.
@@ -19,7 +20,7 @@ import { useUser } from '../Context/ContextApi';
  */
 function AnimeCard({
   anime,
-  name,
+  title,
   onTopRightButtonClick,
   onAddToLibrary,
   hideTopRightButton = false,
@@ -38,7 +39,7 @@ function AnimeCard({
       const height = titleRef.current.scrollHeight;
       setTitleHeight(height);
     }
-  }, [anime.titles.english]); // Re-measure if title changes
+  }, [title]); // Re-measure if title changes 
 
   const formatTimeUntilNextEpisode = (timeUntilAiring, episode) => {
     const days = Math.floor(timeUntilAiring / (3600 * 24));
@@ -148,9 +149,6 @@ function AnimeCard({
     return episodes === '1' ? '1 episode' : `${episodes} episodes`;
   };
 
-  console.log('Rendering AnimeCard:', name); // Debugging line
-  console.log('Anime:', anime); // Debugging line
-
   return (
     <div
       className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${layout === 'compact' ? cardsStyles.compact : ''}`}
@@ -168,7 +166,7 @@ function AnimeCard({
                 {renderStatusIndicator()}
                 <div className={cardsStyles.animeTitle} ref={titleRef}>
                   <h3>
-                    {name}
+                    {title}
                   </h3>
                 </div>
               </div>
@@ -218,7 +216,7 @@ function AnimeCard({
                 <div className={cardsStyles.titleWrapper}>
                   {renderStatusIndicator()}
                   <div className={cardsStyles.animeTitle} ref={titleRef}>
-                    {name}
+                    {title}
                   </div>
                 </div>
                 </Link>
