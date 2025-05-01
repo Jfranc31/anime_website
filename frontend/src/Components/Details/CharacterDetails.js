@@ -18,6 +18,7 @@ const CharacterDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('about');
+  const [showSpoilers, setShowSpoilers] = useState(false);
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -51,33 +52,29 @@ const CharacterDetails = () => {
     return [givenName, middleName, surName].filter(Boolean).join(' ') || nativeName;
   };
 
-  const MediaCard = ({ media, role, type }) => (
-    <a href={`/${type}/${media._id}`} className={styles.mediaCard}>
-      <div className={styles.card2}>
-        <div className={styles.mediaImageContainer}>
-          <img src={media.images?.image || media.image} alt={media.titles?.romaji || media.title} />
-          <div className={styles.mediaRole}>{role}</div>
+  const MediaCard = ({ media, role, type }) => {
+    if (!media) return null;
+    
+    const imageUrl = media.images?.image || media.image || '';
+    const title = media.titles?.romaji || media.title || 'Unknown Title';
+    
+    return (
+      <a href={`/${type}/${media._id}`} className={styles.mediaCard}>
+        <div className={styles.card2}>
+          <div className={styles.mediaImageContainer}>
+            {imageUrl && <img src={imageUrl} alt={title} />}
+            {role && <div className={styles.mediaRole}>{role}</div>}
+          </div>
+          <div className={styles.mediaInfo}>
+            <h4>{formatName(title)}</h4>
+          </div>
         </div>
-        <div className={styles.mediaInfo}>
-          <h4>{formatName(media.titles?.romaji || media.title)}</h4>
-        </div>
-      </div>
-    </a>
-  );
+      </a>
+    );
+  };
 
   return (
     <div className={styles.characterDetailsPage}>
-      <div className={styles.characterHeader}>
-        <div className={styles.bannerSection}>
-          <img 
-            src={character.characterImage} 
-            alt={getFullName()} 
-            className={styles.bannerImage}
-          />
-          <div className={styles.bannerOverlay} />
-        </div>
-      </div>
-
       <div className={styles.contentWrapper}>
         <div className={styles.posterContainer}>
           <img src={character.characterImage} alt={getFullName()} />
@@ -122,6 +119,27 @@ const CharacterDetails = () => {
             </div>
           )}
 
+          {character.names.alterSpoiler?.length > 0 && (
+            <div className={styles.altNames}>
+              <h3>
+                Spoiler Names
+                <button 
+                  className={styles.spoilerToggle}
+                  onClick={() => setShowSpoilers(!showSpoilers)}
+                >
+                  {showSpoilers ? 'Hide' : 'Show'}
+                </button>
+              </h3>
+              {showSpoilers && (
+                <div className={styles.altNamesList}>
+                  {character.names.alterSpoiler.map((name, index) => (
+                    <span key={index} className={styles.altName}>{name}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className={styles.characterTabs}>
             <button 
               className={`${styles.tabButton} ${activeTab === 'about' ? styles.active : ''}`}
@@ -153,7 +171,7 @@ const CharacterDetails = () => {
                   <div className={styles.appearancesGrid}>
                     {character.animes.map((appearance) => (
                       <MediaCard 
-                        key={appearance.animeId} 
+                        key={appearance.animeId || appearance.anime?._id} 
                         media={appearance.anime} 
                         role={appearance.role}
                         type="anime"
@@ -169,7 +187,7 @@ const CharacterDetails = () => {
                   <div className={styles.appearancesGrid}>
                     {character.mangas.map((appearance) => (
                       <MediaCard 
-                        key={appearance.mangaId} 
+                        key={appearance.mangaId || appearance.manga?._id} 
                         media={appearance.manga} 
                         role={appearance.role}
                         type="manga"
