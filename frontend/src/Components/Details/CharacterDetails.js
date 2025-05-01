@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useUser } from '../../context/ContextApi';
+import { useUser } from '../../Context/ContextApi';
 import axios from 'axios';
 import styles from '../../styles/pages/character_details.module.css';
 
