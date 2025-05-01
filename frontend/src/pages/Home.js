@@ -8,8 +8,8 @@ import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 
 const Home = () => {
-  const { animeList } = useAnimeContext();
-  const { mangaList } = useMangaContext();
+  const { animeList = [] } = useAnimeContext();
+  const { mangaList = [] } = useMangaContext();
   const { userData } = useUser();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
@@ -104,6 +104,10 @@ const Home = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response was not JSON');
+      }
       const data = await response.json();
       if (Array.isArray(data)) {
         setFeaturedContent(data);
@@ -120,11 +124,19 @@ const Home = () => {
   };
 
   const getAnimeById = useCallback((animeId) => {
-    return animeList?.find((anime) => anime._id === animeId);
+    if (!Array.isArray(animeList)) {
+      console.warn('animeList is not an array:', animeList);
+      return null;
+    }
+    return animeList.find((anime) => anime._id === animeId);
   }, [animeList]);
 
   const getMangaById = useCallback((mangaId) => {
-    return mangaList?.find((manga) => manga._id === mangaId);
+    if (!Array.isArray(mangaList)) {
+      console.warn('mangaList is not an array:', mangaList);
+      return null;
+    }
+    return mangaList.find((manga) => manga._id === mangaId);
   }, [mangaList]);
 
   const getTitle = useCallback((titles) => {

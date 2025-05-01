@@ -11,16 +11,19 @@ const Avatar = ({ src, alt }) => {
   const [error, setError] = useState(false);
 
   const handleError = () => {
-    setError(true);
-    setImgSrc('/default-avatar.png'); // Make sure this file exists in your public folder
+    if (!error) {
+      setError(true);
+      setImgSrc('/images/default-avatar.png'); // Use a local fallback image
+    }
   };
 
   return (
     <img
-      src={error ? '/default-avatar.png' : imgSrc}
+      src={imgSrc}
       alt={alt}
       onError={handleError}
-      className="avatar"
+      className={navbarStyles.avatarImage}
+      loading="lazy"
     />
   );
 };
