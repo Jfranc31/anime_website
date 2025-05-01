@@ -13,7 +13,7 @@ import { formatDate, formatName } from '../../utils/formatUtils';
  * @returns {JSX.Element} - Rendered character details component.
  */
 const CharacterDetails = () => {
-  const { characterId } = useParams();
+  const { id } = useParams();
   const [character, setCharacter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +22,7 @@ const CharacterDetails = () => {
   useEffect(() => {
     const fetchCharacter = async () => {
       try {
-        const response = await axiosInstance.get(`/characters/characters/${characterId}`);
+        const response = await axiosInstance.get(`/characters/characters/${id}`);
         setCharacter(response.data);
         setLoading(false);
       } catch (err) {
@@ -32,7 +32,7 @@ const CharacterDetails = () => {
     };
 
     fetchCharacter();
-  }, [characterId]);
+  }, [id]);
 
   if (loading) {
     return <div className={styles.characterDetailsPage}>Loading...</div>;
