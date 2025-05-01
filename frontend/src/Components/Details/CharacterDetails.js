@@ -2,12 +2,38 @@
  * src/Components/Details/CharacterDetails.js
  * Description: React component for rendering details of a character.
  */
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import axiosInstance from '../../utils/axiosConfig';
 import characterDetailsStyles from '../../styles/pages/character_details.module.css';
 import CharacterDetailsSkeleton from './CharacterSkeleton';
+
+// Move any reusable components outside
+const ReferenceCard = React.memo(({ reference, seriesTitle }) => {
+  return (
+    <Link
+      to={`/${reference.contentType}/${reference.referenceDetails?._id}`}
+      className={characterDetailsStyles.referenceCard}
+    >
+      <div className={characterDetailsStyles.card2}>
+        <div className={characterDetailsStyles.referenceImageContainer}>
+          <img
+            src={reference.referenceDetails?.images.image}
+            alt={reference.referenceDetails?.titles.english}
+          />
+          <div className={characterDetailsStyles.referenceRole}>
+            {reference.role}
+          </div>
+        </div>
+        <div className={characterDetailsStyles.referenceInfo}>
+          <h4>{seriesTitle(reference.referenceDetails?.titles)}</h4>
+        </div>
+      </div>
+    </Link>
+  );
+});
+
 /**
  * Functional component representing details of a character.
  * @returns {JSX.Element} - Rendered character details component.
@@ -15,94 +41,104 @@ import CharacterDetailsSkeleton from './CharacterSkeleton';
 const CharacterDetails = () => {
   const { id } = useParams();
   const { userData, setUserData } = useContext(data);
-  const [characterDetails, setCharacterDetails] = useState(null);
-  const [referencesDetails, setReferencesDetails] = useState([]);
-  const [activeTab, setActiveTab] = useState('about');
-  const [activeAppearanceType, setActiveAppearanceType] = useState('anime');
+  const [pageData, setPageData] = useState({
+    characterDetails: null,
+    references: [],
+    activeTab: 'about',
+    activeAppearanceType: 'anime',
+    loading: false
+  });
   const [revealedSpoilers, setRevealedSpoilers] = useState({});
   const [revealName, setRevealName] = useState(new Set());
 
+  // Move useMemo hooks before any conditional returns
+  const filteredReferences = useMemo(() => {
+    return pageData.references.filter(
+      (ref) => ref.contentType === pageData.activeAppearanceType
+    );
+  }, [pageData.references, pageData.activeAppearanceType]);
+
+  const updatePageData = (updates) => {
+    setPageData(prev => ({
+      ...prev,
+      ...updates
+    }));
+  };
+
+  // Fetch initial data only when component mounts or ID changes
   useEffect(() => {
-    const fetchCharacterDetails = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/characters/character/${id}`
-        );
-        setCharacterDetails(response.data);
+        const [characterResponse, userResponse] = await Promise.all([
+          axiosInstance.get(`/characters/character/${id}`),
+          userData?._id ? axiosInstance.get(`/users/${userData._id}/current`) : null
+        ]);
+        
+        updatePageData({
+          characterDetails: characterResponse.data
+        });
 
-        if (userData?._id) {
-          const userResponse = await axiosInstance.get(
-            `/users/${userData._id}/current`
-          );
-          const currentUser = userResponse.data;
-
-          setUserData(currentUser);
+        if (userResponse) {
+          setUserData(userResponse.data);
         }
       } catch (error) {
-        console.error('Error fetching character details:', error);
+        console.error('Error fetching initial data:', error);
       }
     };
 
-    fetchCharacterDetails();
-  }, [id, userData, setUserData]);
+    fetchInitialData();
+  }, [id]); // Only depend on id changes
 
+  // Fetch references when character details change
   useEffect(() => {
     const fetchReferenceDetails = async () => {
+      if (!pageData.characterDetails) return;
+      
+      updatePageData({ loading: true });
       try {
-        const animeReferences = await Promise.all(
-          (characterDetails?.animes || []).map(async (reference) => {
+        const [animeReferences, mangaReferences] = await Promise.all([
+          Promise.all((pageData.characterDetails?.animes || []).map(async (reference) => {
             try {
-              const response = await axiosInstance.get(
-                `/animes/anime/${reference.animeId}`
-              );
+              const response = await axiosInstance.get(`/animes/anime/${reference.animeId}`);
               return {
                 ...reference,
                 referenceDetails: response.data,
                 contentType: 'anime',
               };
             } catch (error) {
-              console.error(
-                `Error fetching details for anime reference ${reference.animeId}:`,
-                error
-              );
-              return reference;
+              console.error(`Error fetching anime reference: ${error}`);
+              return null;
             }
-          })
-        );
-
-        const mangaReferences = await Promise.all(
-          (characterDetails?.mangas || []).map(async (reference) => {
+          })),
+          Promise.all((pageData.characterDetails?.mangas || []).map(async (reference) => {
             try {
-              const response = await axiosInstance.get(
-                `/mangas/manga/${reference.mangaId}`
-              );
+              const response = await axiosInstance.get(`/mangas/manga/${reference.mangaId}`);
               return {
                 ...reference,
                 referenceDetails: response.data,
                 contentType: 'manga',
               };
             } catch (error) {
-              console.error(
-                `Error fetching details for manga reference ${reference.mangaId}:`,
-                error
-              );
-              return reference;
+              console.error(`Error fetching manga reference: ${error}`);
+              return null;
             }
-          })
-        );
+          }))
+        ]);
 
-        setReferencesDetails([...animeReferences, ...mangaReferences]);
+        updatePageData({
+          references: [...animeReferences, ...mangaReferences].filter(Boolean),
+          loading: false
+        });
       } catch (error) {
-        console.error('Error fetching references details:', error);
+        console.error('Error fetching references:', error);
+        updatePageData({ loading: false });
       }
     };
 
-    if (characterDetails) {
-      fetchReferenceDetails();
-    }
-  }, [characterDetails]);
+    fetchReferenceDetails();
+  }, [pageData.characterDetails]);
 
-  if (!characterDetails) {
+  if (!pageData.characterDetails) {
     return <CharacterDetailsSkeleton/>
   }
 
@@ -258,37 +294,37 @@ const CharacterDetails = () => {
 
   const renderAboutSection = () => {
     const { metadata, paragraphs } = parseDescription(
-      characterDetails.about || ''
+      pageData.characterDetails.about || ''
     );
 
     return (
       <div className={'character-about'}>
         <div className={characterDetailsStyles.characterMetadata}>
-          {characterDetails.age && (
+          {pageData.characterDetails.age && (
             <div className={characterDetailsStyles.metadataItem}>
               <span className={characterDetailsStyles.metadataLabel}>Age</span>
               <span className={characterDetailsStyles.metadataValue}>
-                {characterDetails.age}
+                {pageData.characterDetails.age}
               </span>
             </div>
           )}
-          {characterDetails.gender && (
+          {pageData.characterDetails.gender && (
             <div className={characterDetailsStyles.metadataItem}>
               <span className={characterDetailsStyles.metadataLabel}>
                 Gender
               </span>
               <span className={characterDetailsStyles.metadataValue}>
-                {characterDetails.gender}
+                {pageData.characterDetails.gender}
               </span>
             </div>
           )}
-          {characterDetails.DOB && formatDOB(characterDetails.DOB) && (
+          {pageData.characterDetails.DOB && formatDOB(pageData.characterDetails.DOB) && (
             <div className={characterDetailsStyles.metadataItem}>
               <span className={characterDetailsStyles.metadataLabel}>
                 Date of Birth
               </span>
               <span className={characterDetailsStyles.metadataValue}>
-                {formatDOB(characterDetails.DOB)}
+                {formatDOB(pageData.characterDetails.DOB)}
               </span>
             </div>
           )}
@@ -321,44 +357,27 @@ const CharacterDetails = () => {
     <div className={characterDetailsStyles.characterAppearances}>
       <div className={characterDetailsStyles.appearanceTabs}>
         <button
-          className={`${characterDetailsStyles.appearanceTab} ${activeAppearanceType === 'anime' ? characterDetailsStyles.active : ''}`}
-          onClick={() => setActiveAppearanceType('anime')}
+          className={`${characterDetailsStyles.appearanceTab} ${pageData.activeAppearanceType === 'anime' ? characterDetailsStyles.active : ''}`}
+          onClick={() => updatePageData({ activeAppearanceType: 'anime' })}
         >
           Anime
         </button>
         <button
-          className={`${characterDetailsStyles.appearanceTab} ${activeAppearanceType === 'manga' ? characterDetailsStyles.active : ''}`}
-          onClick={() => setActiveAppearanceType('manga')}
+          className={`${characterDetailsStyles.appearanceTab} ${pageData.activeAppearanceType === 'manga' ? characterDetailsStyles.active : ''}`}
+          onClick={() => updatePageData({ activeAppearanceType: 'manga' })}
         >
           Manga
         </button>
       </div>
 
       <div className={characterDetailsStyles.referencesGrid}>
-        {referencesDetails
-          .filter((ref) => ref.contentType === activeAppearanceType)
-          .map((reference) => (
-            <Link
-              key={reference.referenceDetails?._id}
-              to={`/${activeAppearanceType}/${reference.referenceDetails?._id}`}
-              className={characterDetailsStyles.referenceCard}
-            >
-              <div className={characterDetailsStyles.card2}>
-                <div className={characterDetailsStyles.referenceImageContainer}>
-                  <img
-                    src={reference.referenceDetails?.images.image}
-                    alt={reference.referenceDetails?.titles.english}
-                  />
-                  <div className={characterDetailsStyles.referenceRole}>
-                    {reference.role}
-                  </div>
-                </div>
-                <div className={characterDetailsStyles.referenceInfo}>
-                  <h4>{seriesTitle(reference.referenceDetails?.titles)}</h4>
-                </div>
-              </div>
-            </Link>
-          ))}
+        {filteredReferences.map((reference) => (
+          <ReferenceCard
+            key={reference.referenceDetails?._id}
+            reference={reference}
+            seriesTitle={seriesTitle}
+          />
+        ))}
       </div>
     </div>
   );
@@ -368,13 +387,13 @@ const CharacterDetails = () => {
       <div className={characterDetailsStyles.characterHeader}>
         <div className={characterDetailsStyles.characterImageSection}>
           <img
-            src={characterDetails.characterImage}
-            alt={characterDetails.names.givenName}
+            src={pageData.characterDetails.characterImage}
+            alt={pageData.characterDetails.names.givenName}
             className={characterDetailsStyles.characterMainImage}
           />
           {userData.role === 'admin' && (
             <Link
-              to={`/characters/${characterDetails._id}/update`}
+              to={`/characters/${pageData.characterDetails._id}/update`}
               className={characterDetailsStyles.editCharacterLink}
             >
               <button className={characterDetailsStyles.editCharacterButton}>
@@ -385,18 +404,18 @@ const CharacterDetails = () => {
         </div>
         <div className={characterDetailsStyles.characterInfoSection}>
           <h1 className={characterDetailsStyles.characterName}>
-            {getFullName(characterDetails.names, userData.characterName)}
+            {getFullName(pageData.characterDetails.names, userData.characterName)}
           </h1>
 
             <div className={characterDetailsStyles.characterAltNames}>
               {[
                 userData.characterName === 'native'
-                  ? getFullName(characterDetails.names, 'romaji-western')
-                  : getFullName(characterDetails.names, 'native'),
+                  ? getFullName(pageData.characterDetails.names, 'romaji-western')
+                  : getFullName(pageData.characterDetails.names, 'native'),
 
-                ...(characterDetails.names.alterNames || []),
+                ...(pageData.characterDetails.names.alterNames || []),
 
-                ...(characterDetails.names.alterSpoiler || []).map((name) => (
+                ...(pageData.characterDetails.names.alterSpoiler || []).map((name) => (
                   <span
                     key={name}
                     style={{
@@ -420,14 +439,14 @@ const CharacterDetails = () => {
 
           <div className={characterDetailsStyles.characterTabs}>
             <button
-              className={`${characterDetailsStyles.tabButton} ${activeTab === 'about' ? characterDetailsStyles.active : ''}`}
-              onClick={() => setActiveTab('about')}
+              className={`${characterDetailsStyles.tabButton} ${pageData.activeTab === 'about' ? characterDetailsStyles.active : ''}`}
+              onClick={() => updatePageData({ activeTab: 'about' })}
             >
               About
             </button>
             <button
-              className={`${characterDetailsStyles.tabButton} ${activeTab === 'appearances' ? characterDetailsStyles.active : ''}`}
-              onClick={() => setActiveTab('appearances')}
+              className={`${characterDetailsStyles.tabButton} ${pageData.activeTab === 'appearances' ? characterDetailsStyles.active : ''}`}
+              onClick={() => updatePageData({ activeTab: 'appearances' })}
             >
               Appearances
             </button>
@@ -436,7 +455,7 @@ const CharacterDetails = () => {
       </div>
 
       <div className={characterDetailsStyles.characterContent}>
-        {activeTab === 'about'
+        {pageData.activeTab === 'about'
           ? renderAboutSection()
           : renderAppearancesSection()}
       </div>

@@ -3,7 +3,7 @@
  * Description: React component for rendering details of a manga.
  */
 
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import MangaEditor from '../ListEditors/MangaEditor';
@@ -14,6 +14,32 @@ import axiosInstance from '../../utils/axiosConfig';
 import Loader from '../../constants/Loader.js';
 import SkeletonDetails from './SkeletonDetails';
 
+// First, move CharacterCard outside of MangaDetails
+const CharacterCard = React.memo(({ character, getFullName }) => {
+  return (
+    <Link
+      to={`/characters/${character.characterDetails._id}`}
+      key={character.characterDetails._id}
+      className={mangaDetailsStyles.characterCard}
+    >
+      <div className={mangaDetailsStyles.card2}>
+        <div className={mangaDetailsStyles.characterImageContainer}>
+          <img
+            src={character.characterDetails.characterImage}
+            alt={character.characterDetails.names.givenName}
+          />
+          <div className={mangaDetailsStyles.characterRole}>
+            {character.role}
+          </div>
+        </div>
+        <div className={mangaDetailsStyles.characterInfo}>
+          <h4>{getFullName(character.characterDetails.names)}</h4>
+        </div>
+      </div>
+    </Link>
+  );
+});
+
 /**
  * Functional component representing details of a manga.
  * @returns {JSX.Element} - Rendered manga details component.
@@ -21,112 +47,109 @@ import SkeletonDetails from './SkeletonDetails';
 const MangaDetails = () => {
   const { id } = useParams();
   const { userData, setUserData } = useContext(data);
-  const [mangaDetails, setMangaDetails] = useState(null);
-  const [isMangaAdded, setIsMangaAdded] = useState(null);
-  const [charactersDetails, setCharactersDetails] = useState([]);
-  const [relationsDetails, setRelationsDetails] = useState([]);
-  const [isMangaEditorOpen, setIsMangaEditorOpen] = useState(false);
-  const [userProgress, setUserProgress] = useState({
-    status: 'Planning',
-    currentChapter: 0,
-    currentVolume: 0,
+  const [pageData, setPageData] = useState({
+    mangaDetails: null,
+    isMangaAdded: false,
+    characters: [],
+    relations: [],
+    userProgress: {
+      status: 'Planning',
+      currentChapter: 0,
+      currentVolume: 0
+    },
+    loading: false,
+    activeTab: 'about'
   });
+  const [isMangaEditorOpen, setIsMangaEditorOpen] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('about');
-  const [loading, setLoading] = useState(false);
+  // Move useMemo before any conditional returns
+  const sortedCharacters = useMemo(() => {
+    return pageData.characters.sort((a, b) => {
+      const rolePriority = ['Main', 'Supporting', 'Background'];
+      const priorityA = rolePriority.indexOf(a.role);
+      const priorityB = rolePriority.indexOf(b.role);
+      return priorityA - priorityB;
+    });
+  }, [pageData.characters]);
 
-  useEffect(() => {
-    const fetchMangaDetails = async () => {
-      try {
-        // Fetch manga details
-        const mangaResponse = await axiosInstance.get(
-          `/mangas/manga/${id}`
-        );
-        setMangaDetails(mangaResponse.data);
+  const updatePageData = (updates) => {
+    setPageData(prev => ({
+      ...prev,
+      ...updates
+    }));
+  };
 
-        if (userData?._id) {
-          const userResponse = await axiosInstance.get(
-            `/users/${userData._id}/current`
-          );
-          const currentUser = userResponse.data;
+  // Memoize the user's manga status check
+  const updateUserMangaStatus = useCallback(() => {
+    if (userData?._id && pageData.mangaDetails?._id) {
+      const isAdded = userData.mangas?.some(
+        (manga) => manga.mangaId === pageData.mangaDetails._id
+      );
+      const existingMangaIndex = userData.mangas?.findIndex(
+        (manga) => manga.mangaId.toString() === pageData.mangaDetails._id.toString()
+      );
 
-          setUserData(currentUser);
-
-          const mangaAdded = currentUser?.mangas?.some(
-            (manga) => manga.mangaId === id
-          );
-          setIsMangaAdded(mangaAdded);
-
-          const existingMangaIndex = currentUser?.mangas?.findIndex(
-            (manga) => manga.mangaId.toString() === id.toString()
-          );
-
-          setMangaDetails(mangaResponse.data);
-
-          if (currentUser && existingMangaIndex !== -1) {
-            setUserProgress({
-              status:
-                currentUser.mangas[existingMangaIndex].status,
-              currentChapter:
-                currentUser.mangas[existingMangaIndex].currentChapter,
-              currentVolume:
-                currentUser.mangas[existingMangaIndex].currentVolume,
-            });
+      updatePageData({
+        isMangaAdded: isAdded,
+        ...(existingMangaIndex !== -1 && {
+          userProgress: {
+            status: userData.mangas[existingMangaIndex].status,
+            currentChapter: userData.mangas[existingMangaIndex].currentChapter,
+            currentVolume: userData.mangas[existingMangaIndex].currentVolume,
           }
+        })
+      });
+    }
+  }, [userData?._id, pageData.mangaDetails?._id, userData?.mangas]);
+
+  // Fetch initial data only when component mounts or ID changes
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [mangaResponse, userResponse] = await Promise.all([
+          axiosInstance.get(`/mangas/manga/${id}`),
+          userData?._id ? axiosInstance.get(`/users/${userData._id}/current`) : null
+        ]);
+        
+        updatePageData({
+          mangaDetails: mangaResponse.data
+        });
+
+        if (userResponse) {
+          setUserData(userResponse.data);
         }
       } catch (error) {
-        console.error('Error fetching manga details:', error);
+        console.error('Error fetching initial data:', error);
       }
     };
 
-    fetchMangaDetails();
-  }, [id, userData, setUserData]);
+    fetchInitialData();
+  }, [id]); // Only depend on id changes
+
+  // Separate effect for user status updates
+  useEffect(() => {
+    updateUserMangaStatus();
+  }, [updateUserMangaStatus]);
 
   const fetchCharacterDetails = async () => {
-    setLoading(true);
-    setCharactersDetails([]); // Clear previous characters
+    updatePageData({ loading: true });
+    updatePageData({ characters: [] }); // Clear previous characters
 
     try {
       await Promise.all(
-        (mangaDetails?.characters || []).map(async (character) => {
+        (pageData.mangaDetails?.characters || []).map(async (character) => {
           try {
             const response = await axiosInstance.get(
               `/characters/character/${character.characterId}`,
             );
 
             // Immediately update state with the new character
-            setCharactersDetails(prev => {
-              // Check if character already exists to prevent duplicates
-              const existingCharacter = prev.find(
-                c => c.characterDetails._id === response.data._id
-              );
-
-              if (!existingCharacter) {
-                const newCharacter = {
-                  ...character,
-                  characterDetails: response.data,
-                };
-
-                // Sort the characters as they are added
-                const updatedCharacters = [...prev, newCharacter]
-                  .sort((a, b) => {
-                    const rolePriority = ['Main', 'Supporting', 'Background'];
-                    const priorityA = rolePriority.indexOf(a.role);
-                    const priorityB = rolePriority.indexOf(b.role);
-
-                    if (priorityA === priorityB) {
-                      // Sort by anilistId as secondary criteria
-                      return (a.characterDetails.anilistId || 0) - (b.characterDetails.anilistId || 0);
-                    }
-
-                    return priorityA - priorityB;
-                  });
-
-                return updatedCharacters;
-              }
-
-              return prev;
-            });
+            updatePageData(prev => ({
+              characters: [...prev.characters, {
+                ...character,
+                characterDetails: response.data,
+              }]
+            }));
 
             return {
               ...character,
@@ -145,15 +168,15 @@ const MangaDetails = () => {
     } catch (error) {
       console.error('Error fetching characters:', error);
     } finally {
-      setLoading(false);
+      updatePageData({ loading: false });
     }
   };
 
   const fetchRelationDetails = async () => {
-    setLoading(true);
+    updatePageData({ loading: true });
     try {
       const relationsWithDetails = await Promise.all([
-        ...(mangaDetails?.mangaRelations.map(async (relation) => {
+        ...(pageData.mangaDetails?.mangaRelations.map(async (relation) => {
           try {
             const response = await axiosInstance.get(
               `/mangas/manga/${relation.relationId}`,
@@ -172,7 +195,7 @@ const MangaDetails = () => {
             return null;
           }
         }) || []),
-        ...(mangaDetails?.animeRelations.map(async (relation) => {
+        ...(pageData.mangaDetails?.animeRelations.map(async (relation) => {
           try {
             const response = await axiosInstance.get(
               `/animes/anime/${relation.relationId}`,
@@ -193,16 +216,16 @@ const MangaDetails = () => {
         }) || []),
       ]);
 
-      setRelationsDetails(relationsWithDetails);
+      updatePageData({ relations: relationsWithDetails });
     } catch (error) {
       console.error('Error fetching relations:', error);
     } finally {
-      setLoading(false);
+      updatePageData({ loading: false });
     }
   };
 
   const handleTabChange = (tab) => {
-    setActiveTab(tab);
+    updatePageData({ activeTab: tab });
     if (tab === 'characters') {
       fetchCharacterDetails(); // Fetch characters only when the tab is 'characters'
     }
@@ -211,16 +234,7 @@ const MangaDetails = () => {
     }
   };
 
-  useEffect(() => {
-    if (userData?._id && mangaDetails?._id) {
-      const isAdded = userData.mangas?.some(
-        (manga) => manga.mangaId === mangaDetails._id
-      );
-      setIsMangaAdded(isAdded);
-    }
-  }, [userData, mangaDetails]);
-
-  if (!mangaDetails) {
+  if (!pageData.mangaDetails) {
     return <SkeletonDetails/>;
   }
 
@@ -307,7 +321,7 @@ const MangaDetails = () => {
     };
   };
 
-  const { season, year } = determineSeason(mangaDetails.releaseData.startDate);
+  const { season, year } = determineSeason(pageData.mangaDetails.releaseData.startDate);
 
   const parseDescription = (description) => {
     if (!description) return [];
@@ -345,8 +359,8 @@ const MangaDetails = () => {
       <div className={mangaDetailsStyles.mangaHeader}>
         <div className={mangaDetailsStyles.bannerSection}>
           <img
-            src={mangaDetails?.images?.border || mangaDetails?.images?.image || ''}
-            alt={mangaDetails?.titles?.english || 'Manga'}
+            src={pageData.mangaDetails?.images?.border || pageData.mangaDetails?.images?.image || ''}
+            alt={pageData.mangaDetails?.titles?.english || 'Manga'}
             className={mangaDetailsStyles.bannerImage}
           />
           <div className={mangaDetailsStyles.bannerOverlay} />
@@ -355,13 +369,13 @@ const MangaDetails = () => {
         <div className={mangaDetailsStyles.contentWrapper}>
           <div className={mangaDetailsStyles.posterContainer}>
             <img
-              src={mangaDetails.images.image}
-              alt={mangaDetails.titles.english}
+              src={pageData.mangaDetails.images.image}
+              alt={pageData.mangaDetails.titles.english}
             />
             <div className={mangaDetailsStyles.actionButtons}>
               {userData && (userData.role === 'admin' || userData.role === 'user') && (
                 <>
-                  {isMangaAdded ? (
+                  {pageData.isMangaAdded ? (
                       <button onClick={openEditor} className={mangaDetailsStyles.editButton}>
                         Edit Progress
                       </button>
@@ -375,7 +389,7 @@ const MangaDetails = () => {
             </div>
             {userData.role === 'admin' && (
               <Link
-                to={`/manga/${mangaDetails._id}/update`}
+                to={`/manga/${pageData.mangaDetails._id}/update`}
                 className={mangaDetailsStyles.editMangaLink}
               >
                 <button className={mangaDetailsStyles.editMangaButton}>
@@ -387,50 +401,50 @@ const MangaDetails = () => {
 
           <div className={mangaDetailsStyles.mangaInfo}>
             <h1 className={mangaDetailsStyles.mangaTitle}>
-              {seriesTitle(mangaDetails.titles)}
+              {seriesTitle(pageData.mangaDetails.titles)}
             </h1>
 
             <div className={mangaDetailsStyles.quickInfo}>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Status:</span> {mangaDetails?.releaseData?.releaseStatus || 'TBA'}
+                <span>Status:</span> {pageData.mangaDetails?.releaseData?.releaseStatus || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Format:</span> {mangaDetails?.typings?.Format || 'TBA'}
+                <span>Format:</span> {pageData.mangaDetails?.typings?.Format || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Chapters:</span> {mangaDetails?.lengths?.chapters || 'TBA'}
+                <span>Chapters:</span> {pageData.mangaDetails?.lengths?.chapters || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Volumes:</span> {mangaDetails?.lengths?.volumes || 'TBA'}
+                <span>Volumes:</span> {pageData.mangaDetails?.lengths?.volumes || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
                 <span>Season:</span> {season} {year}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
                 <span>Start Date:</span>{' '}
-                {formatDate(mangaDetails?.releaseData?.startDate)}
+                {formatDate(pageData.mangaDetails?.releaseData?.startDate)}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
                 <span>End Date:</span>{' '}
-                {formatDate(mangaDetails?.releaseData?.endDate)}
+                {formatDate(pageData.mangaDetails?.releaseData?.endDate)}
               </div>
             </div>
 
             <div className={mangaDetailsStyles.mangaTabs}>
               <button
-                className={`${mangaDetailsStyles.tabButton} ${activeTab === 'about' ? mangaDetailsStyles.active : ''}`}
-                onClick={() => setActiveTab('about')}
+                className={`${mangaDetailsStyles.tabButton} ${pageData.activeTab === 'about' ? mangaDetailsStyles.active : ''}`}
+                onClick={() => handleTabChange('about')}
               >
                 About
               </button>
               <button
-                className={`${mangaDetailsStyles.tabButton} ${activeTab === 'characters' ? mangaDetailsStyles.active : ''}`}
+                className={`${mangaDetailsStyles.tabButton} ${pageData.activeTab === 'characters' ? mangaDetailsStyles.active : ''}`}
                 onClick={() => handleTabChange('characters')}
               >
                 Characters
               </button>
               <button
-                className={`${mangaDetailsStyles.tabButton} ${activeTab === 'relations' ? mangaDetailsStyles.active : ''}`}
+                className={`${mangaDetailsStyles.tabButton} ${pageData.activeTab === 'relations' ? mangaDetailsStyles.active : ''}`}
                 onClick={() => handleTabChange('relations')}
               >
                 Relations
@@ -441,13 +455,13 @@ const MangaDetails = () => {
       </div>
 
       <div className={mangaDetailsStyles.mangaContent}>
-        {activeTab === 'about' && (
+        {pageData.activeTab === 'about' && (
           <div className={mangaDetailsStyles.aboutContainer}>
             <div className={mangaDetailsStyles.metadataGrid}>
               {/* Metadata items */}
             </div>
             <div className={mangaDetailsStyles.descriptionSection}>
-              {parseDescription(mangaDetails.description).map((paragraph, index) => {
+              {parseDescription(pageData.mangaDetails.description).map((paragraph, index) => {
                 return (
                   <p key={index} className={mangaDetailsStyles.paragraph} dangerouslySetInnerHTML={{ __html: paragraph }} />
                 );
@@ -456,46 +470,31 @@ const MangaDetails = () => {
           </div>
         )}
 
-        {activeTab === 'characters' && (
+        {pageData.activeTab === 'characters' && (
           <div className={mangaDetailsStyles.charactersContainer}>
             <div className={mangaDetailsStyles.charactersGrid}>
-              {loading ? (
+              {pageData.loading ? (
                 <Loader />
               ) : (
-                charactersDetails.map((character) => (
-                  <Link
-                    to={`/characters/${character.characterDetails._id}`}
+                sortedCharacters.map((character) => (
+                  <CharacterCard 
                     key={character.characterDetails._id}
-                    className={mangaDetailsStyles.characterCard}
-                  >
-                    <div className={mangaDetailsStyles.card2}>
-                      <div className={mangaDetailsStyles.characterImageContainer}>
-                        <img
-                          src={character.characterDetails.characterImage}
-                          alt={character.characterDetails.names.givenName}
-                        />
-                        <div className={mangaDetailsStyles.characterRole}>
-                          {character.role}
-                        </div>
-                      </div>
-                      <div className={mangaDetailsStyles.characterInfo}>
-                        <h4>{getFullName(character.characterDetails.names)}</h4>
-                      </div>
-                    </div>
-                  </Link>
+                    character={character} 
+                    getFullName={getFullName}
+                  />
                 ))
               )}
             </div>
           </div>
         )}
 
-        {activeTab === 'relations' && (
+        {pageData.activeTab === 'relations' && (
           <div className={mangaDetailsStyles.relationsContainer}>
             <div className={mangaDetailsStyles.relationsGrid}>
-              {loading ? (
+              {pageData.loading ? (
                 <Loader />
               ) : (
-                relationsDetails.map((relation) => (
+                pageData.relations.map((relation) => (
                   <div
                     key={relation.relationDetails._id}
                     onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
@@ -524,14 +523,14 @@ const MangaDetails = () => {
         )}
       </div>
 
-      {isMangaEditorOpen && userProgress && (
+      {isMangaEditorOpen && pageData.userProgress && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
           <div
             className={modalStyles.characterModal}
             onClick={(e) => e.stopPropagation()}
           >
             <MangaEditor
-              manga={mangaDetails}
+              manga={pageData.mangaDetails}
               userId={userData._id}
               closeModal={handleModalClose}
               onMangaDelete={onMangaDelete}
