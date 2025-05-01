@@ -184,17 +184,36 @@
 
 .imgContainer {
   position: relative;
-  border-radius: 10px;
-  display: block;
-  overflow: hidden;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.imageLoading,
+.imageError {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.imageError {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #ff4444;
 }
 
 .imgContainer img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
 /* Responsive breakpoints */
@@ -621,4 +640,59 @@ img {
   font-size: 18px;
   cursor: pointer;
   z-index: 2;
+}
+
+.characterCard {
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.characterCard:hover {
+  transform: scale(0.98);
+}
+
+.appearances {
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.appearanceSection {
+  margin-bottom: 10px;
+}
+
+.appearanceSection h4 {
+  color: #fff;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.appearanceList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.appearanceItem {
+  font-size: 0.8rem;
+}
+
+.appearanceLink {
+  color: #37FF8B;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.appearanceLink:hover {
+  color: #00ff75;
+  text-shadow: 0 0 10px rgba(55, 255, 139, 0.5);
+}
+
+.role {
+  color: #666;
+  margin-left: 5px;
+  font-size: 0.8rem;
 }

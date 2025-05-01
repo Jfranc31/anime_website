@@ -83,16 +83,46 @@ router.get('/image/:imageId', async (req, res) => {
     const imageUrl = `https://s4.anilist.co/file/anilistcdn/character/large/${imageId}`;
     
     const response = await axios.get(imageUrl, {
-      responseType: 'arraybuffer'
+      responseType: 'arraybuffer',
+      headers: {
+        'Accept': 'image/*',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
     });
 
     // Set appropriate headers
-    res.set('Content-Type', response.headers['content-type']);
+    res.set('Content-Type', response.headers['content-type'] || 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // Send the image data
     res.send(response.data);
   } catch (error) {
     console.error('Error proxying image:', error);
-    res.status(500).json({ message: 'Error loading image' });
+    // Try alternative URL pattern if the first one fails
+    try {
+      const altImageUrl = `https://s4.anilist.co/file/anilistcdn/character/medium/${req.params.imageId}`;
+      const altResponse = await axios.get(altImageUrl, {
+        responseType: 'arraybuffer',
+        headers: {
+          'Accept': 'image/*',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+
+      res.set('Content-Type', altResponse.headers['content-type'] || 'image/jpeg');
+      res.set('Cache-Control', 'public, max-age=31536000');
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Access-Control-Allow-Methods', 'GET');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      
+      res.send(altResponse.data);
+    } catch (altError) {
+      console.error('Error with alternative image URL:', altError);
+      res.status(404).json({ message: 'Image not found' });
+    }
   }
 });
 
