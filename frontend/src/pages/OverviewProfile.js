@@ -9,8 +9,8 @@ import axiosInstance from '../utils/axiosConfig';
 
 const Overview = () => {
   const { userData } = useUser();
-  const { animeList } = useAnimeContext();
-  const { mangaList } = useMangaContext();
+  const { animeList = [] } = useAnimeContext();
+  const { mangaList = [] } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
   const [animeActivities, setAnimeActivities] = useState([]);
@@ -27,32 +27,32 @@ const Overview = () => {
     const setActivities = type === 'anime' ? setAnimeActivities : setMangaActivities;
 
     try {
-    const response = await fetchWithErrorHandling(
+      const response = await fetchWithErrorHandling(
         `/latest-activities/${userData._id}?page=${page}&limit=8&type=${type}`
-    );
-    
-    const sortedActivities = response.activities.sort(
+      );
+      
+      const sortedActivities = response.activities.sort(
         (a, b) => new Date(b.activityTimestamp) - new Date(a.activityTimestamp)
-    );
+      );
 
-    setActivities(prev => 
+      setActivities(prev => 
         append ? [...prev, ...sortedActivities] : sortedActivities
-    );
+      );
     } catch (error) {
-    if (!append) {
+      if (!append) {
         setActivities([]);
-    }
+      }
     }
   }, [userData._id]);
 
   const fetchUserList = useCallback(async () => {
     try {
-    const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-    setUserAnimeList(data.animes);
-    setUserMangaList(data.mangas);
+      const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
+      setUserAnimeList(data.animes || []);
+      setUserMangaList(data.mangas || []);
     } catch (error) {
-    setUserAnimeList([]);
-    setUserMangaList([]);
+      setUserAnimeList([]);
+      setUserMangaList([]);
     }
   }, [userData._id]);
 
@@ -112,7 +112,7 @@ const Overview = () => {
     .slice(0, 4)
     .map(item => ({
       ...item,
-      details: animeList?.find(anime => anime._id === item.animeId)
+      details: animeList.find(anime => anime._id === item.animeId)
     }));
     
   const recentlyUpdatedManga = [...(mangaActivities || [])]
@@ -120,7 +120,7 @@ const Overview = () => {
     .slice(0, 4)
     .map(item => ({
       ...item,
-      details: mangaList?.find(manga => manga._id === item.mangaId)
+      details: mangaList.find(manga => manga._id === item.mangaId)
     }));
 
   if (!userData) {
@@ -135,7 +135,7 @@ const Overview = () => {
             <div className={profileStyles.avatarContainer}>
               <div className={profileStyles.avatar}>
                 <img
-                  src={`http://localhost:8080${userData?.avatar}`}
+                  src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar}`}
                   alt="Profile"
                 />
               </div>
