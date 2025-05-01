@@ -66,13 +66,15 @@ const getAllAnimes = async (req, res) => {
       query['releaseData.startDate.season'] = season;
     }
 
-    const [animes, total] = await Promise.all([
-      AnimeModel.find(query)
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      AnimeModel.countDocuments(query)
-    ]);
+    // First get the total count
+    const total = await AnimeModel.countDocuments(query);
+
+    // Then get the paginated results
+    const animes = await AnimeModel.find(query)
+      .sort({ 'titles.english': 1 }) // Sort by English title
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     res.json({
       animes,

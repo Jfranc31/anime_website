@@ -34,6 +34,12 @@ const Animes = () => {
   const handleModalClose = () => setIsAnimeEditorOpen(false);
   const changeLayout = (layout) => setGridLayout(layout);
 
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
   const fetchAnimes = async () => {
     try {
       setLoading(true);
@@ -73,7 +79,6 @@ const Animes = () => {
   };
 
   useEffect(() => {
-    setCurrentPage(1);
     fetchAnimes();
   }, [
     currentPage,
@@ -85,6 +90,10 @@ const Animes = () => {
     selectedYear,
     selectedSeason
   ]);
+
+  useEffect(() => {
+    fetchUserAnimeStatuses();
+  }, [userData?._id]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -158,59 +167,93 @@ const Animes = () => {
             type="text"
             placeholder="Search animes..."
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={handleSearch}
             className={browseStyles.searchInput}
           />
         </div>
         <div className={browseStyles.filters}>
-          <div className={browseStyles.genreFilters}>
-            <h3>Genres</h3>
-            <div className={browseStyles.filterOptions}>
-              {AVAILABLE_GENRES.map(genre => (
-                <button
-                  key={genre}
-                  className={`${browseStyles.filterOption} ${selectedGenres.includes(genre) ? browseStyles.selected : ''}`}
-                  onClick={() => handleGenreClick(genre)}
-                >
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Genres</h3>
+            <div className={browseStyles.selectedFilters}>
+              {selectedGenres.map(genre => (
+                <div key={genre} className={browseStyles.selectedFilter}>
                   {genre}
-                </button>
+                  <button
+                    className={browseStyles.removeGenreBtn}
+                    onClick={() => handleGenreClick(genre)}
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
             </div>
+            <select
+              className={browseStyles.genreSelect}
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleGenreClick(e.target.value);
+                  e.target.value = ''; // Reset the select
+                }
+              }}
+            >
+              <option value="">Select a genre...</option>
+              {AVAILABLE_GENRES.map(genre => (
+                <option key={genre} value={genre}>{genre}</option>
+              ))}
+            </select>
           </div>
-          <div className={browseStyles.filterGroup}>
-            <h3>Format</h3>
-            <div className={browseStyles.filterOptions}>
-              {ANIME_FORMATS.map(format => (
-                <button
-                  key={format}
-                  className={`${browseStyles.filterOption} ${selectedFormats.includes(format) ? browseStyles.selected : ''}`}
-                  onClick={() => handleFormatClick(format)}
-                >
+
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Format</h3>
+            <div className={browseStyles.selectedFilters}>
+              {selectedFormats.map(format => (
+                <div key={format} className={browseStyles.selectedFilter}>
                   {format}
-                </button>
+                  <button
+                    className={browseStyles.removeGenreBtn}
+                    onClick={() => handleFormatClick(format)}
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
             </div>
+            <select
+              className={browseStyles.filterSelect}
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleFormatClick(e.target.value);
+                  e.target.value = ''; // Reset the select
+                }
+              }}
+            >
+              <option value="">Select a format...</option>
+              {ANIME_FORMATS.map(format => (
+                <option key={format} value={format}>{format}</option>
+              ))}
+            </select>
           </div>
-          <div className={browseStyles.filterGroup}>
-            <h3>Status</h3>
-            <div className={browseStyles.filterOptions}>
+
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Status</h3>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className={browseStyles.filterSelect}
+            >
+              <option value="">All Statuses</option>
               {AIRING_STATUS.map(status => (
-                <button
-                  key={status}
-                  className={`${browseStyles.filterOption} ${selectedStatus === status ? browseStyles.selected : ''}`}
-                  onClick={() => setSelectedStatus(status)}
-                >
-                  {status}
-                </button>
+                <option key={status} value={status}>{status}</option>
               ))}
-            </div>
+            </select>
           </div>
-          <div className={browseStyles.filterGroup}>
-            <h3>Year</h3>
+
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Year</h3>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className={browseStyles.yearSelect}
+              className={browseStyles.filterSelect}
             >
               <option value="">All Years</option>
               {YEARS.map(year => (
@@ -218,12 +261,13 @@ const Animes = () => {
               ))}
             </select>
           </div>
-          <div className={browseStyles.filterGroup}>
-            <h3>Season</h3>
+
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Season</h3>
             <select
               value={selectedSeason}
               onChange={(e) => setSelectedSeason(e.target.value)}
-              className={browseStyles.seasonSelect}
+              className={browseStyles.filterSelect}
             >
               <option value="">All Seasons</option>
               {SEASONS.map(season => (

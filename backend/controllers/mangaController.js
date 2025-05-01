@@ -12,7 +12,7 @@ import { updateMangaFromAnilist, compareMangaData } from "../services/updateServ
 
 /**
  * @function getAllManga
- * @description Get all manga documents from the database.
+ * @description Get all manga documents from the database with optional search and filtering.
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  * @return {Array} - Array of manga documents.
@@ -22,14 +22,53 @@ const getAllManga = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
+    const searchQuery = req.query.search || '';
+    const genres = req.query.genres ? req.query.genres.split(',') : [];
+    const formats = req.query.formats ? req.query.formats.split(',') : [];
+    const status = req.query.status || '';
+    const year = req.query.year || '';
 
-    const [mangas, total] = await Promise.all([
-      MangaModel.find({})
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      MangaModel.countDocuments({})
-    ]);
+    // Build the query object
+    const query = {};
+
+    // Add search query if provided
+    if (searchQuery) {
+      query.$or = [
+        { 'titles.english': { $regex: searchQuery, $options: 'i' } },
+        { 'titles.romaji': { $regex: searchQuery, $options: 'i' } },
+        { 'titles.native': { $regex: searchQuery, $options: 'i' } }
+      ];
+    }
+
+    // Add genre filter if provided
+    if (genres.length > 0) {
+      query.genres = { $all: genres };
+    }
+
+    // Add format filter if provided
+    if (formats.length > 0) {
+      query['typings.Format'] = { $in: formats };
+    }
+
+    // Add status filter if provided
+    if (status) {
+      query['releaseData.releaseStatus'] = status;
+    }
+
+    // Add year filter if provided
+    if (year) {
+      query['releaseData.startDate.year'] = parseInt(year);
+    }
+
+    // First get the total count
+    const total = await MangaModel.countDocuments(query);
+
+    // Then get the paginated results
+    const mangas = await MangaModel.find(query)
+      .sort({ 'titles.english': 1 }) // Sort by English title
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     res.json({
       mangas,

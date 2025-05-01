@@ -10,7 +10,7 @@ import { fetchCharacterData } from "../services/anilistService.js";
 
 /**
  * @function getAllCharacters
- * @description Get all character documents from the database.
+ * @description Get all character documents from the database with optional search and filtering.
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  * @return {Array} - Array of character documents.
@@ -20,14 +20,47 @@ const getAllCharacters = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
+    const searchQuery = req.query.search || '';
+    const gender = req.query.gender || '';
+    const animeId = req.query.animeId || '';
+    const mangaId = req.query.mangaId || '';
 
-    const [characters, total] = await Promise.all([
-      CharacterModel.find({})
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      CharacterModel.countDocuments({})
-    ]);
+    // Build the query object
+    const query = {};
+
+    // Add search query if provided
+    if (searchQuery) {
+      query.$or = [
+        { 'name.english': { $regex: searchQuery, $options: 'i' } },
+        { 'name.romaji': { $regex: searchQuery, $options: 'i' } },
+        { 'name.native': { $regex: searchQuery, $options: 'i' } }
+      ];
+    }
+
+    // Add gender filter if provided
+    if (gender) {
+      query.gender = gender;
+    }
+
+    // Add anime filter if provided
+    if (animeId) {
+      query['appearances.anime'] = animeId;
+    }
+
+    // Add manga filter if provided
+    if (mangaId) {
+      query['appearances.manga'] = mangaId;
+    }
+
+    // First get the total count
+    const total = await CharacterModel.countDocuments(query);
+
+    // Then get the paginated results
+    const characters = await CharacterModel.find(query)
+      .sort({ 'name.english': 1 }) // Sort by English name
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     res.json({
       characters,
