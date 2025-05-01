@@ -10,6 +10,7 @@ import animeRoutes from "./routes/animeRoutes.js";
 import mangaRoutes from "./routes/mangaRoutes.js";
 import characterRoutes from "./routes/characterRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import featuredRoutes from "./routes/featuredRoutes.js";
 import MangaModel from "./Models/mangaModel.js";
 import AnimeModel from "./Models/animeModel.js";
 import UserModel from "./Models/userModel.js";
@@ -77,6 +78,7 @@ app.use("/animes", animeRoutes);
 app.use("/mangas", mangaRoutes);
 app.use("/characters", characterRoutes);
 app.use("/users", userRoutes);
+app.use("/featured", featuredRoutes);
 
 // Route for searching relations based on a query term and content type
 app.get("/searchrelations", async (req, res) => {

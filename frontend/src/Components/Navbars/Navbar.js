@@ -1,9 +1,7 @@
-import React, { useContext, useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import navbarStyles from '../../styles/components/navbar.module.css';
-import data from '../../Context/ContextApi';
 import { DEFAULT_AVATAR } from '../../constants/assets';
-import Cookies from 'js-cookie';
 import { useUser } from '../../Context/ContextApi';
 
 const Avatar = ({ src, alt }) => {
@@ -13,7 +11,7 @@ const Avatar = ({ src, alt }) => {
   const handleError = () => {
     if (!error) {
       setError(true);
-      setImgSrc('/images/default-avatar.png'); // Use a local fallback image
+      setImgSrc('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2UwZTBlMCIvPjxwYXRoIGQ9Ik0yMCAyMGM0LjQxOCAwIDgtMy41ODIgOC04cy0zLjU4Mi04LTgtOC04IDMuNTgyLTggOCAzLjU4MiA4IDggOHptMCA0Yy01LjUyMyAwLTEwIDQuNDc3LTEwIDEwaDIwYzAtNS41MjMtNC40NzctMTAtMTAtMTB6IiBmaWxsPSIjOTk5Ii8+PC9zdmc+');
     }
   };
 

@@ -78,7 +78,7 @@ const Home = () => {
 
   const fetchUserList = useCallback(async () => {
     try {
-      const data = await fetchWithErrorHandling(`/api/users/${userData._id}/overview`);
+      const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
       setUserAnimeList(data.animes || []);
       setUserMangaList(data.mangas || []);
     } catch (error) {
@@ -101,7 +101,7 @@ const Home = () => {
   const fetchFeaturedContent = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/home/featured`);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/featured`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -111,7 +111,11 @@ const Home = () => {
       }
       const data = await response.json();
       if (data && typeof data === 'object') {
-        setFeaturedContent(data);
+        setFeaturedContent({
+          trendingAnime: data.trendingAnime || [],
+          trendingManga: data.trendingManga || [],
+          recentReleases: data.recentReleases || []
+        });
       } else {
         console.error('Invalid data format received:', data);
         setError('Invalid data format received from server');
