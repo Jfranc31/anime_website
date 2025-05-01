@@ -8,10 +8,12 @@ import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
 import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
 import { useUser } from '../Context/ContextApi';
+import { useTitlePreference } from '../hooks/useTitlePreference';
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
   const { userData, setUserData } = useUser();
+  const { getTitle } = useTitlePreference();
   const [userAnimeStatuses, setUserAnimeStatuses] = useState({});
   const [searchInput, setSearchInput] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -31,20 +33,6 @@ const Animes = () => {
 
   const handleModalClose = () => setIsAnimeEditorOpen(false);
   const changeLayout = (layout) => setGridLayout(layout);
-
-  const animeTitle = (titles) => {
-    if (!titles) return 'Unknown Title';
-    switch (userData?.preferences?.titleLanguage) {
-      case 'english':
-        return titles.english || titles.romaji;
-      case 'romaji':
-        return titles.romaji || titles.english;
-      case 'native':
-        return titles.native;
-      default:
-        return titles.english || titles.romaji || titles.native || 'Unknown Title';
-    }
-  };
 
   const fetchAnimes = async () => {
     try {
@@ -115,7 +103,7 @@ const Animes = () => {
       <li key={anime._id} className={browseStyles.listItem}>
         <AnimeCard
           anime={anime}
-          title={animeTitle(anime.titles)}
+          title={getTitle(anime.titles)}
           userStatus={userAnimeStatuses[anime._id]}
           onEditClick={() => {
             setSelectedAnimeForEdit(anime);

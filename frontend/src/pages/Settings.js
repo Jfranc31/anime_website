@@ -7,11 +7,13 @@ import { fetchWithErrorHandling } from '../utils/apiUtils';
 import { useTheme } from '../Context/ThemeContext';
 import AvatarUpload from '../Context/AvatarUpload';
 import axiosInstance from '../utils/axiosConfig';
+import { useTitlePreference } from '../hooks/useTitlePreference';
 
 const Settings = () => {
   const { userData, refreshUserData } = useUser();
   const { animeList } = useAnimeContext();
   const { mangaList } = useMangaContext();
+  const { titlePreference, setTitlePreference } = useTitlePreference();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
   const [activeTab, setActiveTab] = useState('Profile');
@@ -111,6 +113,11 @@ const Settings = () => {
           'Authorization': `Bearer ${userData._id}`
         }
       });
+
+      // Update local state
+      if (type === 'title') {
+        setTitlePreference(value);
+      }
 
       // Refresh user data
       refreshUserData();
@@ -502,7 +509,7 @@ const Settings = () => {
       <section className={settingsStyles.section}>
         <h2>Titles</h2>
         <select
-          value={userData.title || 'romaji'}
+          value={titlePreference}
           onChange={(e) => handleLanguageChange('title', e.target.value)}
         >
           <option value="romaji">Romaji (Shingeki no Kyojin)</option>
