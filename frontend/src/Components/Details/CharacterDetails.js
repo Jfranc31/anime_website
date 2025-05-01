@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { axiosInstance } from '../../Context/AnimeContext';
+import axiosInstance from '../../utils/axiosConfig';
 import styles from '../../styles/pages/character_details.module.css';
 import { formatDate, formatName } from '../../utils/formatUtils';
 
