@@ -143,7 +143,7 @@ const Animes = () => {
           />
         </div>
         <div className={browseStyles.filters}>
-          <div className={browseStyles.filterGroup}>
+          <div className={browseStyles.genreFilters}>
             <h3>Genres</h3>
             <div className={browseStyles.filterOptions}>
               {AVAILABLE_GENRES.map(genre => (
