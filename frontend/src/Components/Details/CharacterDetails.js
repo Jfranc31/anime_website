@@ -211,7 +211,7 @@ const CharacterDetails = () => {
       <div className={characterDetailsStyles.characterHeader}>
         <div className={characterDetailsStyles.bannerSection}>
           <img
-            src={pageData.characterDetails?.images?.border || pageData.characterDetails?.images?.characterImage || ''}
+            src={pageData.characterDetails?.characterImage || ''}
             alt={getFullName(pageData.characterDetails.names)}
             className={characterDetailsStyles.bannerImage}
           />
@@ -221,7 +221,7 @@ const CharacterDetails = () => {
         <div className={characterDetailsStyles.contentWrapper}>
           <div className={characterDetailsStyles.posterContainer}>
             <img
-              src={pageData.characterDetails.images.characterImage}
+              src={pageData.characterDetails.characterImage}
               alt={getFullName(pageData.characterDetails.names)}
             />
           </div>
