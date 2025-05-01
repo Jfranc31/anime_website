@@ -1,75 +1,63 @@
 .characterDetailsPage {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
   min-height: 100vh;
-  background: var(--container-bg);
-}
-
-.characterHeader {
-  position: relative;
-  height: auto;
-  margin-top: -70px;
-}
-
-.bannerSection {
-  position: relative;
-  height: 400px;
-  overflow: hidden;
-}
-
-.bannerImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.bannerOverlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60%;
-  background: linear-gradient(to bottom, transparent, var(--container-bg));
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 .contentWrapper {
-  position: relative;
-  margin-top: -150px;
-  padding: 0 2rem;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
   display: flex;
   gap: 2rem;
-  z-index: 1;
+  margin-top: 2rem;
 }
 
 .posterContainer {
-  width: 220px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex: 0 0 300px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .posterContainer img {
   width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px var(--card-hover-shadow);
+  height: auto;
+  display: block;
+}
+
+.editButton {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem;
+  background-color: var(--primary-color);
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.editButton:hover {
+  background-color: var(--primary-color-dark);
 }
 
 .characterInfo {
   flex: 1;
-  padding-top: 1rem;
 }
 
 .characterTitle {
-  font-size: 2.5rem;
+  font-size: 2rem;
   margin-bottom: 0.5rem;
-  color: var(--text-primary);
+  color: var(--text-color);
 }
 
 .nativeName {
-  color: var(--text-secondary);
   font-size: 1.2rem;
+  color: var(--secondary-text-color);
   margin-bottom: 2rem;
 }
 
@@ -77,71 +65,122 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  background: var(--border-color);
-  padding: 1rem;
-  border-radius: 8px;
   margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: var(--card-background);
+  border-radius: 8px;
 }
 
 .quickInfoItem {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  color: var(--text-secondary);
 }
 
-.quickInfoItem span {
-  color: var(--text-primary);
-  font-weight: bold;
+.quickInfoItem span:first-child {
+  font-size: 0.9rem;
+  color: var(--secondary-text-color);
 }
 
-.editButton {
-  width: 100%;
-  padding: 0.75rem 0;
-  background: var(--accent-color);
-  color: var(--text-primary);
-  border: none;
+.quickInfoItem span:last-child {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.altNames {
+  margin-bottom: 2rem;
+}
+
+.altNames h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.altNamesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.altName {
+  background-color: var(--card-background);
+  padding: 0.5rem 1rem;
   border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s ease;
-}
-
-.editButton:hover {
-  background: var(--accent-hover);
+  font-size: 0.9rem;
+  color: var(--text-color);
 }
 
 .characterTabs {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   margin-bottom: 2rem;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .tabButton {
-  color: var(--text-secondary);
-  cursor: pointer;
   padding: 0.5rem 1rem;
-  transition: all 0.2s ease;
-  font-size: 1.1rem;
-  background: transparent;
+  background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color 0.2s ease;
 }
 
 .tabButton:hover {
-  color: var(--accent-hover);
+  color: var(--primary-color);
 }
 
 .tabButton.active {
-  color: var(--accent-color);
-  border-bottom: 2px solid var(--accent-color);
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.characterContent {
+  margin-top: 1rem;
+}
+
+.characterDescription {
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+.appearancesContainer {
+  margin-top: 1rem;
+}
+
+.appearanceTabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.appearanceTab {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.appearanceTab:hover {
+  color: var(--primary-color);
+}
+
+.appearanceTab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
 }
 
 .appearancesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .mediaCard {
@@ -150,30 +189,23 @@
 }
 
 .card2 {
-  background: var(--border-color);
-  border-radius: 3px;
+  background-color: var(--card-background);
+  border-radius: 8px;
   overflow: hidden;
-  text-decoration: none;
-  padding: auto;
-  transition: all 0.3s;
-  background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
+  transition: transform 0.2s ease;
 }
 
 .card2:hover {
-  transform: scale(0.98);
-  border-radius: 20px;
+  transform: translateY(-2px);
 }
 
 .mediaImageContainer {
   position: relative;
-  width: 100%;
-  padding-top: 140%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
 }
 
 .mediaImageContainer img {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -181,81 +213,86 @@
 
 .mediaRole {
   position: absolute;
-  bottom: 0;
-  left: 0;
+  top: 0;
   right: 0;
-  padding: 0.5rem;
-  background: var(--overlay-bg);
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
 }
 
 .mediaInfo {
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 .mediaInfo h4 {
-  color: var(--cancel-button-bg);
   margin: 0;
   font-size: 1rem;
-}
-
-.characterContent {
-  background: var(--border-color);
-  border-radius: 12px;
-  padding: 2rem;
-}
-
-.characterDescription {
-  line-height: 1.6;
-  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .spoilerText {
-  background-color: var(--spoiler-bg, #2a2a2a);
-  border: 1px solid var(--spoiler-border, #3a3a3a);
-  color: transparent;
-  cursor: pointer;
-  user-select: none;
-  padding: 2px 8px;
+  background-color: var(--card-background);
+  padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  cursor: pointer;
   transition: all 0.2s ease;
-  font-style: italic;
-  display: inline-block;
-  margin: 0 2px;
-}
-
-.spoilerText.revealed {
-  background-color: var(--border-color);
-  border-color: var(--border-color);
-  color: var(--text-primary);
-  font-style: normal;
 }
 
 .spoilerText:hover {
-  background-color: var(--spoiler-hover-bg, #3a3a3a);
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.spoilerText.revealed {
+  background-color: transparent;
+  cursor: default;
 }
 
 @media (max-width: 768px) {
   .contentWrapper {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
   }
 
   .posterContainer {
-    width: 180px;
+    max-width: 300px;
+    margin: 0 auto;
   }
 
   .characterTitle {
-    font-size: 2rem;
+    text-align: center;
+  }
+
+  .nativeName {
+    text-align: center;
+  }
+
+  .quickInfo {
+    grid-template-columns: 1fr;
   }
 
   .appearancesGrid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+}
 
-  .characterContent {
+@media (max-width: 480px) {
+  .characterDetailsPage {
     padding: 1rem;
+  }
+
+  .posterContainer {
+    width: 200px;
+  }
+
+  .characterTitle {
+    font-size: 1.5rem;
+  }
+
+  .appearancesGrid {
+    grid-template-columns: 1fr;
   }
 }
