@@ -87,7 +87,7 @@ const Characters = () => {
   const fetchCharacters = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/characters?page=${currentPage}&limit=${limit}`);
+      const response = await axiosInstance.get(`/characters/characters?page=${currentPage}&limit=${limit}`);
       const { characters, total, pages } = response.data;
       setCharacters(characters);
       setTotalPages(pages);

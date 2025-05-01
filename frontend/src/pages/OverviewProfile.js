@@ -1,268 +1,230 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import profileStyles from '../styles/pages/Profile.module.css';
+import React, { useState, useEffect, useContext } from 'react';
+import axiosInstance from '../utils/axiosConfig';
+import { useUser } from '../Context/ContextApi';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
-import { fetchWithErrorHandling } from '../utils/apiUtils';
-import { useUser } from '../Context/ContextApi';
-import axiosInstance from '../utils/axiosConfig';
+import { useCharacterContext } from '../Context/CharacterContext';
+import { useNavigate } from 'react-router-dom';
+import styles from '../styles/pages/OverviewProfile.module.css';
+import { FaUser, FaStar, FaBook, FaTv, FaUsers, FaHistory } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
 
-const Overview = () => {
+const OverviewProfile = () => {
   const { userData } = useUser();
-  const { animeList = [] } = useAnimeContext();
-  const { mangaList = [] } = useMangaContext();
-  const [userAnimeList, setUserAnimeList] = useState([]);
-  const [userMangaList, setUserMangaList] = useState([]);
-  const [animeActivities, setAnimeActivities] = useState([]);
-  const [mangaActivities, setMangaActivities] = useState([]);
+  const { animeList } = useAnimeContext();
+  const { mangaList } = useMangaContext();
+  const { characterList } = useCharacterContext();
+  const navigate = useNavigate();
+
   const [overview, setOverview] = useState({
     recentActivity: [],
     topAnime: [],
-    topManga: []
+    topManga: [],
+    stats: {
+      totalAnime: 0,
+      totalManga: 0,
+      totalCharacters: 0,
+      averageAnimeScore: 0,
+      averageMangaScore: 0
+    }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchActivities = useCallback(async (type, page, append = false) => {
-    const setActivities = type === 'anime' ? setAnimeActivities : setMangaActivities;
-
-    try {
-      const response = await fetchWithErrorHandling(
-        `/latest-activities/${userData._id}?page=${page}&limit=8&type=${type}`
-      );
-      
-      const sortedActivities = response.activities.sort(
-        (a, b) => new Date(b.activityTimestamp) - new Date(a.activityTimestamp)
-      );
-
-      setActivities(prev => 
-        append ? [...prev, ...sortedActivities] : sortedActivities
-      );
-    } catch (error) {
-      if (!append) {
-        setActivities([]);
-      }
-    }
-  }, [userData._id]);
-
-  const fetchUserList = useCallback(async () => {
-    try {
-      const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-      setUserAnimeList(data.animes || []);
-      setUserMangaList(data.mangas || []);
-    } catch (error) {
-      setUserAnimeList([]);
-      setUserMangaList([]);
-    }
-  }, [userData._id]);
-
   useEffect(() => {
-    fetchActivities('anime', 1, false);
-    fetchActivities('manga', 1, false);
-    fetchUserList();
-  }, [userData._id, fetchActivities, fetchUserList]);
-  
-  useEffect(() => {
-    if (userData?._id) {
-      fetchOverview();
-    }
-  }, [userData?._id]);
-
-  const fetchOverview = async () => {
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get(`/users/${userData._id}/current`);
-      const userData = response.data;
-      
-      // Calculate overview data from user data
-      const overviewData = {
-        recentActivity: [
-          ...(userData.animes || []).map(anime => ({
-            type: 'anime',
-            id: anime.animeId,
-            status: anime.status,
-            progress: anime.currentEpisode,
-            updatedAt: anime.updatedAt
-          })),
-          ...(userData.mangas || []).map(manga => ({
-            type: 'manga',
-            id: manga.mangaId,
-            status: manga.status,
-            progress: manga.currentChapter,
-            updatedAt: manga.updatedAt
-          }))
-        ].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-         .slice(0, 10),
-        
-        topAnime: (userData.animes || [])
-          .filter(anime => anime.status === 'Completed')
-          .sort((a, b) => (b.score || 0) - (a.score || 0))
-          .slice(0, 5),
-          
-        topManga: (userData.mangas || [])
-          .filter(manga => manga.status === 'Completed')
-          .sort((a, b) => (b.score || 0) - (a.score || 0))
-          .slice(0, 5)
-      };
-      
-      setOverview(overviewData);
-    } catch (err) {
-      setError('Failed to load overview data');
-      console.error('Error:', err);
-    } finally {
+    if (!userData?._id) {
+      setError('User data not available');
       setLoading(false);
+      return;
     }
-  };
-  
-  // Calculate basic stats for the overview
-  const totalAnime = userAnimeList.length || 0;
-  const totalManga = userMangaList.length || 0;
-  
-  const animeStatusCounts = userAnimeList.reduce((acc, item) => {
-    acc[item.status] = (acc[item.status] || 0) + 1;
-    return acc;
-  }, {});
-  
-  const mangaStatusCounts = userMangaList.reduce((acc, item) => {
-    acc[item.status] = (acc[item.status] || 0) + 1;
-    return acc;
-  }, {});
 
-  const getTitle = useCallback((titles) => {
-    const preference = userData?.title || 'english';
-    return titles[preference] || titles.english || titles.romaji || titles.native;
-  }, [userData?.title]);
-  
-  const episodesWatched = userAnimeList.reduce((sum, item) => 
-    sum + (item.currentEpisode || 0), 0);
-  
-  const chaptersRead = userMangaList.reduce((sum, item) => 
-    sum + (item.currentChapter || 0), 0);
-    
-  // Get recently updated items
-  const recentlyUpdatedAnime = [...animeActivities]
-    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
-    .slice(0, 4)
-    .map(item => ({
-      ...item,
-      details: animeList.find(anime => anime._id === item.animeId)
-    }));
-    
-  const recentlyUpdatedManga = [...mangaActivities]
-    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
-    .slice(0, 4)
-    .map(item => ({
-      ...item,
-      details: mangaList.find(manga => manga._id === item.mangaId)
-    }));
+    const fetchOverview = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  if (!userData) {
-    return <div className={profileStyles.noUser}>Please log in to view your profile.</div>;
+        // Fetch user data
+        const userResponse = await axiosInstance.get(`/users/${userData._id}/current`);
+        const user = userResponse.data;
+
+        // Calculate overview data
+        const recentAnimeActivity = user.animeList
+          ?.filter(anime => anime.status === 'completed' || anime.status === 'watching')
+          .map(anime => ({
+            type: 'anime',
+            title: anime.title,
+            status: anime.status,
+            score: anime.score,
+            updatedAt: anime.updatedAt
+          })) || [];
+
+        const recentMangaActivity = user.mangaList
+          ?.filter(manga => manga.status === 'completed' || manga.status === 'reading')
+          .map(manga => ({
+            type: 'manga',
+            title: manga.title,
+            status: manga.status,
+            score: manga.score,
+            updatedAt: manga.updatedAt
+          })) || [];
+
+        const recentActivity = [...recentAnimeActivity, ...recentMangaActivity]
+          .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+          .slice(0, 10);
+
+        const topAnime = user.animeList
+          ?.filter(anime => anime.status === 'completed' && anime.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5) || [];
+
+        const topManga = user.mangaList
+          ?.filter(manga => manga.status === 'completed' && manga.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5) || [];
+
+        const stats = {
+          totalAnime: user.animeList?.length || 0,
+          totalManga: user.mangaList?.length || 0,
+          totalCharacters: characterList?.length || 0,
+          averageAnimeScore: user.animeList?.length 
+            ? user.animeList.reduce((acc, anime) => acc + (anime.score || 0), 0) / user.animeList.length
+            : 0,
+          averageMangaScore: user.mangaList?.length
+            ? user.mangaList.reduce((acc, manga) => acc + (manga.score || 0), 0) / user.mangaList.length
+            : 0
+        };
+
+        setOverview({
+          recentActivity,
+          topAnime,
+          topManga,
+          stats
+        });
+      } catch (err) {
+        console.error('Error fetching overview:', err);
+        setError('Failed to fetch overview data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOverview();
+  }, [userData?._id, characterList]);
+
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.errorContainer}>
+        <p className={styles.errorMessage}>{error}</p>
+      </div>
+    );
   }
 
   return (
-    <div className={profileStyles.profilePage}>
-      <div className={profileStyles.overviewContainer}>
-        <div className={profileStyles.profileHeader}>
-          <div className={profileStyles.userInfo}>
-            <div className={profileStyles.avatarContainer}>
-              <div className={profileStyles.avatar}>
-                <img
-                  src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar}`}
-                  alt="Profile"
-                />
+    <div className={styles.overviewContainer}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={styles.statsSection}
+      >
+        <h2 className={styles.sectionTitle}>Statistics</h2>
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <FaTv className={styles.statIcon} />
+            <h3>Total Anime</h3>
+            <p>{overview.stats.totalAnime}</p>
+          </div>
+          <div className={styles.statCard}>
+            <FaBook className={styles.statIcon} />
+            <h3>Total Manga</h3>
+            <p>{overview.stats.totalManga}</p>
+          </div>
+          <div className={styles.statCard}>
+            <FaUsers className={styles.statIcon} />
+            <h3>Total Characters</h3>
+            <p>{overview.stats.totalCharacters}</p>
+          </div>
+          <div className={styles.statCard}>
+            <FaStar className={styles.statIcon} />
+            <h3>Average Anime Score</h3>
+            <p>{overview.stats.averageAnimeScore.toFixed(2)}</p>
+          </div>
+          <div className={styles.statCard}>
+            <FaStar className={styles.statIcon} />
+            <h3>Average Manga Score</h3>
+            <p>{overview.stats.averageMangaScore.toFixed(2)}</p>
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className={styles.activitySection}
+      >
+        <h2 className={styles.sectionTitle}>Recent Activity</h2>
+        <div className={styles.activityList}>
+          {overview.recentActivity.map((activity, index) => (
+            <div key={index} className={styles.activityItem}>
+              <div className={styles.activityIcon}>
+                {activity.type === 'anime' ? <FaTv /> : <FaBook />}
+              </div>
+              <div className={styles.activityContent}>
+                <h3>{activity.title}</h3>
+                <p>Status: {activity.status}</p>
+                <p>Score: {activity.score || 'N/A'}</p>
+                <p>Updated: {format(new Date(activity.updatedAt), 'MMM d, yyyy')}</p>
               </div>
             </div>
-            <div className={profileStyles.userDetails}>
-              <h1>{userData.username}</h1>
-            </div>
-          </div>
+          ))}
         </div>
-      
-        <div className={profileStyles.statsSummary}>
-          <div className={profileStyles.statCard}>
-            <h3>Anime</h3>
-            <p>Total: {totalAnime}</p>
-            <p>Watching: {animeStatusCounts["Watching"] || 0}</p>
-            <p>Completed: {animeStatusCounts["Completed"] || 0}</p>
-            <p>Planning: {animeStatusCounts["Planning"] || 0}</p>
-            <p>Episodes Watched: {episodesWatched}</p>
-            <Link to="/profile/animeProfile" className={profileStyles.viewMoreLink}>
-              View Anime List
-            </Link>
-          </div>
-          
-          <div className={profileStyles.statCard}>
-            <h3>Manga</h3>
-            <p>Total: {totalManga}</p>
-            <p>Reading: {mangaStatusCounts["Reading"] || 0}</p>
-            <p>Completed: {mangaStatusCounts["Completed"] || 0}</p>
-            <p>Planning: {mangaStatusCounts["Planning"] || 0}</p>
-            <p>Chapters Read: {chaptersRead}</p>
-            <Link to="/profile/mangaProfile" className={profileStyles.viewMoreLink}>
-              View Manga List
-            </Link>
-          </div>
-        </div>
-        
-        <div className={profileStyles.recentActivity}>
-          <h2>Recent Activity</h2>
-          
-          <div className={profileStyles.recentSection}>
-            <h3>Anime</h3>
-            <div className={profileStyles.recentGrid}>
-              {recentlyUpdatedAnime.length > 0 ? (
-                recentlyUpdatedAnime.map(item => (
-                  <div key={item.animeId} className={profileStyles.recentItem}>
-                    <img 
-                      src={item.details?.images?.image || '/placeholder.jpg'} 
-                      alt={item.details?.titles?.english || 'Anime cover'} 
-                      className={profileStyles.recentItemImage}
-                    />
-                    <div className={profileStyles.recentItemInfo}>
-                      <p className={profileStyles.recentItemTitle}>
-                        {getTitle(item.details?.titles) || 'Unknown anime'}
-                      </p>
-                      <p>Progress: {item.currentEpisode} eps</p>
-                      <p>Status: {item.status}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>No recent anime activity</p>
-              )}
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className={styles.topSection}
+      >
+        <h2 className={styles.sectionTitle}>Top Anime</h2>
+        <div className={styles.topList}>
+          {overview.topAnime.map((anime, index) => (
+            <div key={index} className={styles.topItem}>
+              <h3>{anime.title}</h3>
+              <p>Score: {anime.score}</p>
             </div>
-          </div>
-          
-          <div className={profileStyles.recentSection}>
-            <h3>Manga</h3>
-            <div className={profileStyles.recentGrid}>
-              {recentlyUpdatedManga.length > 0 ? (
-                recentlyUpdatedManga.map(item => (
-                  <div key={item.mangaId} className={profileStyles.recentItem}>
-                    <img 
-                      src={item.details?.images?.image || '/placeholder.jpg'} 
-                      alt={item.details?.titles?.english || 'Manga cover'} 
-                      className={profileStyles.recentItemImage}
-                    />
-                    <div className={profileStyles.recentItemInfo}>
-                      <p className={profileStyles.recentItemTitle}>
-                        {getTitle(item.details?.titles) || 'Unknown manga'}
-                      </p>
-                      <p>Progress: {item.currentChapter} ch, {item.currentVolume || 0} vol</p>
-                      <p>Status: {item.status}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>No recent manga activity</p>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
-      </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+        className={styles.topSection}
+      >
+        <h2 className={styles.sectionTitle}>Top Manga</h2>
+        <div className={styles.topList}>
+          {overview.topManga.map((manga, index) => (
+            <div key={index} className={styles.topItem}>
+              <h3>{manga.title}</h3>
+              <p>Score: {manga.score}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 };
 
-export default Overview;
+export default OverviewProfile;
