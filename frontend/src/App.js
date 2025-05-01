@@ -1,7 +1,7 @@
 import './App.css';
 import './index.css';
 import Profile from './pages/Profile';
-import Login from './pages/Login';
+import LoginPage from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Animes from './pages/Animes';
@@ -53,7 +53,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<Register />} />
       <Route path="/animes" element={<Animes />} />
       <Route path="/mangas" element={<Mangas />} />

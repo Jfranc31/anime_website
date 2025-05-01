@@ -4,7 +4,7 @@ import { useUser } from '../Context/ContextApi';
 import axiosInstance from '../utils/axiosConfig';
 import styles from '../styles/pages/Login.module.css';
 
-const Login = () => {
+const LoginPage = () => {
   const navigate = useNavigate();
   const { refreshUserData } = useUser();
   const [formData, setFormData] = useState({
@@ -95,4 +95,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;
