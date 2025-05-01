@@ -153,9 +153,11 @@ const Home = () => {
     return titles[preference] || titles.english || titles.romaji || titles.native;
   }, [userData?.title]);
 
-  const watchingAnime = useMemo(() => 
-    userAnimeList
-      .filter((userAnime) => userAnime.status === 'Watching')
+  const watchingAnime = useMemo(() => {
+    if (!Array.isArray(userAnimeList)) return [];
+    
+    return userAnimeList
+      .filter((userAnime) => userAnime?.status === 'Watching')
       .map((userAnime) => {
         const animeDetails = getAnimeById(userAnime.animeId);
         return {
@@ -172,13 +174,14 @@ const Home = () => {
         const titleB = getTitle(b.animeDetails.titles) || '';
   
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-      }),
-    [userAnimeList, getAnimeById, getTitle]
-  );
+      });
+  }, [userAnimeList, getAnimeById, getTitle]);
 
-  const readingManga = useMemo(() => 
-    userMangaList
-      .filter((userManga) => userManga.status === 'Reading')
+  const readingManga = useMemo(() => {
+    if (!Array.isArray(userMangaList)) return [];
+    
+    return userMangaList
+      .filter((userManga) => userManga?.status === 'Reading')
       .map((userManga) => {
         const mangaDetails = getMangaById(userManga.mangaId);
         return {
@@ -195,9 +198,8 @@ const Home = () => {
         const titleB = getTitle(b.mangaDetails.titles) || '';
   
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-      }),
-    [userMangaList, getMangaById, getTitle]
-  );
+      });
+  }, [userMangaList, getMangaById, getTitle]);
 
   const updateAiringTimes = useCallback(() => {
     const updatedTimes = {};
