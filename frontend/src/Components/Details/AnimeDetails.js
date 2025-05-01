@@ -14,6 +14,32 @@ import axiosInstance from '../../utils/axiosConfig';
 import Loader from '../../constants/Loader.js';
 import SkeletonDetails from './SkeletonDetails';
 
+// First, move CharacterCard outside of AnimeDetails
+const CharacterCard = React.memo(({ character, getFullName }) => {
+  return (
+    <Link
+      to={`/characters/${character.characterDetails._id}`}
+      key={character.characterDetails._id}
+      className={animeDetailsStyles.characterCard}
+    >
+      <div className={animeDetailsStyles.card2}>
+        <div className={animeDetailsStyles.characterImageContainer}>
+          <img
+            src={character.characterDetails.characterImage}
+            alt={character.characterDetails.names.givenName}
+          />
+          <div className={animeDetailsStyles.characterRole}>
+            {character.role}
+          </div>
+        </div>
+        <div className={animeDetailsStyles.characterInfo}>
+          <h4>{getFullName(character.characterDetails.names)}</h4>
+        </div>
+      </div>
+    </Link>
+  );
+});
+
 /**
  * Functional component representing details of an anime.
  * @returns {JSX.Element} - Rendered anime details component.
@@ -392,32 +418,6 @@ const AnimeDetails = () => {
     });
   }, [pageData.characters]);
 
-  // Use React.memo for character cards
-  const CharacterCard = React.memo(({ character }) => {
-    return (
-      <Link
-        to={`/characters/${character.characterDetails._id}`}
-        key={character.characterDetails._id}
-        className={animeDetailsStyles.characterCard}
-      >
-        <div className={animeDetailsStyles.card2}>
-          <div className={animeDetailsStyles.characterImageContainer}>
-            <img
-              src={character.characterDetails.characterImage}
-              alt={character.characterDetails.names.givenName}
-            />
-            <div className={animeDetailsStyles.characterRole}>
-              {character.role}
-            </div>
-          </div>
-          <div className={animeDetailsStyles.characterInfo}>
-            <h4>{getFullName(character.characterDetails.names)}</h4>
-          </div>
-        </div>
-      </Link>
-    );
-  });
-
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
       <div className={animeDetailsStyles.animeHeader}>
@@ -541,7 +541,11 @@ const AnimeDetails = () => {
                 <Loader />
               ) : (
                 sortedCharacters.map((character) => (
-                  <CharacterCard character={character} />
+                  <CharacterCard 
+                    key={character.characterDetails._id}
+                    character={character} 
+                    getFullName={getFullName}
+                  />
                 ))
               )}
             </div>
