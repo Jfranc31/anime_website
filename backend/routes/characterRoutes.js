@@ -12,7 +12,8 @@ import {
   findCharacterInfo,
   createCharacter,
   updateCharacter,
-  createCharacterFromAnilist
+  createCharacterFromAnilist,
+  getBatchCharacters
 } from "../controllers/characterController.js";
 import { fetchCharacterDataById } from "../services/anilistService.js";
 
@@ -71,5 +72,7 @@ router.post("/addcharacter", createCharacter);
 router.put("/character/:id", updateCharacter);
 
 router.post("/create-from-anilist", createCharacterFromAnilist);
+
+router.get("/batch", getBatchCharacters);
 
 export default router;

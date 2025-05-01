@@ -3,7 +3,7 @@
  * Description: React component for rendering details of an anime.
  */
 
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import data from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
@@ -21,137 +21,106 @@ import SkeletonDetails from './SkeletonDetails';
 const AnimeDetails = () => {
   const { id } = useParams();
   const { userData, setUserData } = useContext(data);
-  const [animeDetails, setAnimeDetails] = useState(null);
-  const [isAnimeAdded, setIsAnimeAdded] = useState(null);
-  const [charactersDetails, setCharactersDetails] = useState([]);
-  const [relationsDetails, setRelationsDetails] = useState([]);
-  const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
-  const [userProgress, setUserProgress] = useState({
-    status: 'Planning',
-    currentEpisode: 0,
+  const [pageData, setPageData] = useState({
+    animeDetails: null,
+    isAnimeAdded: false,
+    characters: [],
+    relations: [],
+    userProgress: {
+      status: 'Planning',
+      currentEpisode: 0
+    },
+    loading: false,
+    activeTab: 'about'
   });
+  const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('about');
-  const [loading, setLoading] = useState(false);
+  const updatePageData = (updates) => {
+    setPageData(prev => ({
+      ...prev,
+      ...updates
+    }));
+  };
 
-  useEffect(() => {
-    const fetchAnimeDetails = async () => {
-      try {
-        // Fetch anime details
-        const animeResponse = await axiosInstance.get(
-          `/animes/anime/${id}`
+  const fetchInitialData = async () => {
+    try {
+      const [animeResponse, userResponse] = await Promise.all([
+        axiosInstance.get(`/animes/anime/${id}`),
+        userData?._id ? axiosInstance.get(`/users/${userData._id}/current`) : null
+      ]);
+      
+      updatePageData({
+        animeDetails: animeResponse.data,
+        isAnimeAdded: userResponse ? userResponse.data.animes?.some(
+          (anime) => anime.animeId === id
+        ) : false
+      });
+      if (userResponse) {
+        const currentUser = userResponse.data;
+        setUserData(currentUser);
+        const existingAnimeIndex = currentUser?.animes?.findIndex(
+          (anime) => anime.animeId.toString() === id.toString()
         );
-        setAnimeDetails(animeResponse.data);
 
-        // Only fetch user details if user is logged in
-        if (userData?._id) {
-          const userResponse = await axiosInstance.get(
-            `/users/${userData._id}/current`
-          );
-          const currentUser = userResponse.data;
-
-          setUserData(currentUser);
-
-          const animeAdded = currentUser?.animes?.some(
-            (anime) => anime.animeId === id
-          );
-          setIsAnimeAdded(animeAdded);
-
-          const existingAnimeIndex = currentUser?.animes?.findIndex(
-            (anime) => anime.animeId.toString() === id.toString()
-          );
-
-          setAnimeDetails(animeResponse.data);
-
-          if (currentUser && existingAnimeIndex !== -1) {
-            setUserProgress({
+        if (currentUser && existingAnimeIndex !== -1) {
+          updatePageData({
+            userProgress: {
               status:
                 currentUser.animes[existingAnimeIndex].status,
               currentEpisode:
                 currentUser.animes[existingAnimeIndex].currentEpisode,
-            });
-          }
+            },
+          });
         }
-      } catch (error) {
-        console.error('Error fetching anime details:', error);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+    }
+  };
 
-    fetchAnimeDetails();
+  useEffect(() => {
+    fetchInitialData();
   }, [id, userData, setUserData]);
 
   const fetchCharacterDetails = async () => {
-    setLoading(true);
-    setCharactersDetails([]); // Clear previous characters
-
+    updatePageData({ loading: true });
     try {
-      await Promise.all(
-        (animeDetails?.characters || []).map(async (character) => {
-          try {
-            const response = await axiosInstance.get(
-              `/characters/character/${character.characterId}`,
-            );
-
-            // Immediately update state with the new character
-            setCharactersDetails(prev => {
-              // Check if character already exists to prevent duplicates
-              const existingCharacter = prev.find(
-                c => c.characterDetails._id === response.data._id
-              );
-
-              if (!existingCharacter) {
-                const newCharacter = {
-                  ...character,
-                  characterDetails: response.data,
-                };
-
-                // Sort the characters as they are added
-                const updatedCharacters = [...prev, newCharacter]
-                  .sort((a, b) => {
-                    const rolePriority = ['Main', 'Supporting', 'Background'];
-                    const priorityA = rolePriority.indexOf(a.role);
-                    const priorityB = rolePriority.indexOf(b.role);
-
-                    if (priorityA === priorityB) {
-                      // Sort by anilistId as secondary criteria
-                      return (a.characterDetails.anilistId || 0) - (b.characterDetails.anilistId || 0);
-                    }
-
-                    return priorityA - priorityB;
-                  });
-
-                return updatedCharacters;
-              }
-
-              return prev;
-            });
-
-            return {
-              ...character,
-              characterDetails: response.data,
-            };
-          } catch (error) {
-            console.error(
-              `Error fetching details for character ${character.characterId}:`,
-              error.message
-            );
-            return null;
-          }
-        }) || []
-      );
-
+      const characterIds = (pageData.animeDetails?.characters || [])
+        .map(char => char.characterId)
+        .join(',');
+      
+      const response = await axiosInstance.get('/characters/batch', {
+        params: { ids: characterIds }
+      });
+      
+      const characterMap = response.data.reduce((acc, char) => {
+        acc[char._id] = char;
+        return acc;
+      }, {});
+      
+      const processedCharacters = pageData.animeDetails.characters
+        .map(char => ({
+          ...char,
+          characterDetails: characterMap[char.characterId]
+        }))
+        .sort((a, b) => {
+          const rolePriority = ['Main', 'Supporting', 'Background'];
+          return rolePriority.indexOf(a.role) - rolePriority.indexOf(b.role);
+        });
+      
+      updatePageData({ characters: processedCharacters });
     } catch (error) {
       console.error('Error fetching characters:', error);
     } finally {
-      setLoading(false);
+      updatePageData({ loading: false });
     }
   };
 
   const fetchRelationDetails = async () => {
-    setLoading(true);
+    updatePageData({ loading: true });
     try {
       const relationsWithDetails = await Promise.all([
-        ...(animeDetails?.mangaRelations.map(async (relation) => {
+        ...(pageData.animeDetails?.mangaRelations.map(async (relation) => {
           try {
             const response = await axiosInstance.get(
               `/mangas/manga/${relation.relationId}`,
@@ -170,7 +139,7 @@ const AnimeDetails = () => {
             return null;
           }
         }) || []),
-        ...(animeDetails?.animeRelations.map(async (relation) => {
+        ...(pageData.animeDetails?.animeRelations.map(async (relation) => {
           try {
             const response = await axiosInstance.get(
               `/animes/anime/${relation.relationId}`,
@@ -191,16 +160,16 @@ const AnimeDetails = () => {
         }) || []),
       ]);
 
-      setRelationsDetails(relationsWithDetails);
+      updatePageData({ relations: relationsWithDetails });
     } catch (error) {
       console.error('Error fetching relations:', error);
     } finally {
-      setLoading(false);
+      updatePageData({ loading: false });
     }
   };
 
   const handleTabChange = (tab) => {
-    setActiveTab(tab);
+    updatePageData({ activeTab: tab });
     if (tab === 'characters') {
       fetchCharacterDetails(); // Fetch characters only when the tab is 'characters'
     }
@@ -216,7 +185,7 @@ const AnimeDetails = () => {
     const fetchRelationDetails = async () => {
       try {
         const relationsWithDetails = await Promise.all([
-          ...(animeDetails?.mangaRelations?.map(async (relation) => {
+          ...(pageData.animeDetails?.mangaRelations?.map(async (relation) => {
             if (!relation?.relationId) return null; // Skip if no relationId
             try {
               const response = await axiosInstance.get(
@@ -238,7 +207,7 @@ const AnimeDetails = () => {
               return null;
             }
           }) || []),
-          ...(animeDetails?.animeRelations?.map(async (relation) => {
+          ...(pageData.animeDetails?.animeRelations?.map(async (relation) => {
             if (!relation?.relationId) return null; // Skip if no relationId
             try {
               const response = await axiosInstance.get(
@@ -263,9 +232,7 @@ const AnimeDetails = () => {
         ]);
 
         if (isMounted) {
-          setRelationsDetails(
-            relationsWithDetails.filter((relation) => relation !== null)
-          );
+          updatePageData({ relations: relationsWithDetails.filter((relation) => relation !== null) });
         }
       } catch (error) {
         if (!isMounted || error.name === 'CanceledError') return;
@@ -273,7 +240,7 @@ const AnimeDetails = () => {
       }
     };
 
-    if (animeDetails && (animeDetails.mangaRelations?.length > 0 || animeDetails.animeRelations?.length > 0)) {
+    if (pageData.animeDetails && (pageData.animeDetails.mangaRelations?.length > 0 || pageData.animeDetails.animeRelations?.length > 0)) {
       fetchRelationDetails();
     }
 
@@ -281,18 +248,18 @@ const AnimeDetails = () => {
       isMounted = false;
       controller.abort();
     };
-  }, [animeDetails]);
+  }, [pageData.animeDetails]);
 
   useEffect(() => {
-    if (userData?._id && animeDetails?._id) {
+    if (userData?._id && pageData.animeDetails?._id) {
       const isAdded = userData.animes?.some(
-        (anime) => anime.animeId === animeDetails._id
+        (anime) => anime.animeId === pageData.animeDetails._id
       );
-      setIsAnimeAdded(isAdded);
+      updatePageData({ isAnimeAdded: isAdded });
     }
-  }, [userData, animeDetails]);
+  }, [userData, pageData.animeDetails]);
 
-  if (!animeDetails) {
+  if (!pageData.animeDetails) {
     return <SkeletonDetails/>;
   }
 
@@ -381,7 +348,7 @@ const AnimeDetails = () => {
     };
   };
 
-  const { season, year } = determineSeason(animeDetails.releaseData.startDate);
+  const { season, year } = determineSeason(pageData.animeDetails.releaseData.startDate);
 
   const parseDescription = (description) => {
     if (!description) return [];
@@ -416,13 +383,48 @@ const AnimeDetails = () => {
     // navigate(`/${contentType}/${relationId}`, { replace: true });
   };
 
+  const sortedCharacters = useMemo(() => {
+    return pageData.characters.sort((a, b) => {
+      const rolePriority = ['Main', 'Supporting', 'Background'];
+      const priorityA = rolePriority.indexOf(a.role);
+      const priorityB = rolePriority.indexOf(b.role);
+      return priorityA - priorityB;
+    });
+  }, [pageData.characters]);
+
+  // Use React.memo for character cards
+  const CharacterCard = React.memo(({ character }) => {
+    return (
+      <Link
+        to={`/characters/${character.characterDetails._id}`}
+        key={character.characterDetails._id}
+        className={animeDetailsStyles.characterCard}
+      >
+        <div className={animeDetailsStyles.card2}>
+          <div className={animeDetailsStyles.characterImageContainer}>
+            <img
+              src={character.characterDetails.characterImage}
+              alt={character.characterDetails.names.givenName}
+            />
+            <div className={animeDetailsStyles.characterRole}>
+              {character.role}
+            </div>
+          </div>
+          <div className={animeDetailsStyles.characterInfo}>
+            <h4>{getFullName(character.characterDetails.names)}</h4>
+          </div>
+        </div>
+      </Link>
+    );
+  });
+
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
       <div className={animeDetailsStyles.animeHeader}>
         <div className={animeDetailsStyles.bannerSection}>
           <img
-            src={animeDetails?.images?.border || animeDetails?.images?.image || ''}
-            alt={animeDetails?.titles?.english || 'Anime'}
+            src={pageData.animeDetails?.images?.border || pageData.animeDetails?.images?.image || ''}
+            alt={pageData.animeDetails?.titles?.english || 'Anime'}
             className={animeDetailsStyles.bannerImage}
           />
           <div className={animeDetailsStyles.bannerOverlay} />
@@ -431,13 +433,13 @@ const AnimeDetails = () => {
         <div className={animeDetailsStyles.contentWrapper}>
           <div className={animeDetailsStyles.posterContainer}>
             <img
-              src={animeDetails?.images?.image || ''}
-              alt={animeDetails?.titles?.english || 'Anime'}
+              src={pageData.animeDetails?.images?.image || ''}
+              alt={pageData.animeDetails?.titles?.english || 'Anime'}
             />
             <div className={animeDetailsStyles.actionButtons}>
               {userData && (userData.role === 'admin' || userData.role === 'user') && (
                 <>
-                  {isAnimeAdded ? (
+                  {pageData.isAnimeAdded ? (
                       <button onClick={openEditor} className={animeDetailsStyles.editButton}>
                         Edit Progress
                       </button>
@@ -451,7 +453,7 @@ const AnimeDetails = () => {
             </div>
             {userData.role === 'admin' && (
               <Link
-                to={`/anime/${animeDetails._id}/update`}
+                to={`/anime/${pageData.animeDetails._id}/update`}
                 className={animeDetailsStyles.editAnimeLink}
               >
                 <button className={animeDetailsStyles.editAnimeButton}>
@@ -463,51 +465,51 @@ const AnimeDetails = () => {
 
           <div className={animeDetailsStyles.animeInfo}>
             <h1 className={animeDetailsStyles.animeTitle}>
-              {seriesTitle(animeDetails?.titles)}
+              {seriesTitle(pageData.animeDetails?.titles)}
             </h1>
 
             <div className={animeDetailsStyles.quickInfo}>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Status:</span> {animeDetails?.releaseData?.releaseStatus || 'TBA'}
+                <span>Status:</span> {pageData.animeDetails?.releaseData?.releaseStatus || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Format:</span> {animeDetails?.typings?.Format || 'TBA'}
+                <span>Format:</span> {pageData.animeDetails?.typings?.Format || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Episodes:</span> {animeDetails?.lengths?.Episodes || 'TBA'}
+                <span>Episodes:</span> {pageData.animeDetails?.lengths?.Episodes || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Duration:</span> {animeDetails?.lengths?.EpisodeDuration ? `${animeDetails.lengths.EpisodeDuration} mins` : 'TBA'}
+                <span>Duration:</span> {pageData.animeDetails?.lengths?.EpisodeDuration ? `${pageData.animeDetails.lengths.EpisodeDuration} mins` : 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>Season:</span> {season} {year}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>Start Date:</span>{' '}
-                {formatDate(animeDetails?.releaseData?.startDate)}
+                {formatDate(pageData.animeDetails?.releaseData?.startDate)}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>End Date:</span>{' '}
-                {formatDate(animeDetails?.releaseData?.endDate)}
+                {formatDate(pageData.animeDetails?.releaseData?.endDate)}
               </div>
             </div>
 
             <div className={animeDetailsStyles.animeTabs}>
               <button
-                className={`${animeDetailsStyles.tabButton} ${activeTab === 'about' ? animeDetailsStyles.active : ''}`}
-                onClick={() => setActiveTab('about')}
+                className={`${animeDetailsStyles.tabButton} ${pageData.activeTab === 'about' ? animeDetailsStyles.active : ''}`}
+                onClick={() => handleTabChange('about')}
               >
                 About
               </button>
               <button
-                className={`${animeDetailsStyles.tabButton} ${activeTab === 'characters' ? animeDetailsStyles.active : ''}`}
+                className={`${animeDetailsStyles.tabButton} ${pageData.activeTab === 'characters' ? animeDetailsStyles.active : ''}`}
                 onClick={() => handleTabChange('characters')}
               >
                 Characters
               </button>
               <button
-                className={`${animeDetailsStyles.tabButton} ${activeTab === 'relations' ? animeDetailsStyles.active : ''}`}
-                onClick={() => setActiveTab('relations')}
+                className={`${animeDetailsStyles.tabButton} ${pageData.activeTab === 'relations' ? animeDetailsStyles.active : ''}`}
+                onClick={() => handleTabChange('relations')}
               >
                 Relations
               </button>
@@ -517,13 +519,13 @@ const AnimeDetails = () => {
       </div>
 
       <div className={animeDetailsStyles.animeContent}>
-        {activeTab === 'about' && (
+        {pageData.activeTab === 'about' && (
           <div className={animeDetailsStyles.aboutContainer}>
             <div className={animeDetailsStyles.metadataGrid}>
               {/* Metadata items */}
             </div>
             <div className={animeDetailsStyles.descriptionSection}>
-              {parseDescription(animeDetails.description).map((paragraph, index) => {
+              {parseDescription(pageData.animeDetails.description).map((paragraph, index) => {
                 return (
                   <p key={index} className={animeDetailsStyles.paragraph} dangerouslySetInnerHTML={{ __html: paragraph }} />
                 );
@@ -532,43 +534,24 @@ const AnimeDetails = () => {
           </div>
         )}
 
-        {activeTab === 'characters' && (
+        {pageData.activeTab === 'characters' && (
           <div className={animeDetailsStyles.charactersContainer}>
             <div className={animeDetailsStyles.charactersGrid}>
-              {loading ? (
+              {pageData.loading ? (
                 <Loader />
               ) : (
-                charactersDetails.map((character) => (
-                  <Link
-                    to={`/characters/${character.characterDetails._id}`}
-                    key={character.characterDetails._id}
-                    className={animeDetailsStyles.characterCard}
-                  >
-                    <div className={animeDetailsStyles.card2}>
-                      <div className={animeDetailsStyles.characterImageContainer}>
-                        <img
-                          src={character.characterDetails.characterImage}
-                          alt={character.characterDetails.names.givenName}
-                        />
-                        <div className={animeDetailsStyles.characterRole}>
-                          {character.role}
-                        </div>
-                      </div>
-                      <div className={animeDetailsStyles.characterInfo}>
-                        <h4>{getFullName(character.characterDetails.names)}</h4>
-                      </div>
-                    </div>
-                  </Link>
+                sortedCharacters.map((character) => (
+                  <CharacterCard character={character} />
                 ))
               )}
             </div>
           </div>
         )}
 
-        {activeTab === 'relations' && (
+        {pageData.activeTab === 'relations' && (
           <div className={animeDetailsStyles.relationsContainer}>
             <div className={animeDetailsStyles.relationsGrid}>
-              {relationsDetails.map((relation) => (
+              {pageData.relations.map((relation) => (
                 <div
                   key={relation.relationDetails._id}
                   onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
@@ -596,14 +579,14 @@ const AnimeDetails = () => {
         )}
       </div>
 
-      {isAnimeEditorOpen && userProgress && (
+      {isAnimeEditorOpen && pageData.userProgress && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
           <div
             className={modalStyles.characterModal}
             onClick={(e) => e.stopPropagation()}
           >
             <AnimeEditor
-              anime={animeDetails}
+              anime={pageData.animeDetails}
               userId={userData._id}
               closeModal={handleModalClose}
               onAnimeDelete={onAnimeDelete}

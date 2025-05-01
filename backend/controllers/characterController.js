@@ -332,6 +332,45 @@ const createCharacterFromAnilist = async (req, res) => {
   }
 };
 
+/**
+ * @function getBatchCharacters
+ * @description Get multiple characters by their IDs in a single request
+ * @param {Object} req - Express request object with query parameter containing comma-separated IDs
+ * @param {Object} res - Express response object
+ * @return {Array} - Array of character documents
+ */
+const getBatchCharacters = async (req, res) => {
+  try {
+    const { ids } = req.query;
+    
+    if (!ids) {
+      return res.status(400).json({ message: "No character IDs provided" });
+    }
+
+    // Split the comma-separated IDs and filter out any empty strings
+    const characterIds = ids.split(',').filter(id => id);
+
+    if (characterIds.length === 0) {
+      return res.status(400).json({ message: "Invalid character IDs format" });
+    }
+
+    // Find all characters that match the provided IDs
+    const characters = await CharacterModel.find({
+      _id: { $in: characterIds }
+    });
+
+    // If no characters found, return an empty array
+    if (!characters || characters.length === 0) {
+      return res.json([]);
+    }
+
+    res.json(characters);
+  } catch (error) {
+    console.error("Error fetching batch characters:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export {
   getAllCharacters,
   searchForCharacters,
@@ -340,5 +379,6 @@ export {
   findCharacterInfo,
   createCharacter,
   updateCharacter,
-  createCharacterFromAnilist
+  createCharacterFromAnilist,
+  getBatchCharacters
 };
