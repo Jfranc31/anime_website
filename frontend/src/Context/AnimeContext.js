@@ -15,7 +15,7 @@ export const AnimeProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await axiosInstance.get('/animes/animes');
+      const response = await axiosInstance.get('/animes/animes?page=1&limit=20');
       setAnimeList(response.data.animes || []);
     } catch (error) {
       console.error('Error fetching anime list:', error);

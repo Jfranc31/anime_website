@@ -83,7 +83,7 @@ const Mangas = () => {
   const fetchMangas = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/manga?page=${currentPage}&limit=${limit}`);
+      const response = await axiosInstance.get(`/mangas/mangas?page=${currentPage}&limit=${limit}`);
       const { mangas, total, pages } = response.data;
       setMangas(mangas);
       setTotalPages(pages);

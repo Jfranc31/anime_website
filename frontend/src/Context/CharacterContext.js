@@ -15,11 +15,11 @@ export const CharacterProvider = ({ children }) => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await axiosInstance.get('/characters/characters');
-        setCharacterList(response.data);
+        const response = await axiosInstance.get('/characters/characters?page=1&limit=20');
+        setCharacterList(response.data.characters || []);
       } catch (error) {
         console.error('Error fetching character list:', error);
-        setError(error.response?.data?.message || 'Unable to load character list. PLease try again later.');
+        setError(error.response?.data?.message || 'Unable to load character list. Please try again later.');
         setCharacterList([]);
       } finally {
         setIsLoading(false);

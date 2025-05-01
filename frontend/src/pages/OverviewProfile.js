@@ -71,8 +71,41 @@ const Overview = () => {
   const fetchOverview = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/users/${userData._id}/overview`);
-      setOverview(response.data);
+      const response = await axiosInstance.get(`/users/${userData._id}/current`);
+      const userData = response.data;
+      
+      // Calculate overview data from user data
+      const overviewData = {
+        recentActivity: [
+          ...(userData.animes || []).map(anime => ({
+            type: 'anime',
+            id: anime.animeId,
+            status: anime.status,
+            progress: anime.currentEpisode,
+            updatedAt: anime.updatedAt
+          })),
+          ...(userData.mangas || []).map(manga => ({
+            type: 'manga',
+            id: manga.mangaId,
+            status: manga.status,
+            progress: manga.currentChapter,
+            updatedAt: manga.updatedAt
+          }))
+        ].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+         .slice(0, 10),
+        
+        topAnime: (userData.animes || [])
+          .filter(anime => anime.status === 'Completed')
+          .sort((a, b) => (b.score || 0) - (a.score || 0))
+          .slice(0, 5),
+          
+        topManga: (userData.mangas || [])
+          .filter(manga => manga.status === 'Completed')
+          .sort((a, b) => (b.score || 0) - (a.score || 0))
+          .slice(0, 5)
+      };
+      
+      setOverview(overviewData);
     } catch (err) {
       setError('Failed to load overview data');
       console.error('Error:', err);
