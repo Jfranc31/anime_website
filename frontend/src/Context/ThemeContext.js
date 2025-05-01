@@ -1,27 +1,43 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import data from './ContextApi';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useUser } from './ContextApi';
 
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('light');
-  const { userData } = useContext(data) || { userData: null };
+  const { userData } = useUser();
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme || 'light';
+  });
 
   useEffect(() => {
     if (userData?.theme) {
       setTheme(userData.theme);
     }
-  }, [userData]);
+  }, [userData?.theme]);
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
   }, [theme]);
 
+  const value = {
+    theme,
+    setTheme
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
+export default ThemeContext;

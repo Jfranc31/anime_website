@@ -1,11 +1,11 @@
-import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import profileStyles from '../styles/pages/Profile.module.css';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 import AnimeEditor from '../Components/ListEditors/AnimeEditor';
 import UserAnimeCard from '../cards/userAnimeCard';
-import data from '../Context/ContextApi';
+import { useUser } from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 
 const LAYOUTS = {
@@ -21,7 +21,7 @@ const LAYOUTS = {
 
 const AnimeProfile = () => {
     const { animeList } = useAnimeContext();
-    const { userData, setUserData } = useContext(data);
+    const { userData, refreshUserData } = useUser();
     const [statusType, setStatusType] = useState(STATUS_TYPES.WATCHING);
     const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
     const [selectedAnimeForEdit, setSelectedAnimeForEdit] = useState(null);
@@ -51,10 +51,10 @@ const AnimeProfile = () => {
     }, [userData?._id]);
 
     useEffect(() => {
-        if (userData?._id && animeList?.length) {
-          fetchUserList();
+        if (userData?._id) {
+            fetchUserList();
         }
-    }, [userData?._id, animeList, fetchUserList]);
+    }, [userData?._id, fetchUserList]);
     
     const getMediaById = useCallback((mediaId) => (
         animeList?.find((anime) => anime._id === mediaId)
@@ -125,7 +125,7 @@ const AnimeProfile = () => {
 
     const onAnimeDelete = (animeId) => {
         setUserAnimeList(prev => prev.filter(anime => anime.animeId !== animeId));
-        setUserData(prev => {
+        refreshUserData(prev => {
             if (!prev?.animes) return prev;
             return {
             ...prev,
@@ -146,7 +146,7 @@ const AnimeProfile = () => {
         );
         
         // Update userData if needed
-        setUserData(prev => {
+        refreshUserData(prev => {
           if (!prev?.animes) return prev;
           return {
             ...prev,
@@ -264,7 +264,7 @@ const AnimeProfile = () => {
                         closeModal={handleAnimeModalClose}
                         onAnimeDelete={onAnimeDelete}
                         onAnimeUpdate={onAnimeUpdate}
-                        setUserData={setUserData}
+                        setUserData={refreshUserData}
                         />
                     </div>
                     </div>

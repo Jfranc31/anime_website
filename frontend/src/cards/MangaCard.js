@@ -6,12 +6,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import cardsStyles from '../styles/components/cards.module.css';
+import { useUser } from '../Context/ContextApi';
 
 /**
  * Functional component representing a manga card.
  * @param {Object} props - Props passed to the component.
  * @param {Object} props.manga - Manga object containing details like titles, images, etc.
  * @param {Function} props.onTopRightButtonClick - Callback function for top-right button click.
+ * @param {Function} props.onAddToLibrary - Callback function for adding manga to library.
  * @param {Function} props.handleGenreClick - Callback function for genre click.
  * @returns {JSX.Element} - Rendered manga card component.
  */
@@ -19,11 +21,13 @@ function MangaCard({
   manga,
   name,
   onTopRightButtonClick,
+  onAddToLibrary,
   hideTopRightButton = false,
   layout,
   handleGenreClick,
   status
 }) {
+  const { userData } = useUser();
   const [isHovered, setIsHovered] = useState(false);
   const [titleHeight, setTitleHeight] = useState('auto');
   const titleRef = useRef(null);
@@ -220,13 +224,13 @@ function MangaCard({
               </div>
             </div>
           )}
-          {/* Button for top-right action (Edit) */}
-          {isHovered && !hideTopRightButton && (
+          {/* Button for top-right action (Edit or Add to Library) */}
+          {isHovered && !hideTopRightButton && userData && (
             <button
               className={cardsStyles.topRightButton}
-              onClick={() => onTopRightButtonClick(manga)}
+              onClick={() => onTopRightButtonClick ? onTopRightButtonClick(manga) : onAddToLibrary(manga._id)}
             >
-              Edit
+              {onTopRightButtonClick ? 'Edit' : 'Add to Library'}
             </button>
           )}
         </div>

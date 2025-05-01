@@ -5,13 +5,14 @@ import data from '../Context/ContextApi';
 import CharacterCard from '../cards/CharacterCard';
 import SkeletonCard from '../cards/SkeletonCard';
 import browseStyles from '../styles/pages/Browse.module.css';
+import { useUser } from '../Context/ContextApi';
 
 const CHARACTERS_PER_PAGE = 18;
 const DEBOUNCE_DELAY = 300; // ms delay for search debouncing
 
 const Characters = () => {
   const { characterList, setCharacterList } = useCharacterContext();
-  const { userData } = useContext(data);
+  const { userData } = useUser();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -20,6 +21,9 @@ const Characters = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingStates, setLoadingStates] = useState({});
   const [isSearching, setIsSearching] = useState(false);
+  const [characters, setCharacters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const observer = useRef();
   const filteredCharactersRef = useRef([]);
@@ -72,16 +76,23 @@ const Characters = () => {
   // Initial data fetch
   useEffect(() => {
     setIsInitialLoading(true);
-    axiosInstance.get('/characters/characters')
-      .then(response => {
-        setCharacterList(response.data);
-        setIsInitialLoading(false);
-      })
-      .catch(error => {
-        console.error(error);
-        setIsInitialLoading(false);
-      });
-  }, [setCharacterList]);
+    fetchCharacters();
+  }, []);
+
+  const fetchCharacters = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get('/characters');
+      setCharacters(response.data);
+      setCharacterList(response.data);
+    } catch (err) {
+      setError('Failed to load characters');
+      console.error('Error:', err);
+    } finally {
+      setIsInitialLoading(false);
+      setLoading(false);
+    }
+  };
 
   const getFullName = useCallback((names) => {
     const givenName = names.givenName || '';

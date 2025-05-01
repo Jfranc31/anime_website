@@ -1,11 +1,11 @@
-import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import profileStyles from '../styles/pages/Profile.module.css';
 import { useMangaContext } from '../Context/MangaContext';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 import MangaEditor from '../Components/ListEditors/MangaEditor';
 import UserMangaCard from '../cards/userMangaCard';
-import data from '../Context/ContextApi';
+import { useUser } from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 
 const LAYOUTS = {
@@ -21,7 +21,7 @@ const STATUS_TYPES = {
 
 const MangaProfile = () => {
     const { mangaList } = useMangaContext();
-    const { userData, setUserData } = useContext(data);
+    const { userData, refreshUserData } = useUser();
     const [statusType, setStatusType] = useState(STATUS_TYPES.READING);
     const [isMangaEditorOpen, setIsMangaEditorOpen] = useState(false);
     const [selectedMangaForEdit, setSelectedMangaForEdit] = useState(null);
@@ -51,10 +51,10 @@ const MangaProfile = () => {
     }, [userData?._id]);
 
     useEffect(() => {
-        if (userData?._id && mangaList?.length) {
+        if (userData?._id) {
             fetchUserList();
         }
-    }, [userData?._id, mangaList, fetchUserList]);
+    }, [userData?._id, fetchUserList]);
 
     const getMediaById = useCallback((mediaId) => (
         mangaList?.find((manga) => manga._id === mediaId)
@@ -132,7 +132,7 @@ const MangaProfile = () => {
 
     const onMangaDelete = (mangaId) => {
         setUserMangaList(prev => prev.filter(manga => manga.mangaId !== mangaId));
-        setUserData(prev => {
+        refreshUserData(prev => {
           if (!prev?.mangas) return prev;
           return {
             ...prev,
@@ -153,7 +153,7 @@ const MangaProfile = () => {
         );
     
         // Update userData if needed
-        setUserData(prev => {
+        refreshUserData(prev => {
           if(!prev?.mangas) return prev;
           return {
             ...prev,
@@ -268,7 +268,7 @@ const MangaProfile = () => {
                         closeModal={handleMangaModalClose}
                         onMangaDelete={onMangaDelete}
                         onMangaUpdate={onMangaUpdate}
-                        setUserData={setUserData}
+                        setUserData={refreshUserData}
                         />
                     </div>
                     </div>

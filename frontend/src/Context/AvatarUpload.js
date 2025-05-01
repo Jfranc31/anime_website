@@ -1,87 +1,49 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useUser } from './ContextApi';
 import axiosInstance from '../utils/axiosConfig';
-import data from './ContextApi'; // Import your context
-import Cookies from 'js-cookie';
+import styles from '../styles/components/AvatarUpload.module.css';
 import settingsStyle from '../styles/pages/Settings.module.css';
+import Cookies from 'js-cookie';
 
-const AvatarUpload = ({ userId }) => {
+const AvatarUpload = () => {
+  const { userData, refreshUserData } = useUser();
   const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const { userData, setUserData } = useContext(data); // Get the context data and setter
-
-  // Set initial preview if user has an avatar
-  useEffect(() => {
-    if (userData && userData.avatar) {
-      setPreviewUrl(`${axiosInstance.defaults.baseURL}/users/${userId}/avatar?${new Date().getTime()}`);
-    }
-  }, [userData, userId]);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-    
-    // Create a preview URL
     if (selectedFile) {
-      const objectUrl = URL.createObjectURL(selectedFile);
-      setPreviewUrl(objectUrl);
+      setFile(selectedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(selectedFile);
     }
   };
 
-  const handleFileDeselect = () => {
-    setFile(null);
-    // Don't clear the preview if we're showing an existing avatar
-    if (!userData.avatar) {
-      setPreviewUrl(null);
-    }
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-
-    if (!file) {
-      alert('Please select a file before uploading!');
-      return;
-    }
+  const handleUpload = async () => {
+    if (!file || !userData?._id) return;
 
     const formData = new FormData();
     formData.append('avatar', file);
 
     try {
-      const response = await axiosInstance.post(`/users/${userId}/upload-avatar`, formData, {
+      setLoading(true);
+      setError(null);
+      await axiosInstance.post(`/users/${userData._id}/avatar`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.data && response.data.avatar) {
-        alert(response.data.message);
-
-        // Set the avatar URL (adding a timestamp to prevent caching)
-        const avatarUrl = response.data.avatar;
-
-        // Update the user data in context with the new avatar
-        setUserData((prevData) => ({
-          ...prevData,
-          avatar: avatarUrl,
-        }));
-
-        // Update the cookie with the new avatar
-        const userInfo = Cookies.get('userInfo');
-        if (userInfo) {
-          const parsedUserInfo = JSON.parse(userInfo);
-          parsedUserInfo.avatar = avatarUrl;
-          Cookies.set('userInfo', JSON.stringify(parsedUserInfo));
+          'Content-Type': 'multipart/form-data'
         }
-
-        // Update preview with cache-busting
-        setPreviewUrl(`${axiosInstance.defaults.baseURL}${avatarUrl}?${new Date().getTime()}`);
-        setFile(null); // Clear the file input
-      } else {
-        throw new Error('Avatar URL not found in response');
-      }
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      alert('Error uploading avatar');
+      });
+      await refreshUserData();
+    } catch (err) {
+      setError('Failed to upload avatar');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,15 +51,15 @@ const AvatarUpload = ({ userId }) => {
     <div>
       <div className={settingsStyle.container}>
         <div className={settingsStyle.header}>
-          {previewUrl ? (
+          {preview ? (
             <div className={settingsStyle.preview}>
               <img
-                src={previewUrl}
+                src={preview}
                 alt="Selected Avatar"
                 className={settingsStyle.imagePreview}
               />
               {file && (
-                <button onClick={handleFileDeselect} className={settingsStyle.deselectButton}>
+                <button onClick={() => setFile(null)} className={settingsStyle.deselectButton}>
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -126,7 +88,7 @@ const AvatarUpload = ({ userId }) => {
         </div>
         <input id="file" type="file" name="avatar" onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
         {file && <button onClick={handleUpload} className={settingsStyle.uploadButton}>Upload</button>}
-        {previewUrl && !file && (
+        {preview && !file && (
           <div className={settingsStyle.actions}>
             <label htmlFor="file" className={settingsStyle.changeButton}>
               Change Avatar

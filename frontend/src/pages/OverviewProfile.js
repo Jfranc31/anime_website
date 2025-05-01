@@ -1,19 +1,27 @@
-import React, { useContext, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import profileStyles from '../styles/pages/Profile.module.css';
-import data from '../Context/ContextApi';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
+import { useUser } from '../Context/ContextApi';
+import axiosInstance from '../utils/axiosConfig';
 
 const Overview = () => {
-  const { userData } = useContext(data);
+  const { userData } = useUser();
   const { animeList } = useAnimeContext();
   const { mangaList } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
   const [animeActivities, setAnimeActivities] = useState([]);
   const [mangaActivities, setMangaActivities] = useState([]);
+  const [overview, setOverview] = useState({
+    recentActivity: [],
+    topAnime: [],
+    topManga: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchActivities = useCallback(async (type, page, append = false) => {
     const setActivities = type === 'anime' ? setAnimeActivities : setMangaActivities;
@@ -53,6 +61,25 @@ const Overview = () => {
     fetchActivities('manga', 1, false);
     fetchUserList();
   }, [userData._id, fetchActivities, fetchUserList]);
+  
+  useEffect(() => {
+    if (userData?._id) {
+      fetchOverview();
+    }
+  }, [userData?._id]);
+
+  const fetchOverview = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/users/${userData._id}/overview`);
+      setOverview(response.data);
+    } catch (err) {
+      setError('Failed to load overview data');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Calculate basic stats for the overview
   const totalAnime = userAnimeList.length || 0;

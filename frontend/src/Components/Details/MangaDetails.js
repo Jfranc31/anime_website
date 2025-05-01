@@ -3,9 +3,9 @@
  * Description: React component for rendering details of a manga.
  */
 
-import React, { useEffect, useState, useContext, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import data from '../../Context/ContextApi';
+import { useUser } from '../../Context/ContextApi';
 import MangaEditor from '../ListEditors/MangaEditor';
 import mangaDetailsStyles from '../../styles/pages/manga_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
@@ -46,7 +46,7 @@ const CharacterCard = React.memo(({ character, getFullName }) => {
  */
 const MangaDetails = () => {
   const { id } = useParams();
-  const { userData, setUserData } = useContext(data);
+  const { userData, refreshUserData } = useUser();
   const [pageData, setPageData] = useState({
     mangaDetails: null,
     isMangaAdded: false,
@@ -54,8 +54,7 @@ const MangaDetails = () => {
     relations: [],
     userProgress: {
       status: 'Planning',
-      currentChapter: 0,
-      currentVolume: 0
+      currentChapter: 0
     },
     loading: false,
     activeTab: 'about'
@@ -95,7 +94,6 @@ const MangaDetails = () => {
           userProgress: {
             status: userData.mangas[existingMangaIndex].status,
             currentChapter: userData.mangas[existingMangaIndex].currentChapter,
-            currentVolume: userData.mangas[existingMangaIndex].currentVolume,
           }
         })
       });
@@ -106,18 +104,10 @@ const MangaDetails = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [mangaResponse, userResponse] = await Promise.all([
-          axiosInstance.get(`/mangas/manga/${id}`),
-          userData?._id ? axiosInstance.get(`/users/${userData._id}/current`) : null
-        ]);
-        
+        const mangaResponse = await axiosInstance.get(`/mangas/manga/${id}`);
         updatePageData({
           mangaDetails: mangaResponse.data
         });
-
-        if (userResponse) {
-          setUserData(userResponse.data);
-        }
       } catch (error) {
         console.error('Error fetching initial data:', error);
       }
@@ -236,15 +226,8 @@ const MangaDetails = () => {
   }
 
   const onMangaDelete = (mangaId) => {
-    // Implement logic to update the user's anime list after deletion
-    setUserData((prevUserData) => {
-      const updatedUser = { ...prevUserData };
-      const updatedMangas = updatedUser.mangas.filter(
-        (manga) => manga.mangaId !== mangaId
-      );
-      updatedUser.mangas = updatedMangas;
-      return updatedUser;
-    });
+    // Implement logic to update the user's manga list after deletion
+    refreshUserData();
   };
 
   const handleModalClose = () => {
@@ -299,26 +282,6 @@ const MangaDetails = () => {
 
     return `${monthName} ${formattedDay}, ${year || 'TBA'}`;
   };
-
-  const determineSeason = (startDate) => {
-    if (!startDate || !startDate.month)
-      return { season: 'TBA', year: startDate?.year || 'TBA' };
-
-    const month = startDate.month;
-    let season;
-
-    if (month >= 3 && month <= 5) season = 'Spring';
-    else if (month >= 6 && month <= 8) season = 'Summer';
-    else if (month >= 9 && month <= 11) season = 'Fall';
-    else season = 'Winter';
-
-    return {
-      season,
-      year: startDate.year || 'TBA',
-    };
-  };
-
-  const { season, year } = determineSeason(pageData.mangaDetails.releaseData.startDate);
 
   const parseDescription = (description) => {
     if (!description) return [];
@@ -409,13 +372,10 @@ const MangaDetails = () => {
                 <span>Format:</span> {pageData.mangaDetails?.typings?.Format || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Chapters:</span> {pageData.mangaDetails?.lengths?.chapters || 'TBA'}
+                <span>Chapters:</span> {pageData.mangaDetails?.lengths?.Chapters || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Volumes:</span> {pageData.mangaDetails?.lengths?.volumes || 'TBA'}
-              </div>
-              <div className={mangaDetailsStyles.quickInfoItem}>
-                <span>Season:</span> {season} {year}
+                <span>Volumes:</span> {pageData.mangaDetails?.lengths?.Volumes || 'TBA'}
               </div>
               <div className={mangaDetailsStyles.quickInfoItem}>
                 <span>Start Date:</span>{' '}
@@ -531,7 +491,7 @@ const MangaDetails = () => {
               userId={userData._id}
               closeModal={handleModalClose}
               onMangaDelete={onMangaDelete}
-              setUserData={setUserData}
+              setUserData={refreshUserData}
             />
           </div>
         </div>

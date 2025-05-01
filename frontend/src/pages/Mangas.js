@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import { useMangaContext } from '../Context/MangaContext';
 import MangaCard from '../cards/MangaCard';
 import SkeletonCard from '../cards/SkeletonCard';
 import MangaEditor from '../Components/ListEditors/MangaEditor';
-import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
 import { MANGA_FORMATS, AVAILABLE_GENRES, AIRING_STATUS, YEARS } from '../constants/filterOptions';
+import { useUser } from '../Context/ContextApi';
 
 const MANGAS_PER_PAGE = 18;
 
 const Mangas = () => {
   const { mangaList, setMangaList } = useMangaContext();
-  const { userData, setUserData } = useContext(data);
+  const { userData, setUserData, refreshUserData } = useUser();
   const [userMangaStatuses, setUserMangaStatuses] = useState({});
   const [searchInput, setSearchInput] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -28,6 +28,8 @@ const Mangas = () => {
   const [displayedMangas, setDisplayedMangas] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingStates, setLoadingStates] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const observer = useRef();
   const filteredMangasRef = useRef([]);
@@ -75,13 +77,14 @@ const Mangas = () => {
 
   const fetchMangas = useCallback(async () => {
     try {
-      setIsInitialLoading(true);
-      const response = await axiosInstance.get('/mangas/mangas');
+      setLoading(true);
+      const response = await axiosInstance.get('/mangas');
       setMangaList(response.data);
-      setIsInitialLoading(false);
-    } catch (error) {
-      console.error('Error fetching manga:', error);
-      setIsInitialLoading(false);
+    } catch (err) {
+      setError('Failed to load mangas');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
     }
   }, [setMangaList]);
 
@@ -291,6 +294,7 @@ const Mangas = () => {
                 hideTopRightButton={!userData || !userData._id}
                 handleGenreClick={handleGenreClick}
                 status={mangaStatus}
+                onAddToLibrary={handleAddToLibrary}
               />
             </div>
           )}
@@ -341,6 +345,18 @@ const Mangas = () => {
       };
     });
     setIsMangaEditorOpen(false);
+  };
+
+  const handleAddToLibrary = async (mangaId) => {
+    if (!userData?._id) return;
+    
+    try {
+      await axiosInstance.post(`/users/${userData._id}/addManga`, { mangaId });
+      refreshUserData();
+    } catch (err) {
+      setError('Failed to add manga to library');
+      console.error('Error:', err);
+    }
   };
 
   return (

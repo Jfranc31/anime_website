@@ -1,9 +1,10 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import navbarStyles from '../../styles/components/navbar.module.css';
 import data from '../../Context/ContextApi';
 import { DEFAULT_AVATAR } from '../../constants/assets';
 import Cookies from 'js-cookie';
+import { useUser } from '../../Context/ContextApi';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -11,9 +12,10 @@ const Navbar = () => {
   const [isBrowseMenuOpen, setBrowseMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const { userData } = useContext(data);
+  const { userData } = useUser();
   const profileRef = useRef(null);
   const browseRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,8 +54,12 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    Cookies.remove('userInfo');
-    window.location.href = '/login';
+    // Clear cookies and localStorage
+    document.cookie = 'userInfo=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    localStorage.removeItem('userPreferences');
+    
+    // Navigate to login page
+    navigate('/login');
   };
 
   const handleBrowseMouseEnter = () => {

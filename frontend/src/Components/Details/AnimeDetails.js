@@ -3,9 +3,9 @@
  * Description: React component for rendering details of an anime.
  */
 
-import React, { useEffect, useState, useContext, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import data from '../../Context/ContextApi';
+import { useUser } from '../../Context/ContextApi';
 import AnimeEditor from '../ListEditors/AnimeEditor';
 import animeDetailsStyles from '../../styles/pages/anime_details.module.css';
 import modalStyles from '../../styles/components/Modal.module.css';
@@ -46,7 +46,7 @@ const CharacterCard = React.memo(({ character, getFullName }) => {
  */
 const AnimeDetails = () => {
   const { id } = useParams();
-  const { userData, setUserData } = useContext(data);
+  const { userData, refreshUserData } = useUser();
   const [pageData, setPageData] = useState({
     animeDetails: null,
     isAnimeAdded: false,
@@ -61,7 +61,7 @@ const AnimeDetails = () => {
   });
   const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
 
-  // Move useMemo before conditional returns
+  // Move useMemo before any conditional returns
   const sortedCharacters = useMemo(() => {
     return pageData.characters.sort((a, b) => {
       const rolePriority = ['Main', 'Supporting', 'Background'];
@@ -70,6 +70,13 @@ const AnimeDetails = () => {
       return priorityA - priorityB;
     });
   }, [pageData.characters]);
+
+  const updatePageData = (updates) => {
+    setPageData(prev => ({
+      ...prev,
+      ...updates
+    }));
+  };
 
   // Memoize the user's anime status check
   const updateUserAnimeStatus = useCallback(() => {
@@ -97,18 +104,10 @@ const AnimeDetails = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [animeResponse, userResponse] = await Promise.all([
-          axiosInstance.get(`/animes/anime/${id}`),
-          userData?._id ? axiosInstance.get(`/users/${userData._id}/current`) : null
-        ]);
-        
+        const animeResponse = await axiosInstance.get(`/animes/anime/${id}`);
         updatePageData({
           animeDetails: animeResponse.data
         });
-
-        if (userResponse) {
-          setUserData(userResponse.data);
-        }
       } catch (error) {
         console.error('Error fetching initial data:', error);
       }
@@ -121,13 +120,6 @@ const AnimeDetails = () => {
   useEffect(() => {
     updateUserAnimeStatus();
   }, [updateUserAnimeStatus]);
-
-  const updatePageData = (updates) => {
-    setPageData(prev => ({
-      ...prev,
-      ...updates
-    }));
-  };
 
   const fetchCharacterDetails = async () => {
     updatePageData({ loading: true });
@@ -150,15 +142,18 @@ const AnimeDetails = () => {
           ...char,
           characterDetails: characterMap[char.characterId]
         }))
+        .filter(char => char.characterDetails) // Filter out any characters without details
         .sort((a, b) => {
           const rolePriority = ['Main', 'Supporting', 'Background'];
           return rolePriority.indexOf(a.role) - rolePriority.indexOf(b.role);
         });
       
-      updatePageData({ characters: processedCharacters });
+      updatePageData({ 
+        characters: processedCharacters,
+        loading: false 
+      });
     } catch (error) {
       console.error('Error fetching characters:', error);
-    } finally {
       updatePageData({ loading: false });
     }
   };
@@ -167,25 +162,6 @@ const AnimeDetails = () => {
     updatePageData({ loading: true });
     try {
       const relationsWithDetails = await Promise.all([
-        ...(pageData.animeDetails?.mangaRelations.map(async (relation) => {
-          try {
-            const response = await axiosInstance.get(
-              `/mangas/manga/${relation.relationId}`,
-            );
-            return {
-              ...relation,
-              relationDetails: response.data,
-              contentType: 'manga',
-            };
-          } catch (error) {
-            if (error.name === 'CanceledError') return null;
-            console.error(
-              `Error fetching manga relation ${relation.relationId}`,
-              error.message
-            );
-            return null;
-          }
-        }) || []),
         ...(pageData.animeDetails?.animeRelations.map(async (relation) => {
           try {
             const response = await axiosInstance.get(
@@ -205,6 +181,25 @@ const AnimeDetails = () => {
             return null;
           }
         }) || []),
+        ...(pageData.animeDetails?.mangaRelations.map(async (relation) => {
+          try {
+            const response = await axiosInstance.get(
+              `/mangas/manga/${relation.relationId}`,
+            );
+            return {
+              ...relation,
+              relationDetails: response.data,
+              contentType: 'manga',
+            };
+          } catch (error) {
+            if (error.name === 'CanceledError') return null; // Silently handle canceled requests
+            console.error(
+              `Error fetching manga relation ${relation.relationId}:`,
+              error.message
+            );
+            return null;
+          }
+        }) || []),
       ]);
 
       updatePageData({ relations: relationsWithDetails });
@@ -217,85 +212,14 @@ const AnimeDetails = () => {
 
   const handleTabChange = (tab) => {
     updatePageData({ activeTab: tab });
-    if (tab === 'characters') {
-      fetchCharacterDetails(); // Fetch characters only when the tab is 'characters'
+    if (tab === 'characters' && pageData.characters.length === 0) {
+      // Only fetch if we haven't loaded characters yet
+      fetchCharacterDetails();
     }
-    if (tab === 'relations') {
+    if (tab === 'relations' && pageData.relations.length === 0) {
       fetchRelationDetails();
     }
   };
-
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-
-    const fetchRelationDetails = async () => {
-      try {
-        const relationsWithDetails = await Promise.all([
-          ...(pageData.animeDetails?.mangaRelations?.map(async (relation) => {
-            if (!relation?.relationId) return null; // Skip if no relationId
-            try {
-              const response = await axiosInstance.get(
-                `/mangas/manga/${relation.relationId}`,
-                { signal: controller.signal }
-              );
-              if (!isMounted) return null;
-              return {
-                ...relation,
-                relationDetails: response.data,
-                contentType: 'manga',
-              };
-            } catch (error) {
-              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
-              console.error(
-                `Error fetching manga relation ${relation.relationId}:`,
-                error.message
-              );
-              return null;
-            }
-          }) || []),
-          ...(pageData.animeDetails?.animeRelations?.map(async (relation) => {
-            if (!relation?.relationId) return null; // Skip if no relationId
-            try {
-              const response = await axiosInstance.get(
-                `/animes/anime/${relation.relationId}`,
-                { signal: controller.signal }
-              );
-              if (!isMounted) return null;
-              return {
-                ...relation,
-                relationDetails: response.data,
-                contentType: 'anime',
-              };
-            } catch (error) {
-              if (error.name === 'CanceledError') return null; // Silently handle canceled requests
-              console.error(
-                `Error fetching anime relation ${relation.relationId}:`,
-                error.message
-              );
-              return null;
-            }
-          }) || []),
-        ]);
-
-        if (isMounted) {
-          updatePageData({ relations: relationsWithDetails.filter((relation) => relation !== null) });
-        }
-      } catch (error) {
-        if (!isMounted || error.name === 'CanceledError') return;
-        console.error('Error fetching relation details:', error.message);
-      }
-    };
-
-    if (pageData.animeDetails && (pageData.animeDetails.mangaRelations?.length > 0 || pageData.animeDetails.animeRelations?.length > 0)) {
-      fetchRelationDetails();
-    }
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [pageData.animeDetails]);
 
   if (!pageData.animeDetails) {
     return <SkeletonDetails/>;
@@ -303,14 +227,7 @@ const AnimeDetails = () => {
 
   const onAnimeDelete = (animeId) => {
     // Implement logic to update the user's anime list after deletion
-    setUserData((prevUserData) => {
-      const updatedUser = { ...prevUserData };
-      const updatedAnimes = updatedUser.animes.filter(
-        (anime) => anime.animeId !== animeId
-      );
-      updatedUser.animes = updatedAnimes;
-      return updatedUser;
-    });
+    refreshUserData();
   };
 
   const handleModalClose = () => {
@@ -352,13 +269,11 @@ const AnimeDetails = () => {
     }
   };
 
-  // Add this helper function to format the date
   const formatDate = (dateObj) => {
     if (!dateObj) return 'TBA';
     const { year, month, day } = dateObj;
     if (!year && !month && !day) return 'TBA';
 
-    // If we have a month, subtract 1 as array is 0-based
     const monthName = month ? MONTHS[month - 1] : '';
     const formattedDay = day ? day : '';
 
@@ -417,8 +332,6 @@ const AnimeDetails = () => {
   const handleRelationClick = (contentType, relationId) => {
     // Force a full navigation to the new page
     window.location.href = `/${contentType}/${relationId}`;
-    // Alternative approach using navigate:
-    // navigate(`/${contentType}/${relationId}`, { replace: true });
   };
 
   return (
@@ -436,8 +349,8 @@ const AnimeDetails = () => {
         <div className={animeDetailsStyles.contentWrapper}>
           <div className={animeDetailsStyles.posterContainer}>
             <img
-              src={pageData.animeDetails?.images?.image || ''}
-              alt={pageData.animeDetails?.titles?.english || 'Anime'}
+              src={pageData.animeDetails.images.image}
+              alt={pageData.animeDetails.titles.english}
             />
             <div className={animeDetailsStyles.actionButtons}>
               {userData && (userData.role === 'admin' || userData.role === 'user') && (
@@ -468,7 +381,7 @@ const AnimeDetails = () => {
 
           <div className={animeDetailsStyles.animeInfo}>
             <h1 className={animeDetailsStyles.animeTitle}>
-              {seriesTitle(pageData.animeDetails?.titles)}
+              {seriesTitle(pageData.animeDetails.titles)}
             </h1>
 
             <div className={animeDetailsStyles.quickInfo}>
@@ -482,7 +395,7 @@ const AnimeDetails = () => {
                 <span>Episodes:</span> {pageData.animeDetails?.lengths?.Episodes || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
-                <span>Duration:</span> {pageData.animeDetails?.lengths?.EpisodeDuration ? `${pageData.animeDetails.lengths.EpisodeDuration} mins` : 'TBA'}
+                <span>Duration:</span> {pageData.animeDetails?.lengths?.Duration || 'TBA'}
               </div>
               <div className={animeDetailsStyles.quickInfoItem}>
                 <span>Season:</span> {season} {year}
@@ -558,29 +471,33 @@ const AnimeDetails = () => {
         {pageData.activeTab === 'relations' && (
           <div className={animeDetailsStyles.relationsContainer}>
             <div className={animeDetailsStyles.relationsGrid}>
-              {pageData.relations.map((relation) => (
-                <div
-                  key={relation.relationDetails._id}
-                  onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
-                  className={animeDetailsStyles.relationCard}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={animeDetailsStyles.card2}>
-                    <div className={animeDetailsStyles.relationImageContainer}>
-                      <img
-                        src={relation.relationDetails.images.image}
-                        alt={relation.relationDetails.titles.english}
-                      />
-                      <div className={animeDetailsStyles.relationType}>
-                        {relation.typeofRelation}
+              {pageData.loading ? (
+                <Loader />
+              ) : (
+                pageData.relations.map((relation) => (
+                  <div
+                    key={relation.relationDetails._id}
+                    onClick={() => handleRelationClick(relation.contentType, relation.relationDetails._id)}
+                    className={animeDetailsStyles.relationCard}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className={animeDetailsStyles.card2}>
+                      <div className={animeDetailsStyles.relationImageContainer}>
+                        <img
+                          src={relation.relationDetails.images.image}
+                          alt={relation.relationDetails.titles.english}
+                        />
+                        <div className={animeDetailsStyles.relationType}>
+                          {relation.typeofRelation}
+                        </div>
+                      </div>
+                      <div className={animeDetailsStyles.relationInfo}>
+                        <h4>{seriesTitle(relation.relationDetails.titles)}</h4>
                       </div>
                     </div>
-                    <div className={animeDetailsStyles.relationInfo}>
-                      <h4>{seriesTitle(relation.relationDetails.titles)}</h4>
-                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}
@@ -597,11 +514,11 @@ const AnimeDetails = () => {
               userId={userData._id}
               closeModal={handleModalClose}
               onAnimeDelete={onAnimeDelete}
-              setUserData={setUserData}
+              setUserData={refreshUserData}
             />
           </div>
         </div>
-)}
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
-import React, { useContext, useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import settingsStyles from '../styles/pages/Settings.module.css';
-import data from '../Context/ContextApi';
+import { useUser } from '../Context/ContextApi';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
@@ -9,7 +9,7 @@ import AvatarUpload from '../Context/AvatarUpload';
 import axiosInstance from '../utils/axiosConfig';
 
 const Settings = () => {
-  const { userData, setUserData } = useContext(data);
+  const { userData, refreshUserData } = useUser();
   const { animeList } = useAnimeContext();
   const { mangaList } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
@@ -89,10 +89,8 @@ const Settings = () => {
       // Update theme in localStorage
       updateUserPreferences('theme', newTheme);
 
-      // Update theme in userData context if needed
-      if (userData.theme !== newTheme) {
-        setUserData({...userData, theme: newTheme});
-      }
+      // Refresh user data
+      refreshUserData();
 
     } catch (error) {
       console.error('Error updating theme:', error);
@@ -114,12 +112,8 @@ const Settings = () => {
         }
       });
 
-      // Update userData context
-      const updatedUserData = { ...userData, [type]: value };
-      setUserData(updatedUserData);
-
-      // Update the setting in localStorage
-      updateUserPreferences(type, value);
+      // Refresh user data
+      refreshUserData();
 
     } catch (error) {
       console.error(`Error updating ${type} setting:`, error);
@@ -163,7 +157,7 @@ const Settings = () => {
             });
 
             if (response.data.success) {
-              setUserData({...userData, anilist: response.data.user.anilist});
+              refreshUserData({...userData, anilist: response.data.user.anilist});
               popup.close();
             }
           } catch (error) {
@@ -190,7 +184,7 @@ const Settings = () => {
       });
       
       if (response.data.success) {
-        setUserData({...userData, anilist: response.data.user.anilist});
+        refreshUserData({...userData, anilist: response.data.user.anilist});
       }
     } catch (error) {
       console.error('Error disconnecting from AniList:', error);
@@ -301,7 +295,7 @@ const Settings = () => {
 
       if (response.data.success) {
         alert('Successfully deleted all entries from your lists');
-        setUserData({
+        refreshUserData({
           ...userData,
           animeList: [],
           mangaList: []

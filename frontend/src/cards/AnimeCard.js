@@ -6,12 +6,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import cardsStyles from '../styles/components/cards.module.css';
+import { useUser } from '../Context/ContextApi';
 
 /**
  * Functional component representing an anime card.
  * @param {Object} props - Props passed to the component.
  * @param {Object} props.anime - Anime object containing details like titles, images, etc.
  * @param {Function} props.onTopRightButtonClick - Callback function for top-right button click.
+ * @param {Function} props.onAddToLibrary - Callback function for adding anime to library.
  * @param {Function} props.handleGenreClick - Callback function for genre click.
  * @returns {JSX.Element} - Rendered anime card component.
  */
@@ -19,11 +21,13 @@ function AnimeCard({
   anime,
   name,
   onTopRightButtonClick,
+  onAddToLibrary,
   hideTopRightButton = false,
   layout,
   handleGenreClick,
   status
 }) {
+  const { userData } = useUser();
   // State to track hover state
   const [isHovered, setIsHovered] = useState(false);
   const [titleHeight, setTitleHeight] = useState('auto');
@@ -256,12 +260,12 @@ function AnimeCard({
               </div>
             </div>
           )}
-          {isHovered && !hideTopRightButton && (
+          {isHovered && !hideTopRightButton && userData && (
             <button
               className={cardsStyles.topRightButton}
-              onClick={() => onTopRightButtonClick(anime)}
+              onClick={() => onTopRightButtonClick ? onTopRightButtonClick(anime) : onAddToLibrary(anime._id)}
             >
-              Edit
+              {onTopRightButtonClick ? 'Edit' : 'Add to Library'}
             </button>
           )}
         </div>

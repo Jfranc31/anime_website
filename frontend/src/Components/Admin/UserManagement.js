@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import data from '../../Context/ContextApi';
+import { useUser } from '../../Context/ContextApi';
 import Cookies from 'js-cookie';
 import styles from '../../styles/components/user_management.module.css';
 import axiosInstance from '../../utils/axiosConfig';
@@ -11,7 +11,7 @@ const UserManagement = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const { userData } = useContext(data);
+  const { userData } = useUser();
 
   useEffect(() => {
     fetchUsers();

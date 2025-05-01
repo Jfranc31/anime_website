@@ -111,19 +111,23 @@ const loginUser = async (req, res) => {
  * @description Get information about a specific user.
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
- * @return {Object} - User document.
+ * @return {Object} - User document with only necessary fields.
  */
 const getUserInfo = async (req, res) => {
   try {
     const userID = req.params.userId;
-    const user = await UserModel.findById(userID);
+    const user = await UserModel.findById(userID).select('username email role theme avatar title CharacterName animes mangas');
+    
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Set cache headers
+    res.setHeader('Cache-Control', 'public, max-age=60'); // Cache for 1 minute
     res.json(user);
   } catch (error) {
     console.error("Error fetching user for page: ", error);
-    res.status(500).json({ message: "internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

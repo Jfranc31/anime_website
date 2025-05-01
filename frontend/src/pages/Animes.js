@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
 import AnimeCard from '../cards/AnimeCard';
 import SkeletonCard from '../cards/SkeletonCard';
 import AnimeEditor from '../Components/ListEditors/AnimeEditor';
-import data from '../Context/ContextApi';
 import modalStyles from '../styles/components/Modal.module.css';
 import browseStyles from '../styles/pages/Browse.module.css';
 import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
+import { useUser } from '../Context/ContextApi';
 
 const ANIMES_PER_PAGE = 18;
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
-  const { userData, setUserData } = useContext(data);
+  const { userData, setUserData, refreshUserData } = useUser();
   const [userAnimeStatuses, setUserAnimeStatuses] = useState({});
   const [searchInput, setSearchInput] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -29,6 +29,7 @@ const Animes = () => {
   const [displayedAnimes, setDisplayedAnimes] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingStates, setLoadingStates] = useState({});
+  const [error, setError] = useState(null);
 
   const observer = useRef();
   const filteredAnimesRef = useRef([]);
@@ -306,6 +307,7 @@ const Animes = () => {
                 hideTopRightButton={!userData || !userData._id}
                 handleGenreClick={handleGenreClick}
                 status={animeStatus}
+                onAddToLibrary={handleAddToLibrary}
               />
             </div>
           )}
@@ -356,6 +358,18 @@ const Animes = () => {
       };
     });
     setIsAnimeEditorOpen(false);
+  };
+
+  const handleAddToLibrary = async (animeId) => {
+    if (!userData?._id) return;
+    
+    try {
+      await axiosInstance.post(`/users/${userData._id}/addAnime`, { animeId });
+      refreshUserData();
+    } catch (err) {
+      setError('Failed to add anime to library');
+      console.error('Error:', err);
+    }
   };
 
   return (

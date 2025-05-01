@@ -1,16 +1,23 @@
-import React, { useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import profileStyles from '../styles/pages/Profile.module.css';
-import data from '../Context/ContextApi';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
+import { useUser } from '../Context/ContextApi';
+import axiosInstance from '../utils/axiosConfig';
 
 const Stats = () => {
-  const { userData } = useContext(data);
+  const { userData } = useUser();
   const { animeList } = useAnimeContext();
   const { mangaList } = useMangaContext();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
+  const [stats, setStats] = useState({
+    anime: { watching: 0, completed: 0, planning: 0 },
+    manga: { reading: 0, completed: 0, planning: 0 }
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const fetchUserList = useCallback(async () => {
     try {
@@ -26,6 +33,25 @@ const Stats = () => {
   useEffect(() => {
     fetchUserList();
   }, [userData._id, fetchUserList]);
+  
+  useEffect(() => {
+    if (userData?._id) {
+      fetchStats();
+    }
+  }, [userData?._id]);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/users/${userData._id}/stats`);
+      setStats(response.data);
+    } catch (err) {
+      setError('Failed to load statistics');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Anime stats calculations
   const animeStatusCounts = useMemo(() => {

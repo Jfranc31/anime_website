@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import axiosInstance from './../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
-import data from '../Context/ContextApi';
+import { useUser } from '../Context/ContextApi';
 import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 
 const Home = () => {
   const { animeList } = useAnimeContext();
   const { mangaList } = useMangaContext();
-  const { userData } = useContext(data);
+  const { userData } = useUser();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -26,6 +26,14 @@ const Home = () => {
   const [loadingManga, setLoadingManga] = useState(false);
   const [animeActivities, setAnimeActivities] = useState([]);
   const [mangaActivities, setMangaActivities] = useState([]);
+
+  const [featuredContent, setFeaturedContent] = useState({
+    trendingAnime: [],
+    trendingManga: [],
+    recentReleases: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const calculateTimeUntilAiring = useCallback((airingAt) => {
     const now = Math.floor(Date.now() / 1000);
@@ -88,6 +96,23 @@ const Home = () => {
       fetchActivities('manga', 1, false);
       fetchUserList();
   }, [userData._id, fetchActivities, fetchUserList]);
+
+  useEffect(() => {
+    fetchFeaturedContent();
+  }, []);
+
+  const fetchFeaturedContent = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get('/home/featured');
+      setFeaturedContent(response.data);
+    } catch (err) {
+      setError('Failed to load featured content');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getAnimeById = useCallback((animeId) => {
     return animeList?.find((anime) => anime._id === animeId);

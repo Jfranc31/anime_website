@@ -1,6 +1,6 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import profileStyles from '../styles/pages/Profile.module.css';
-import data from '../Context/ContextApi';
+import { useUser } from '../Context/ContextApi';
 import ProfileNavigation from '../Components/Navbars/ProfileNavbar';
 import '../styles/components/add_navbar.module.css';
 import AnimeProfile from './AnimeProfile';
@@ -10,7 +10,7 @@ import Overview from './OverviewProfile';
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 const Profile = () => {
-  const { userData } = useContext(data);
+  const { userData } = useUser();
 
   if (!userData) {
     return <div className={profileStyles.noUser}>Please log in to view your profile.</div>;
