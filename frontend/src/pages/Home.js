@@ -8,8 +8,8 @@ import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 
 const Home = () => {
-  const { animeList = [] } = useAnimeContext();
-  const { mangaList = [] } = useMangaContext();
+  const animeContext = useAnimeContext();
+  const mangaContext = useMangaContext();
   const { userData } = useUser();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
@@ -129,20 +129,20 @@ const Home = () => {
   };
 
   const getAnimeById = useCallback((animeId) => {
-    if (!animeList) {
-      console.warn('animeList is not available:', animeList);
+    if (!animeContext?.animeList) {
+      console.warn('animeList is not available:', animeContext?.animeList);
       return null;
     }
-    return animeList.find((anime) => anime._id === animeId);
-  }, [animeList]);
+    return animeContext.animeList.find((anime) => anime._id === animeId);
+  }, [animeContext?.animeList]);
 
   const getMangaById = useCallback((mangaId) => {
-    if (!mangaList) {
-      console.warn('mangaList is not available:', mangaList);
+    if (!mangaContext?.mangaList) {
+      console.warn('mangaList is not available:', mangaContext?.mangaList);
       return null;
     }
-    return mangaList.find((manga) => manga._id === mangaId);
-  }, [mangaList]);
+    return mangaContext.mangaList.find((manga) => manga._id === mangaId);
+  }, [mangaContext?.mangaList]);
 
   const getTitle = useCallback((titles) => {
     const preference = userData?.title || 'english';
