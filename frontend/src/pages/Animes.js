@@ -63,6 +63,7 @@ const Animes = () => {
     }
   };
 
+  console.log('User:', user);
   console.log('Animes:', animeList);
   const fetchUserAnimeStatuses = async () => {
     if (!user?._id) return;
