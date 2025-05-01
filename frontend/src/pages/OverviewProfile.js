@@ -6,7 +6,12 @@ import { useMangaContext } from '../Context/MangaContext';
 import { useCharacterContext } from '../Context/CharacterContext';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/pages/OverviewProfile.module.css';
-import { FaUser, FaStar, FaBook, FaTv, FaUsers, FaHistory } from 'react-icons/fa';
+import { FaUser } from 'react-icons/fa';
+import { FaStar } from 'react-icons/fa';
+import { FaBook } from 'react-icons/fa';
+import { FaTv } from 'react-icons/fa';
+import { FaUsers } from 'react-icons/fa';
+import { FaHistory } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
