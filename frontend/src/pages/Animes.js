@@ -37,7 +37,18 @@ const Animes = () => {
   const fetchAnimes = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/animes/animes?page=${currentPage}&limit=${limit}`);
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: limit,
+        ...(searchInput && { search: searchInput }),
+        ...(selectedGenres.length > 0 && { genres: selectedGenres.join(',') }),
+        ...(selectedFormats.length > 0 && { formats: selectedFormats.join(',') }),
+        ...(selectedStatus && { status: selectedStatus }),
+        ...(selectedYear && { year: selectedYear }),
+        ...(selectedSeason && { season: selectedSeason })
+      });
+
+      const response = await axiosInstance.get(`/animes/animes?${params.toString()}`);
       const { animes, total, pages } = response.data;
       setAnimeList(animes);
       setTotalPages(pages);
@@ -62,9 +73,18 @@ const Animes = () => {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchAnimes();
-    fetchUserAnimeStatuses();
-  }, [currentPage, userData?._id]);
+  }, [
+    currentPage,
+    userData?._id,
+    searchInput,
+    selectedGenres,
+    selectedFormats,
+    selectedStatus,
+    selectedYear,
+    selectedSeason
+  ]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
