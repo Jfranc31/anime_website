@@ -24,6 +24,7 @@ const getAllCharacters = async (req, res) => {
     const gender = req.query.gender || '';
     const animeId = req.query.animeId || '';
     const mangaId = req.query.mangaId || '';
+    const birthdayToday = req.query.birthdayToday === 'true';
 
     // Build the query object
     const query = {};
@@ -31,9 +32,11 @@ const getAllCharacters = async (req, res) => {
     // Add search query if provided
     if (searchQuery) {
       query.$or = [
-        { 'name.english': { $regex: searchQuery, $options: 'i' } },
-        { 'name.romaji': { $regex: searchQuery, $options: 'i' } },
-        { 'name.native': { $regex: searchQuery, $options: 'i' } }
+        { 'names.givenName': { $regex: searchQuery, $options: 'i' } },
+        { 'names.middleName': { $regex: searchQuery, $options: 'i' } },
+        { 'names.surName': { $regex: searchQuery, $options: 'i' } },
+        { 'names.nativeName': { $regex: searchQuery, $options: 'i' } },
+        { 'names.alterNames': { $regex: searchQuery, $options: 'i' } }
       ];
     }
 
@@ -44,12 +47,27 @@ const getAllCharacters = async (req, res) => {
 
     // Add anime filter if provided
     if (animeId) {
-      query['appearances.anime'] = animeId;
+      query['animes.animeId'] = animeId;
     }
 
     // Add manga filter if provided
     if (mangaId) {
-      query['appearances.manga'] = mangaId;
+      query['mangas.mangaId'] = mangaId;
+    }
+
+    // Add birthday filter if provided
+    if (birthdayToday) {
+      const today = new Date();
+      const month = today.getMonth() + 1; // JavaScript months are 0-based
+      const day = today.getDate();
+      
+      // Match characters with birthday today (month and day)
+      query.$expr = {
+        $and: [
+          { $eq: [{ $month: '$DOB' }, month] },
+          { $eq: [{ $dayOfMonth: '$DOB' }, day] }
+        ]
+      };
     }
 
     // First get the total count
@@ -57,7 +75,7 @@ const getAllCharacters = async (req, res) => {
 
     // Then get the paginated results
     const characters = await CharacterModel.find(query)
-      .sort({ 'name.english': 1 }) // Sort by English name
+      .sort({ 'names.givenName': 1, 'names.surName': 1 }) // Sort by given name, then surname
       .skip(skip)
       .limit(limit)
       .lean();

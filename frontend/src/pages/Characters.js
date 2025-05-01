@@ -18,6 +18,11 @@ const Characters = () => {
   const [selectedGender, setSelectedGender] = useState('');
   const [selectedAnime, setSelectedAnime] = useState('');
   const [selectedManga, setSelectedManga] = useState('');
+  const [showBirthdayToday, setShowBirthdayToday] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCharacters, setTotalCharacters] = useState(0);
+  const limit = 20;
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [displayedCharacters, setDisplayedCharacters] = useState([]);
@@ -79,19 +84,25 @@ const Characters = () => {
   useEffect(() => {
     setIsInitialLoading(true);
     fetchCharacters();
-  }, []);
+  }, [currentPage, debouncedSearch, selectedGender, selectedAnime, selectedManga, showBirthdayToday]);
 
   const fetchCharacters = async () => {
     try {
       const params = new URLSearchParams({
+        page: currentPage,
+        limit: limit,
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(selectedGender && { gender: selectedGender }),
         ...(selectedAnime && { animeId: selectedAnime }),
-        ...(selectedManga && { mangaId: selectedManga })
+        ...(selectedManga && { mangaId: selectedManga }),
+        ...(showBirthdayToday && { birthdayToday: true })
       });
 
       const response = await axiosInstance.get(`/characters/characters?${params.toString()}`);
-      setCharacters(response.data.characters);
+      const { characters, total, pages } = response.data;
+      setCharacters(characters);
+      setTotalPages(pages);
+      setTotalCharacters(total);
       setError(null);
     } catch (err) {
       console.error('Error fetching characters:', err);
@@ -245,6 +256,12 @@ const Characters = () => {
     return items;
   };
 
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   return (
     <div className={browseStyles.browseContainer}>
       <div className={browseStyles.filterContainer}>
@@ -264,7 +281,10 @@ const Characters = () => {
             <h3 className={browseStyles.filterTitle}>Gender</h3>
             <select
               value={selectedGender}
-              onChange={(e) => setSelectedGender(e.target.value)}
+              onChange={(e) => {
+                setSelectedGender(e.target.value);
+                setCurrentPage(1); // Reset to first page when changing filter
+              }}
               className={browseStyles.filterSelect}
             >
               <option value="">All Genders</option>
@@ -279,7 +299,10 @@ const Characters = () => {
             <h3 className={browseStyles.filterTitle}>Appears in Anime</h3>
             <select
               value={selectedAnime}
-              onChange={(e) => setSelectedAnime(e.target.value)}
+              onChange={(e) => {
+                setSelectedAnime(e.target.value);
+                setCurrentPage(1);
+              }}
               className={browseStyles.filterSelect}
             >
               <option value="">All Anime</option>
@@ -291,12 +314,32 @@ const Characters = () => {
             <h3 className={browseStyles.filterTitle}>Appears in Manga</h3>
             <select
               value={selectedManga}
-              onChange={(e) => setSelectedManga(e.target.value)}
+              onChange={(e) => {
+                setSelectedManga(e.target.value);
+                setCurrentPage(1);
+              }}
               className={browseStyles.filterSelect}
             >
               <option value="">All Manga</option>
               {/* You'll need to fetch and map available manga here */}
             </select>
+          </div>
+
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Birthday</h3>
+            <div className={browseStyles.filterOptions}>
+              <label className={browseStyles.filterOption}>
+                <input
+                  type="checkbox"
+                  checked={showBirthdayToday}
+                  onChange={(e) => {
+                    setShowBirthdayToday(e.target.checked);
+                    setCurrentPage(1);
+                  }}
+                />
+                Show characters with birthday today
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -313,6 +356,24 @@ const Characters = () => {
             </ul>
           </div>
         )}
+      </div>
+
+      <div className={browseStyles.pagination}>
+        <button 
+          onClick={() => handlePageChange(currentPage - 1)} 
+          disabled={currentPage === 1}
+          className={browseStyles.paginationButton}
+        >
+          Previous
+        </button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button 
+          onClick={() => handlePageChange(currentPage + 1)} 
+          disabled={currentPage === totalPages}
+          className={browseStyles.paginationButton}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
