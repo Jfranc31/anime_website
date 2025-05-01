@@ -15,6 +15,9 @@ const Characters = () => {
   const { userData } = useUser();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedGender, setSelectedGender] = useState('');
+  const [selectedAnime, setSelectedAnime] = useState('');
+  const [selectedManga, setSelectedManga] = useState('');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [displayedCharacters, setDisplayedCharacters] = useState([]);
@@ -80,7 +83,14 @@ const Characters = () => {
 
   const fetchCharacters = async () => {
     try {
-      const response = await axiosInstance.get('/characters/characters');
+      const params = new URLSearchParams({
+        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(selectedGender && { gender: selectedGender }),
+        ...(selectedAnime && { animeId: selectedAnime }),
+        ...(selectedManga && { mangaId: selectedManga })
+      });
+
+      const response = await axiosInstance.get(`/characters/characters?${params.toString()}`);
       setCharacters(response.data.characters);
       setError(null);
     } catch (err) {
@@ -248,6 +258,46 @@ const Characters = () => {
             onChange={(e) => setSearchInput(e.target.value)}
             className={browseStyles.searchInput}
           />
+        </div>
+        <div className={browseStyles.filters}>
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Gender</h3>
+            <select
+              value={selectedGender}
+              onChange={(e) => setSelectedGender(e.target.value)}
+              className={browseStyles.filterSelect}
+            >
+              <option value="">All Genders</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Non-binary">Non-binary</option>
+              <option value="Unknown">Unknown</option>
+            </select>
+          </div>
+
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Appears in Anime</h3>
+            <select
+              value={selectedAnime}
+              onChange={(e) => setSelectedAnime(e.target.value)}
+              className={browseStyles.filterSelect}
+            >
+              <option value="">All Anime</option>
+              {/* You'll need to fetch and map available anime here */}
+            </select>
+          </div>
+
+          <div className={browseStyles.filterSection}>
+            <h3 className={browseStyles.filterTitle}>Appears in Manga</h3>
+            <select
+              value={selectedManga}
+              onChange={(e) => setSelectedManga(e.target.value)}
+              className={browseStyles.filterSelect}
+            >
+              <option value="">All Manga</option>
+              {/* You'll need to fetch and map available manga here */}
+            </select>
+          </div>
         </div>
       </div>
 
