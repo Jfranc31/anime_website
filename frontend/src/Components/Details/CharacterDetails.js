@@ -22,7 +22,7 @@ const CharacterDetails = () => {
   useEffect(() => {
     const fetchCharacter = async () => {
       try {
-        const response = await axiosInstance.get(`/characters/characters/${id}`);
+        const response = await axiosInstance.get(`/characters/character/${id}`);
         setCharacter(response.data);
         setLoading(false);
       } catch (err) {
