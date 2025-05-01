@@ -61,6 +61,16 @@ const AnimeDetails = () => {
   });
   const [isAnimeEditorOpen, setIsAnimeEditorOpen] = useState(false);
 
+  // Move useMemo here, before any conditional returns
+  const sortedCharacters = useMemo(() => {
+    return pageData.characters.sort((a, b) => {
+      const rolePriority = ['Main', 'Supporting', 'Background'];
+      const priorityA = rolePriority.indexOf(a.role);
+      const priorityB = rolePriority.indexOf(b.role);
+      return priorityA - priorityB;
+    });
+  }, [pageData.characters]);
+
   const updatePageData = (updates) => {
     setPageData(prev => ({
       ...prev,
@@ -408,15 +418,6 @@ const AnimeDetails = () => {
     // Alternative approach using navigate:
     // navigate(`/${contentType}/${relationId}`, { replace: true });
   };
-
-  const sortedCharacters = useMemo(() => {
-    return pageData.characters.sort((a, b) => {
-      const rolePriority = ['Main', 'Supporting', 'Background'];
-      const priorityA = rolePriority.indexOf(a.role);
-      const priorityB = rolePriority.indexOf(b.role);
-      return priorityA - priorityB;
-    });
-  }, [pageData.characters]);
 
   return (
     <div className={animeDetailsStyles.animeDetailsPage}>
