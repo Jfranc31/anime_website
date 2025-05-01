@@ -129,19 +129,19 @@ const Home = () => {
   };
 
   const getAnimeById = useCallback((animeId) => {
-    if (!animeContext?.animeList) {
-      console.warn('animeList is not available:', animeContext?.animeList);
+    if (!animeContext?.animeList || !Array.isArray(animeContext.animeList)) {
+      console.warn('animeList is not available or not an array:', animeContext?.animeList);
       return null;
     }
-    return animeContext.animeList.find((anime) => anime._id === animeId);
+    return animeContext.animeList.find((anime) => anime?._id === animeId);
   }, [animeContext?.animeList]);
 
   const getMangaById = useCallback((mangaId) => {
-    if (!mangaContext?.mangaList) {
-      console.warn('mangaList is not available:', mangaContext?.mangaList);
+    if (!mangaContext?.mangaList || !Array.isArray(mangaContext.mangaList)) {
+      console.warn('mangaList is not available or not an array:', mangaContext?.mangaList);
       return null;
     }
-    return mangaContext.mangaList.find((manga) => manga._id === mangaId);
+    return mangaContext.mangaList.find((manga) => manga?._id === mangaId);
   }, [mangaContext?.mangaList]);
 
   const getTitle = useCallback((titles) => {
