@@ -2,9 +2,9 @@
  * src/Components/Details/CharacterDetails.js
  * Description: React component for rendering details of a character.
  */
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import data from '../../Context/ContextApi';
+import { useUser } from '../../Context/ContextApi';
 import axiosInstance from '../../utils/axiosConfig';
 import characterDetailsStyles from '../../styles/pages/character_details.module.css';
 import CharacterDetailsSkeleton from './CharacterSkeleton';
@@ -15,7 +15,7 @@ import CharacterDetailsSkeleton from './CharacterSkeleton';
  */
 const CharacterDetails = () => {
   const { id } = useParams();
-  const { userData, setUserData } = useContext(data);
+  const { user, setUser } = useUser();
   const [characterDetails, setCharacterDetails] = useState(null);
   const [referencesDetails, setReferencesDetails] = useState([]);
   const [activeTab, setActiveTab] = useState('about');
@@ -31,13 +31,13 @@ const CharacterDetails = () => {
         );
         setCharacterDetails(response.data);
 
-        if (userData?._id) {
+        if (user?._id) {
           const userResponse = await axiosInstance.get(
-            `/users/${userData._id}/current`
+            `/users/${user._id}/current`
           );
           const currentUser = userResponse.data;
 
-          setUserData(currentUser);
+          setUser(currentUser);
         }
       } catch (error) {
         console.error('Error fetching character details:', error);
@@ -45,7 +45,7 @@ const CharacterDetails = () => {
     };
 
     fetchCharacterDetails();
-  }, [id, userData, setUserData]);
+  }, [id, user, setUser]);
 
   useEffect(() => {
     const fetchReferenceDetails = async () => {
@@ -215,6 +215,7 @@ const CharacterDetails = () => {
   };
 
   const getFullName = (names, type) => {
+    if (!names) return '';
     const givenName = names.givenName || '';
     const middleName = names.middleName || '';
     const surName = names.surName || '';
@@ -233,7 +234,8 @@ const CharacterDetails = () => {
   };
 
   const seriesTitle = (titles) => {
-    switch (userData.title) {
+    if (!titles) return 'Unknown Title';
+    switch (user?.preferences?.titleLanguage) {
       case 'english':
         return titles.english || titles.romaji;
       case 'romaji':
@@ -370,10 +372,10 @@ const CharacterDetails = () => {
         <div className={characterDetailsStyles.characterImageSection}>
           <img
             src={characterDetails.characterImage}
-            alt={characterDetails.names.givenName}
+            alt={characterDetails.names?.givenName}
             className={characterDetailsStyles.characterMainImage}
           />
-          {userData.role === 'admin' && (
+          {user?.isAdmin && (
             <Link
               to={`/characters/${characterDetails._id}/update`}
               className={characterDetailsStyles.editCharacterLink}
@@ -386,18 +388,18 @@ const CharacterDetails = () => {
         </div>
         <div className={characterDetailsStyles.characterInfoSection}>
           <h1 className={characterDetailsStyles.characterName}>
-            {getFullName(characterDetails.names, userData.characterName)}
+            {getFullName(characterDetails.names, user?.preferences?.characterName)}
           </h1>
 
           <div className={characterDetailsStyles.characterAltNames}>
             {[
-              userData.characterName === 'native'
+              user?.preferences?.characterName === 'native'
                 ? getFullName(characterDetails.names, 'romaji-western')
                 : getFullName(characterDetails.names, 'native'),
 
-              ...(characterDetails.names.alterNames || []),
+              ...(characterDetails.names?.alterNames || []),
 
-              ...(characterDetails.names.alterSpoiler || []).map((name) => (
+              ...(characterDetails.names?.alterSpoiler || []).map((name) => (
                 <span
                   key={name}
                   style={{
