@@ -30,7 +30,9 @@ import {
   updateTitle,
   updateCharacterName,
   syncUserList,
-  deleteAllLists
+  deleteAllLists,
+  getUserAnimeStatuses,
+  getUserMangaStatuses
 } from "../controllers/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniListConnection, syncAniListData, getAniListUserLists } from '../services/anilistAuthService.js';
@@ -51,11 +53,13 @@ router.get("/:userId/current", getUserInfo);
 router.post("/:userId/addManga", addManga);
 router.post("/:userId/updateManga", updateUserManga);
 router.post("/:userId/removeManga", removeManga);
+router.get("/:userId/manga-statuses", getUserMangaStatuses);
 
 // Anime routes
 router.post("/:userId/addAnime", addAnime);
 router.post("/:userId/updateAnime", updateUserAnime);
 router.post("/:userId/removeAnime", removeAnime);
+router.get("/:userId/anime-statuses", getUserAnimeStatuses);
 
 // Admin routes
 router.put("/:userId/make-admin", authMiddleware, makeAdmin);

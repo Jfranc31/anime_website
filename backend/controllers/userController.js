@@ -979,6 +979,50 @@ const deleteAllLists = async (req, res) => {
   }
 };
 
+export const getUserAnimeStatuses = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await UserModel.findById(userId).select('animes');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Create a map of anime IDs to their statuses
+    const statuses = {};
+    user.animes.forEach(anime => {
+      statuses[anime.animeId] = anime.status;
+    });
+
+    res.json(statuses);
+  } catch (error) {
+    console.error('Error fetching user anime statuses:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getUserMangaStatuses = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await UserModel.findById(userId).select('mangas');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Create a map of manga IDs to their statuses
+    const statuses = {};
+    user.mangas.forEach(manga => {
+      statuses[manga.mangaId] = manga.status;
+    });
+
+    res.json(statuses);
+  } catch (error) {
+    console.error('Error fetching user manga statuses:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export {
   registerUser,
   loginUser,
