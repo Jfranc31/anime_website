@@ -6,6 +6,25 @@ import { DEFAULT_AVATAR } from '../../constants/assets';
 import Cookies from 'js-cookie';
 import { useUser } from '../../Context/ContextApi';
 
+const Avatar = ({ src, alt }) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [error, setError] = useState(false);
+
+  const handleError = () => {
+    setError(true);
+    setImgSrc('/default-avatar.png'); // Make sure this file exists in your public folder
+  };
+
+  return (
+    <img
+      src={error ? '/default-avatar.png' : imgSrc}
+      alt={alt}
+      onError={handleError}
+      className="avatar"
+    />
+  );
+};
+
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -141,11 +160,7 @@ const Navbar = () => {
               ref={profileRef}
             >
               <div className={navbarStyles.profileIcon}>
-                <img
-                  src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar || DEFAULT_AVATAR}`}
-                  alt="Profile"
-                  className={navbarStyles.avatarImage}
-                />
+                <Avatar src={`${process.env.REACT_APP_BACKEND_URL}${userData?.avatar || DEFAULT_AVATAR}`} alt="Profile" />
               </div>
               {isProfileMenuOpen && (
                 <div className={navbarStyles.profileDropdown}>

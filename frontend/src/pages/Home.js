@@ -27,11 +27,7 @@ const Home = () => {
   const [animeActivities, setAnimeActivities] = useState([]);
   const [mangaActivities, setMangaActivities] = useState([]);
 
-  const [featuredContent, setFeaturedContent] = useState({
-    trendingAnime: [],
-    trendingManga: [],
-    recentReleases: []
-  });
+  const [featuredContent, setFeaturedContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -104,11 +100,20 @@ const Home = () => {
   const fetchFeaturedContent = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/home/featured');
-      setFeaturedContent(response.data);
+      const response = await fetch('/api/home/featured');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setFeaturedContent(data);
+      } else {
+        console.error('Invalid data format received:', data);
+        setError('Invalid data format received from server');
+      }
     } catch (err) {
-      setError('Failed to load featured content');
-      console.error('Error:', err);
+      console.error('Error fetching featured content:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -442,6 +447,14 @@ const Home = () => {
       </div>
     </div>
   );
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className={homeStyles.activityPage}>
