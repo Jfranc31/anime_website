@@ -133,41 +133,37 @@ const MangaDetails = () => {
 
   const fetchCharacterDetails = async () => {
     updatePageData({ loading: true });
-    updatePageData({ characters: [] }); // Clear previous characters
-
     try {
-      await Promise.all(
-        (pageData.mangaDetails?.characters || []).map(async (character) => {
-          try {
-            const response = await axiosInstance.get(
-              `/characters/character/${character.characterId}`,
-            );
-
-            // Immediately update state with the new character
-            updatePageData(prev => ({
-              characters: [...prev.characters, {
-                ...character,
-                characterDetails: response.data,
-              }]
-            }));
-
-            return {
-              ...character,
-              characterDetails: response.data,
-            };
-          } catch (error) {
-            console.error(
-              `Error fetching details for character ${character.characterId}:`,
-              error.message
-            );
-            return null;
-          }
-        }) || []
-      );
-
+      const characterIds = (pageData.mangaDetails?.characters || [])
+        .map(char => char.characterId)
+        .join(',');
+      
+      const response = await axiosInstance.get('/characters/batch', {
+        params: { ids: characterIds }
+      });
+      
+      const characterMap = response.data.reduce((acc, char) => {
+        acc[char._id] = char;
+        return acc;
+      }, {});
+      
+      const processedCharacters = pageData.mangaDetails.characters
+        .map(char => ({
+          ...char,
+          characterDetails: characterMap[char.characterId]
+        }))
+        .filter(char => char.characterDetails) // Filter out any characters without details
+        .sort((a, b) => {
+          const rolePriority = ['Main', 'Supporting', 'Background'];
+          return rolePriority.indexOf(a.role) - rolePriority.indexOf(b.role);
+        });
+      
+      updatePageData({ 
+        characters: processedCharacters,
+        loading: false 
+      });
     } catch (error) {
       console.error('Error fetching characters:', error);
-    } finally {
       updatePageData({ loading: false });
     }
   };
@@ -226,10 +222,11 @@ const MangaDetails = () => {
 
   const handleTabChange = (tab) => {
     updatePageData({ activeTab: tab });
-    if (tab === 'characters') {
-      fetchCharacterDetails(); // Fetch characters only when the tab is 'characters'
+    if (tab === 'characters' && pageData.characters.length === 0) {
+      // Only fetch if we haven't loaded characters yet
+      fetchCharacterDetails();
     }
-    if (tab === 'relations') {
+    if (tab === 'relations' && pageData.relations.length === 0) {
       fetchRelationDetails();
     }
   };
