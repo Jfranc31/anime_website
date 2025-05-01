@@ -148,6 +148,9 @@ function AnimeCard({
     return episodes === '1' ? '1 episode' : `${episodes} episodes`;
   };
 
+  console.log('Rendering AnimeCard:', name); // Debugging line
+  console.log('Anime:', anime); // Debugging line
+
   return (
     <div
       className={`${cardsStyles.card} ${layout === 'wide' ? cardsStyles.wide : ''} ${layout === 'compact' ? cardsStyles.compact : ''}`}
