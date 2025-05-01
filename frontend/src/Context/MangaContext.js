@@ -16,7 +16,7 @@ export const MangaProvider = ({ children }) => {
         setIsLoading(true);
       setError(null);
         const response = await axiosInstance.get('/mangas/mangas');
-        setMangaList(response.data);
+        setMangaList(response.data.mangas || []);
     } catch (error) {
       console.error('Error fetching manga list:', error);
       setError(error.response?.data?.message || 'Unable to load manga list. Please try again later.');
