@@ -9,6 +9,7 @@ import browseStyles from '../styles/pages/Browse.module.css';
 import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
 import { useUser } from '../Context/ContextApi';
 import { useTitlePreference } from '../hooks/useTitlePreference';
+import { fetchWithErrorHandling } from '../utils/fetchWithErrorHandling';
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
