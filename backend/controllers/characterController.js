@@ -42,7 +42,7 @@ const getAllCharacters = async (req, res) => {
 
     // Add gender filter if provided
     if (gender) {
-      query.gender = gender;
+      query.gender = { $regex: `^${gender}$`, $options: 'i' };
     }
 
     // Add anime filter if provided
@@ -62,12 +62,10 @@ const getAllCharacters = async (req, res) => {
       const day = today.getDate();
       
       // Match characters with birthday today (month and day)
-      query.$expr = {
-        $and: [
-          { $eq: [{ $month: '$DOB' }, month] },
-          { $eq: [{ $dayOfMonth: '$DOB' }, day] }
-        ]
-      };
+      query.$and = [
+        { 'DOB.month': month.toString() },
+        { 'DOB.day': day.toString() }
+      ];
     }
 
     // First get the total count

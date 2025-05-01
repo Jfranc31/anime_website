@@ -16,6 +16,7 @@ import {
   getBatchCharacters
 } from "../controllers/characterController.js";
 import { fetchCharacterDataById } from "../services/anilistService.js";
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -74,5 +75,25 @@ router.put("/character/:id", updateCharacter);
 router.post("/create-from-anilist", createCharacterFromAnilist);
 
 router.get("/batch", getBatchCharacters);
+
+// Add the new proxy route for images
+router.get('/image/:imageId', async (req, res) => {
+  try {
+    const { imageId } = req.params;
+    const imageUrl = `https://s4.anilist.co/file/anilistcdn/character/large/${imageId}`;
+    
+    const response = await axios.get(imageUrl, {
+      responseType: 'arraybuffer'
+    });
+
+    // Set appropriate headers
+    res.set('Content-Type', response.headers['content-type']);
+    res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.send(response.data);
+  } catch (error) {
+    console.error('Error proxying image:', error);
+    res.status(500).json({ message: 'Error loading image' });
+  }
+});
 
 export default router;
