@@ -16,7 +16,6 @@ import {
   getBatchCharacters
 } from "../controllers/characterController.js";
 import { fetchCharacterDataById } from "../services/anilistService.js";
-import axios from 'axios';
 
 const router = express.Router();
 
@@ -75,50 +74,5 @@ router.put("/character/:id", updateCharacter);
 router.post("/create-from-anilist", createCharacterFromAnilist);
 
 router.get("/batch", getBatchCharacters);
-
-// Add the new proxy route for images
-router.get('/image/:imageId', async (req, res) => {
-  try {
-    const { imageId } = req.params;
-    const imageUrl = `https://s4.anilist.co/file/anilistcdn/character/large/${imageId}`;
-    
-    const response = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
-      headers: {
-        'Accept': 'image/*',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
-
-    // Convert the image to base64
-    const base64Image = Buffer.from(response.data).toString('base64');
-    const dataUrl = `data:${response.headers['content-type'] || 'image/jpeg'};base64,${base64Image}`;
-
-    // Send the data URL
-    res.json({ dataUrl });
-  } catch (error) {
-    console.error('Error proxying image:', error);
-    // Try alternative URL pattern if the first one fails
-    try {
-      const altImageUrl = `https://s4.anilist.co/file/anilistcdn/character/medium/${req.params.imageId}`;
-      const altResponse = await axios.get(altImageUrl, {
-        responseType: 'arraybuffer',
-        headers: {
-          'Accept': 'image/*',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      });
-
-      // Convert the alternative image to base64
-      const base64Image = Buffer.from(altResponse.data).toString('base64');
-      const dataUrl = `data:${altResponse.headers['content-type'] || 'image/jpeg'};base64,${base64Image}`;
-
-      res.json({ dataUrl });
-    } catch (altError) {
-      console.error('Error with alternative image URL:', altError);
-      res.status(404).json({ message: 'Image not found' });
-    }
-  }
-});
 
 export default router;

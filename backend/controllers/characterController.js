@@ -42,7 +42,14 @@ const getAllCharacters = async (req, res) => {
 
     // Add gender filter if provided
     if (gender) {
-      query.gender = { $regex: `^${gender}$`, $options: 'i' };
+      // Map the frontend gender values to the database values
+      const genderMap = {
+        'Male': 'Male',
+        'Female': 'Female',
+        'Non-binary': 'Non-binary',
+        'Unknown': 'Unknown'
+      };
+      query.gender = genderMap[gender];
     }
 
     // Add anime filter if provided

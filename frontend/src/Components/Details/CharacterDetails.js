@@ -389,7 +389,7 @@ const CharacterDetails = () => {
         <div className={characterDetailsStyles.characterInfoSection}>
           <h1 className={characterDetailsStyles.characterName}>
             {getFullName(characterDetails.names, user?.preferences?.characterName)}
-          </h1>
+            </h1>
 
           <div className={characterDetailsStyles.characterAltNames}>
             {[
