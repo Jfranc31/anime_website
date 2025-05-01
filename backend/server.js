@@ -279,6 +279,9 @@ const __dirname = path.dirname(__filename);
 // Serve static files from the frontend's public directory
 app.use('/public', express.static(path.join(__dirname, '../frontend/public')));
 
+// Serve static files from the backend's public directory
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 /*============================
         listen
 =============================*/

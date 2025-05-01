@@ -8,8 +8,8 @@ import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 
 const Home = () => {
-  const { animeList = { animes: [] } } = useAnimeContext();
-  const { mangaList = { mangas: [] } } = useMangaContext();
+  const { animeList = [] } = useAnimeContext();
+  const { mangaList = [] } = useMangaContext();
   const { userData } = useUser();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
@@ -129,19 +129,19 @@ const Home = () => {
   };
 
   const getAnimeById = useCallback((animeId) => {
-    if (!animeList?.animes) {
-      console.warn('animeList.animes is not available:', animeList);
+    if (!animeList) {
+      console.warn('animeList is not available:', animeList);
       return null;
     }
-    return animeList.animes.find((anime) => anime._id === animeId);
+    return animeList.find((anime) => anime._id === animeId);
   }, [animeList]);
 
   const getMangaById = useCallback((mangaId) => {
-    if (!mangaList?.mangas) {
-      console.warn('mangaList.mangas is not available:', mangaList);
+    if (!mangaList) {
+      console.warn('mangaList is not available:', mangaList);
       return null;
     }
-    return mangaList.mangas.find((manga) => manga._id === mangaId);
+    return mangaList.find((manga) => manga._id === mangaId);
   }, [mangaList]);
 
   const getTitle = useCallback((titles) => {

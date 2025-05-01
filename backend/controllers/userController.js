@@ -9,6 +9,7 @@ import MangaModel from "../Models/mangaModel.js";
 import bcrypt from "bcrypt";
 import { syncAniListData } from '../services/anilistAuthService.js';
 import mongoose from 'mongoose';
+import path from 'path';
 const { ObjectId } = mongoose.Types;
 
 // Initialize GridFS stream
@@ -698,7 +699,7 @@ const uploadAvatar = async (req, res) => {
     await user.save();
     
     // Construct the URL for the frontend to use
-    const avatarUrl = `/api/users/${userId}/avatar`;
+    const avatarUrl = `/users/${userId}/avatar`;
     
     res.status(200).json({ 
       message: 'Avatar updated successfully',
@@ -715,14 +716,20 @@ const getAvatar = async (req, res) => {
     const user = await UserModel.findById(req.params.userId);
     
     if (!user || !user.avatar || !user.avatar.fileId) {
-      return res.status(404).json({ message: 'Avatar not found' });
+      // Serve default avatar when no avatar exists
+      const defaultAvatarPath = path.join(__dirname, '../../public/default-avatar.png');
+      res.set('Content-Type', 'image/png');
+      return res.sendFile(defaultAvatarPath);
     }
     
     // Find the file by ID
     const file = await gfs.find({ _id: mongoose.Types.ObjectId(user.avatar.fileId) }).toArray();
     
     if (!file || file.length === 0) {
-      return res.status(404).json({ message: 'Avatar file not found' });
+      // Serve default avatar when file not found
+      const defaultAvatarPath = path.join(__dirname, '../../public/default-avatar.png');
+      res.set('Content-Type', 'image/png');
+      return res.sendFile(defaultAvatarPath);
     }
     
     // Set the appropriate content type
@@ -735,7 +742,10 @@ const getAvatar = async (req, res) => {
     downloadStream.pipe(res);
   } catch (error) {
     console.error('Error retrieving avatar:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    // Serve default avatar on error
+    const defaultAvatarPath = path.join(__dirname, '../../public/default-avatar.png');
+    res.set('Content-Type', 'image/png');
+    return res.sendFile(defaultAvatarPath);
   }
 };
 
