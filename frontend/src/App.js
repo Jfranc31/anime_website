@@ -1,7 +1,7 @@
 import './App.css';
 import './index.css';
 import Profile from './pages/Profile';
-import { Login } from './pages/Login';
+import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Animes from './pages/Animes';
@@ -11,7 +11,6 @@ import AddSection from './pages/Add';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { UserProvider, useUser } from './Context/ContextApi';
-import Cookies from 'js-cookie';
 import AnimeDetails from './Components/Details/AnimeDetails';
 import MangaDetails from './Components/Details/MangaDetails';
 import CharacterDetails from './Components/Details/CharacterDetails';
