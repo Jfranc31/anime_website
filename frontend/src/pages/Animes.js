@@ -63,8 +63,6 @@ const Animes = () => {
     }
   };
 
-  console.log('User:', user);
-  console.log('Animes:', animeList);
   const fetchUserAnimeStatuses = async () => {
     if (!user?._id) return;
     try {
@@ -84,6 +82,24 @@ const Animes = () => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
+  };
+
+  const handleGenreClick = (genre) => {
+    setSelectedGenres(prev => {
+      if (prev.includes(genre)) {
+        return prev.filter(g => g !== genre);
+      }
+      return [...prev, genre];
+    });
+  };
+
+  const handleFormatClick = (format) => {
+    setSelectedFormats(prev => {
+      if (prev.includes(format)) {
+        return prev.filter(f => f !== format);
+      }
+      return [...prev, format];
+    });
   };
 
   const renderListItems = () => {
@@ -120,6 +136,7 @@ const Animes = () => {
               console.error('Error updating anime status:', error);
             }
           }}
+          handleGenreClick={handleGenreClick}
         />
       </li>
     ));
@@ -137,7 +154,76 @@ const Animes = () => {
             className={browseStyles.searchInput}
           />
         </div>
-        {/* Add other filter components here */}
+        <div className={browseStyles.filters}>
+          <div className={browseStyles.filterGroup}>
+            <h3>Genres</h3>
+            <div className={browseStyles.filterOptions}>
+              {AVAILABLE_GENRES.map(genre => (
+                <button
+                  key={genre}
+                  className={`${browseStyles.filterOption} ${selectedGenres.includes(genre) ? browseStyles.selected : ''}`}
+                  onClick={() => handleGenreClick(genre)}
+                >
+                  {genre}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={browseStyles.filterGroup}>
+            <h3>Format</h3>
+            <div className={browseStyles.filterOptions}>
+              {ANIME_FORMATS.map(format => (
+                <button
+                  key={format}
+                  className={`${browseStyles.filterOption} ${selectedFormats.includes(format) ? browseStyles.selected : ''}`}
+                  onClick={() => handleFormatClick(format)}
+                >
+                  {format}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={browseStyles.filterGroup}>
+            <h3>Status</h3>
+            <div className={browseStyles.filterOptions}>
+              {AIRING_STATUS.map(status => (
+                <button
+                  key={status}
+                  className={`${browseStyles.filterOption} ${selectedStatus === status ? browseStyles.selected : ''}`}
+                  onClick={() => setSelectedStatus(status)}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={browseStyles.filterGroup}>
+            <h3>Year</h3>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className={browseStyles.yearSelect}
+            >
+              <option value="">All Years</option>
+              {YEARS.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div className={browseStyles.filterGroup}>
+            <h3>Season</h3>
+            <select
+              value={selectedSeason}
+              onChange={(e) => setSelectedSeason(e.target.value)}
+              className={browseStyles.seasonSelect}
+            >
+              <option value="">All Seasons</option>
+              {SEASONS.map(season => (
+                <option key={season} value={season}>{season}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className={`${browseStyles.listSection} ${browseStyles[gridLayout]}`}>
