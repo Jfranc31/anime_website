@@ -43,6 +43,7 @@ const allowedOrigins = [
   'http://localhost:3000',
 ];
 
+// CORS configuration
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -50,14 +51,15 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error('Not allowed by CORS'));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
-    exposedHeaders: ["Set-Cookie"],
-  }),
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 600 // Cache preflight requests for 10 minutes
+  })
 );
 
 // Add this before your routes
