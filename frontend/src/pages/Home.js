@@ -4,15 +4,18 @@ import axiosInstance from './../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
 import { useUser } from '../Context/ContextApi';
-import { useSeries } from '../Context/SeriesContext';
 import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
+import AnimeCard from '../cards/AnimeCard';
+import MangaCard from '../cards/MangaCard';
+import SkeletonCard from '../cards/SkeletonCard';
+import { useTitlePreference } from '../hooks/useTitlePreference';
 
 const Home = () => {
   const animeContext = useAnimeContext();
   const mangaContext = useMangaContext();
   const { userData } = useUser();
-  const { animes, mangas, loading } = useSeries();
+  const { getTitle } = useTitlePreference();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -30,7 +33,11 @@ const Home = () => {
   const [mangaActivities, setMangaActivities] = useState([]);
 
   const [featuredContent, setFeaturedContent] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [currentlyWatching, setCurrentlyWatching] = useState([]);
+  const [currentlyReading, setCurrentlyReading] = useState([]);
 
   const calculateTimeUntilAiring = useCallback((airingAt) => {
     const now = Math.floor(Date.now() / 1000);
@@ -101,6 +108,7 @@ const Home = () => {
 
   const fetchFeaturedContent = async () => {
     try {
+      setLoading(true);
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/featured`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -123,6 +131,8 @@ const Home = () => {
     } catch (err) {
       console.error('Error fetching featured content:', err);
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,19 +151,6 @@ const Home = () => {
     }
     return mangaContext.mangaList.find((manga) => manga?._id === mangaId);
   }, [mangaContext?.mangaList]);
-
-  const getTitle = useCallback((titles) => {
-    const preference = userData?.title || 'english';
-    return titles[preference] || titles.english || titles.romaji || titles.native;
-  }, [userData?.title]);
-
-  // Filter animes and mangas based on user status
-  const watchingAnimes = animes.filter(anime => 
-    userData?.animeStatuses?.[anime._id] === 'Watching'
-  );
-  const readingMangas = mangas.filter(manga => 
-    userData?.mangaStatuses?.[manga._id] === 'Reading'
-  );
 
   const watchingAnime = useMemo(() => 
     userAnimeList
@@ -367,59 +364,60 @@ const Home = () => {
     <div className={homeStyles.progressSection}>
       <h2>Currently Watching</h2>
       <div className={homeStyles.progressGrid}>
-        {watchingAnimes.map((anime) => (
+        {watchingAnime.map((activity) => (
           <div
-            key={anime._id}
+            key={activity.animeId}
             className={homeStyles.progressCard}
-            onMouseEnter={(event) => handleMouseEnter(anime._id, event)}
+            onMouseEnter={(event) => handleMouseEnter(activity.animeId, event)}
             onMouseLeave={() => setHoveredCard(null)}
           >
-            <Link to={`/anime/${anime._id}`}>
+            <Link to={`/anime/${activity.animeId}`}>
               <img
-                src={anime.images.image}
-                alt={anime.titles.english}
+                src={getAnimeById(activity.animeId)?.images.image}
+                alt={getAnimeById(activity.animeId)?.titles.english}
               />
             </Link>
             <div className={homeStyles.progressInfo}>
-              {hoveredCard === anime._id ? (
+              {hoveredCard === activity.animeId ? (
                 <div className={homeStyles.episodeInfo}>
                   <span
-                    onClick={() => handleIncrementWatchCount(anime._id, 'anime')}
+                    onClick={() => handleIncrementWatchCount(activity.animeId, 'anime')}
                   >
-                    {anime.currentEpisode}+
+                    {activity.currentEpisode}+
                   </span>
                 </div>
               ) : (
-                airingTimes[anime._id] && (
+                airingTimes[activity.animeId] && (
                   <div className={homeStyles.episodeInfo}>
                     <span>
-                      {airingTimes[anime._id].episode}
+                      {airingTimes[activity.animeId].episode}
                     </span>
                     <span>
-                      {formatTimeUntilNextEpisode(airingTimes[anime._id].timeUntilAiring)}
+                      {formatTimeUntilNextEpisode(airingTimes[activity.animeId].timeUntilAiring)}
                     </span>
                   </div>
                 )
               )}
             </div>
-            {hoveredCard === anime._id && (
+            {hoveredCard === activity.animeId && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                {anime.releaseData.releaseStatus === 'Currently Releasing' && (
+                {getAnimeById(activity.animeId)?.releaseData.releaseStatus === 'Currently Releasing' && (
                   (() => {
-                    const maxEpisodes = parseInt(anime.lengths.Episodes) || Infinity;
+                    const anime = getAnimeById(activity.animeId);
+                    const maxEpisodes = parseInt(anime?.lengths.Episodes) || Infinity;
                     const latestAiredEpisode = Math.min(
-                      (anime.nextAiringEpisode?.episode || 1) - 1,
+                      (anime?.nextAiringEpisode?.episode || 1) - 1,
                       maxEpisodes
                     );
-                    const episodesBehind = Math.max(0, latestAiredEpisode - anime.currentEpisode);
+                    const episodesBehind = Math.max(0, latestAiredEpisode - activity.currentEpisode);
                     
                     return episodesBehind > 0 ? (
                       <h3>{episodesBehind} Episodes Behind</h3>
                     ) : null;
                   })()
                 )}
-                <h4>{getTitle(anime.titles)}</h4>
-                <p>Progress: {anime.currentEpisode}/{anime.lengths.Episodes}</p>
+                <h4>{getTitle(getAnimeById(activity.animeId)?.titles)}</h4>
+                <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
               </div>
             )}
           </div>
@@ -432,36 +430,36 @@ const Home = () => {
     <div className={homeStyles.progressSection}>
       <h2>Currently Reading</h2>
       <div className={homeStyles.progressGrid}>
-        {readingMangas.map((manga) => (
+        {readingManga.map((activity) => (
           <div
-            key={manga._id}
+            key={activity.mangaId}
             className={homeStyles.progressCard}
-            onMouseEnter={(event) => handleMouseEnter(manga._id, event)}
+            onMouseEnter={(event) => handleMouseEnter(activity.mangaId, event)}
             onMouseLeave={() => setHoveredCard(null)}
           >
             <Link
-              to={`/manga/${manga._id}`}
+              to={`/manga/${activity.mangaId}`}
             >
               <img
-                src={manga.images.image}
-                alt={manga.titles.english}
+                src={getMangaById(activity.mangaId)?.images.image}
+                alt={getMangaById(activity.mangaId)?.titles.english}
               />
             </Link>
             <div className={homeStyles.progressInfo}>
-              {hoveredCard === manga._id && (
+              {hoveredCard === activity.mangaId && (
                 <div className={homeStyles.episodeInfo}>
                   <span
-                    onClick={() => handleIncrementWatchCount(manga._id, 'manga')}
+                    onClick={() => handleIncrementWatchCount(activity.mangaId, 'manga')}
                   >
-                    {manga.currentChapter}+
+                    {activity.currentChapter}+
                   </span>
                 </div>
               )}
             </div>
-            {hoveredCard === manga._id && (
+            {hoveredCard === activity.mangaId && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                <h4>{getTitle(manga.titles)}</h4>
-                <p>Progress: {manga.currentChapter}/{manga.lengths.chapters}</p>
+                <h4>{getTitle(getMangaById(activity.mangaId)?.titles)}</h4>
+                <p>Progress: {activity.currentChapter}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
               </div>
             )}
           </div>
@@ -470,152 +468,100 @@ const Home = () => {
     </div>
   );
 
-  if (loading.animes || loading.mangas) {
-    return <div>Loading...</div>;
-  }
+  const fetchLists = useCallback(async () => {
+    if (!userData?._id) return;
+    
+    try {
+      setLoading(true);
+      const [watchingResponse, readingResponse] = await Promise.all([
+        axiosInstance.get(`/users/${userData._id}/currently-watching`),
+        axiosInstance.get(`/users/${userData._id}/currently-reading`)
+      ]);
+
+      setCurrentlyWatching(watchingResponse.data.animes);
+      setCurrentlyReading(readingResponse.data.mangas);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching lists:', err);
+      setError('Failed to fetch lists');
+    } finally {
+      setLoading(false);
+    }
+  }, [userData?._id]);
+
+  useEffect(() => {
+    fetchLists();
+  }, [fetchLists]);
+
+  const renderCurrentlyWatching = () => {
+    if (loading) {
+      return Array(5).fill(0).map((_, index) => (
+        <div key={index} className={homeStyles.cardContainer}>
+          <SkeletonCard />
+        </div>
+      ));
+    }
+
+    if (currentlyWatching.length === 0) {
+      return <p className={homeStyles.emptyMessage}>No currently watching anime</p>;
+    }
+
+    return currentlyWatching.map(anime => (
+      <div key={anime._id} className={homeStyles.cardContainer}>
+        <AnimeCard
+          anime={anime}
+          title={getTitle(anime.titles)}
+          progress={anime.progress}
+          lastUpdated={anime.lastUpdated}
+        />
+      </div>
+    ));
+  };
+
+  const renderCurrentlyReading = () => {
+    if (loading) {
+      return Array(5).fill(0).map((_, index) => (
+        <div key={index} className={homeStyles.cardContainer}>
+          <SkeletonCard />
+        </div>
+      ));
+    }
+
+    if (currentlyReading.length === 0) {
+      return <p className={homeStyles.emptyMessage}>No currently reading manga</p>;
+    }
+
+    return currentlyReading.map(manga => (
+      <div key={manga._id} className={homeStyles.cardContainer}>
+        <MangaCard
+          manga={manga}
+          title={getTitle(manga.titles)}
+          progress={manga.progress}
+          lastUpdated={manga.lastUpdated}
+        />
+      </div>
+    ));
+  };
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className={homeStyles.error}>{error}</div>;
   }
 
   return (
-    <div className={homeStyles.activityPage}>
-      <div className={homeStyles.tabContainer}>
-        <button 
-          className={`${homeStyles.tabButton} ${activeTab === 'anime' ? homeStyles.activeTab : ''}`}
-          onClick={() => setActiveTab('anime')}
-        >
-          Anime
-        </button>
-        <button 
-          className={`${homeStyles.tabButton} ${activeTab === 'manga' ? homeStyles.activeTab : ''}`}
-          onClick={() => setActiveTab('manga')}
-        >
-          Manga
-        </button>
-      </div>
-
-      {activeTab === 'anime' && animeActivities.length > 0 && (
-        <>
-          <div className={homeStyles.sectionContainer}>
-            <div className={homeStyles.headerContainer}>
-              <h1>Anime Activities</h1>
-            </div>
-            <div className={homeStyles.activitiesGrid}>
-              {animeActivities.map((activity) => (
-                <div key={activity._id} className={homeStyles.activityCard}>
-                  <Link to={`/anime/${activity.animeDetails._id}`}>
-                    <div className={homeStyles.activityImage}>
-                      <img
-                        src={activity.animeDetails.images.image}
-                        alt={activity.animeDetails.titles.english}
-                      />
-                    </div>
-                  </Link>
-                  <div className={homeStyles.activityInfo}>
-                    <h3>{getTitle(activity.animeDetails.titles)}</h3>
-                    <p className={homeStyles.activityStatus}>
-                      {activity.status === 'Completed'
-                        ? 'Completed'
-                        : activity.status === 'Planning'
-                        ? `Planning to watch`
-                        : activity.currentEpisode === 0 &&
-                            activity.status === 'Watching'
-                          ? 'Started watching'
-                          : `Episode ${activity.currentEpisode}`}
-                    </p>
-                    <span className={homeStyles.activityTimestamp}>
-                      {new Date(
-                        activity.activityTimestamp
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {hasMoreAnime && (
-              <div className={homeStyles.loadMoreContainer}>
-                <button
-                  className={homeStyles.loadMoreButton}
-                  onClick={handleLoadMoreAnime}
-                  disabled={loadingAnime}
-                >
-                  {loadingAnime ? 'Loading...' : 'Load More Anime'}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {watchingAnimes.length > 0 && renderProgressSection()}
-        </>
-      )}
-
-      {activeTab === 'manga' && mangaActivities.length > 0 && (
-        <>
-          <div className={homeStyles.sectionContainer}>
-            <div className={homeStyles.headerContainer}>
-              <h1>Manga Activities</h1>
-            </div>
-            <div className={homeStyles.activitiesGrid}>
-              {mangaActivities.map((activity) => (
-                <div key={activity._id} className={homeStyles.activityCard}>
-                  <Link to={`/manga/${activity.mangaDetails._id}`}>
-                    <div className={homeStyles.activityImage}>
-                      <img
-                        src={activity.mangaDetails.images.image}
-                        alt={activity.mangaDetails.titles.english}
-                      />
-                    </div>
-                  </Link>
-                  <div className={homeStyles.activityInfo}>
-                    <h3>{getTitle(activity.mangaDetails.titles)}</h3>
-                    <p className={homeStyles.activityStatus}>
-                      {activity.status === 'Completed'
-                        ? 'Completed'
-                        : activity.status === 'Planning'
-                        ? 'Planning to read'
-                        : activity.currentChapter === 0 &&
-                            activity.status === 'Reading'
-                          ? 'Started reading'
-                          : `Chapter ${activity.currentChapter}`}
-                    </p>
-                    <span className={homeStyles.activityTimestamp}>
-                      {new Date(
-                        activity.activityTimestamp
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {hasMoreManga && (
-              <div className={homeStyles.loadMoreContainer}>
-                <button
-                  className={homeStyles.loadMoreButton}
-                  onClick={handleLoadMoreManga}
-                  disabled={loadingManga}
-                >
-                  {loadingManga ? 'Loading...' : 'Load More Manga'}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {readingMangas.length > 0 && (
-            renderReadingSection()
-          )}
-        </>
-      )}
-
-      {((activeTab === 'anime' && animeActivities.length === 0) || 
-        (activeTab === 'manga' && mangaActivities.length === 0)) && (
-        <div className={homeStyles.emptyState}>
-          <h2>No Recent Activities</h2>
-          <p>
-            Start {activeTab === 'anime' ? 'watching anime' : 'reading manga'} to see your activities here!
-          </p>
+    <div className={homeStyles.homeContainer}>
+      <section className={homeStyles.section}>
+        <h2 className={homeStyles.sectionTitle}>Currently Watching</h2>
+        <div className={homeStyles.cardsGrid}>
+          {renderCurrentlyWatching()}
         </div>
-      )}
+      </section>
+
+      <section className={homeStyles.section}>
+        <h2 className={homeStyles.sectionTitle}>Currently Reading</h2>
+        <div className={homeStyles.cardsGrid}>
+          {renderCurrentlyReading()}
+        </div>
+      </section>
     </div>
   );
 };

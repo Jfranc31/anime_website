@@ -10,6 +10,7 @@ import bcrypt from "bcrypt";
 import { syncAniListData } from '../services/anilistAuthService.js';
 import mongoose from 'mongoose';
 import path from 'path';
+import UserList from '../models/UserList';
 const { ObjectId } = mongoose.Types;
 
 // Initialize GridFS stream
@@ -1034,6 +1035,292 @@ export const getUserMangaStatuses = async (req, res) => {
   } catch (error) {
     console.error('Error fetching user manga statuses:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Helper function to update list
+const updateList = async (userId, itemId, status, type, progress = 0) => {
+  const userList = await UserList.findOne({ userId }) || new UserList({ userId });
+  
+  // Remove from all lists first
+  const removeFromList = (list) => {
+    const index = list.findIndex(item => 
+      item[`${type}Id`].toString() === itemId.toString()
+    );
+    if (index !== -1) {
+      list.splice(index, 1);
+    }
+  };
+
+  removeFromList(userList.watchingAnime);
+  removeFromList(userList.completedAnime);
+  removeFromList(userList.planningAnime);
+  removeFromList(userList.readingManga);
+  removeFromList(userList.completedManga);
+  removeFromList(userList.planningManga);
+
+  // Add to the correct list
+  const newItem = {
+    [`${type}Id`]: itemId,
+    lastUpdated: new Date()
+  };
+
+  if (progress !== undefined) {
+    newItem.progress = progress;
+  }
+
+  switch (status) {
+    case 'watching':
+      userList.watchingAnime.push(newItem);
+      break;
+    case 'completed':
+      userList.completedAnime.push(newItem);
+      break;
+    case 'planning':
+      userList.planningAnime.push(newItem);
+      break;
+    case 'reading':
+      userList.readingManga.push(newItem);
+      break;
+    case 'completed-manga':
+      userList.completedManga.push(newItem);
+      break;
+    case 'planning-manga':
+      userList.planningManga.push(newItem);
+      break;
+  }
+
+  await userList.save();
+  return userList;
+};
+
+// Get currently watching anime
+exports.getCurrentlyWatching = async (req, res) => {
+  try {
+    const result = await UserList.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId(req.params.userId) } },
+      { $unwind: "$watchingAnime" },
+      { $sort: { "watchingAnime.lastUpdated": -1 } },
+      {
+        $lookup: {
+          from: "animes",
+          localField: "watchingAnime.animeId",
+          foreignField: "_id",
+          as: "animeDetails"
+        }
+      },
+      { $unwind: "$animeDetails" },
+      {
+        $project: {
+          _id: "$animeDetails._id",
+          titles: "$animeDetails.titles",
+          images: "$animeDetails.images",
+          progress: "$watchingAnime.progress",
+          lastUpdated: "$watchingAnime.lastUpdated"
+        }
+      }
+    ]);
+
+    res.json({ animes: result });
+  } catch (error) {
+    console.error('Error fetching currently watching:', error);
+    res.status(500).json({ message: 'Error fetching currently watching list' });
+  }
+};
+
+// Get currently reading manga
+exports.getCurrentlyReading = async (req, res) => {
+  try {
+    const result = await UserList.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId(req.params.userId) } },
+      { $unwind: "$readingManga" },
+      { $sort: { "readingManga.lastUpdated": -1 } },
+      {
+        $lookup: {
+          from: "mangas",
+          localField: "readingManga.mangaId",
+          foreignField: "_id",
+          as: "mangaDetails"
+        }
+      },
+      { $unwind: "$mangaDetails" },
+      {
+        $project: {
+          _id: "$mangaDetails._id",
+          titles: "$mangaDetails.titles",
+          images: "$mangaDetails.images",
+          progress: "$readingManga.progress",
+          lastUpdated: "$readingManga.lastUpdated"
+        }
+      }
+    ]);
+
+    res.json({ mangas: result });
+  } catch (error) {
+    console.error('Error fetching currently reading:', error);
+    res.status(500).json({ message: 'Error fetching currently reading list' });
+  }
+};
+
+// Update anime status
+exports.updateAnimeStatus = async (req, res) => {
+  try {
+    const { animeId, status, progress } = req.body;
+    const userList = await updateList(req.params.userId, animeId, status, 'anime', progress);
+    res.json(userList);
+  } catch (error) {
+    console.error('Error updating anime status:', error);
+    res.status(500).json({ message: 'Error updating anime status' });
+  }
+};
+
+// Update manga status
+exports.updateMangaStatus = async (req, res) => {
+  try {
+    const { mangaId, status, progress } = req.body;
+    const userList = await updateList(req.params.userId, mangaId, status, 'manga', progress);
+    res.json(userList);
+  } catch (error) {
+    console.error('Error updating manga status:', error);
+    res.status(500).json({ message: 'Error updating manga status' });
+  }
+};
+
+// Get user's anime list
+exports.getUserAnimeList = async (req, res) => {
+  try {
+    const userList = await UserList.findOne({ userId: req.params.userId });
+    if (!userList) {
+      return res.json({
+        watching: [],
+        completed: [],
+        planning: []
+      });
+    }
+
+    const result = await UserList.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId(req.params.userId) } },
+      {
+        $lookup: {
+          from: "animes",
+          let: {
+            watchingIds: "$watchingAnime.animeId",
+            completedIds: "$completedAnime.animeId",
+            planningIds: "$planningAnime.animeId"
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $in: ["$_id", "$$watchingIds"] },
+                    { $in: ["$_id", "$$completedIds"] },
+                    { $in: ["$_id", "$$planningIds"] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "animeDetails"
+        }
+      }
+    ]);
+
+    const animeMap = {};
+    result[0].animeDetails.forEach(anime => {
+      animeMap[anime._id.toString()] = anime;
+    });
+
+    const watching = userList.watchingAnime.map(item => ({
+      ...animeMap[item.animeId.toString()],
+      progress: item.progress,
+      lastUpdated: item.lastUpdated
+    }));
+
+    const completed = userList.completedAnime.map(item => ({
+      ...animeMap[item.animeId.toString()],
+      progress: item.progress,
+      lastUpdated: item.lastUpdated
+    }));
+
+    const planning = userList.planningAnime.map(item => ({
+      ...animeMap[item.animeId.toString()],
+      lastUpdated: item.lastUpdated
+    }));
+
+    res.json({ watching, completed, planning });
+  } catch (error) {
+    console.error('Error fetching user anime list:', error);
+    res.status(500).json({ message: 'Error fetching user anime list' });
+  }
+};
+
+// Get user's manga list
+exports.getUserMangaList = async (req, res) => {
+  try {
+    const userList = await UserList.findOne({ userId: req.params.userId });
+    if (!userList) {
+      return res.json({
+        reading: [],
+        completed: [],
+        planning: []
+      });
+    }
+
+    const result = await UserList.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId(req.params.userId) } },
+      {
+        $lookup: {
+          from: "mangas",
+          let: {
+            readingIds: "$readingManga.mangaId",
+            completedIds: "$completedManga.mangaId",
+            planningIds: "$planningManga.mangaId"
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $in: ["$_id", "$$readingIds"] },
+                    { $in: ["$_id", "$$completedIds"] },
+                    { $in: ["$_id", "$$planningIds"] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "mangaDetails"
+        }
+      }
+    ]);
+
+    const mangaMap = {};
+    result[0].mangaDetails.forEach(manga => {
+      mangaMap[manga._id.toString()] = manga;
+    });
+
+    const reading = userList.readingManga.map(item => ({
+      ...mangaMap[item.mangaId.toString()],
+      progress: item.progress,
+      lastUpdated: item.lastUpdated
+    }));
+
+    const completed = userList.completedManga.map(item => ({
+      ...mangaMap[item.mangaId.toString()],
+      progress: item.progress,
+      lastUpdated: item.lastUpdated
+    }));
+
+    const planning = userList.planningManga.map(item => ({
+      ...mangaMap[item.mangaId.toString()],
+      lastUpdated: item.lastUpdated
+    }));
+
+    res.json({ reading, completed, planning });
+  } catch (error) {
+    console.error('Error fetching user manga list:', error);
+    res.status(500).json({ message: 'Error fetching user manga list' });
   }
 };
 

@@ -17,52 +17,60 @@ import { fetchCharacterData } from "../services/anilistService.js";
  */
 const getAllCharacters = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, gender } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
+    const searchQuery = req.query.search || '';
+    const gender = req.query.gender || '';
+    const animeId = req.query.animeId || '';
+    const mangaId = req.query.mangaId || '';
 
-    let query = {};
-    if (search) {
+    // Build the query object
+    const query = {};
+
+    // Add search query if provided
+    if (searchQuery) {
       query.$or = [
-        { 'names.givenName': { $regex: search, $options: 'i' } },
-        { 'names.surName': { $regex: search, $options: 'i' } },
-        { 'names.nativeName': { $regex: search, $options: 'i' } }
+        { 'name.english': { $regex: searchQuery, $options: 'i' } },
+        { 'name.romaji': { $regex: searchQuery, $options: 'i' } },
+        { 'name.native': { $regex: searchQuery, $options: 'i' } }
       ];
     }
+
+    // Add gender filter if provided
     if (gender) {
       query.gender = gender;
     }
 
+    // Add anime filter if provided
+    if (animeId) {
+      query['appearances.anime'] = animeId;
+    }
+
+    // Add manga filter if provided
+    if (mangaId) {
+      query['appearances.manga'] = mangaId;
+    }
+
+    // First get the total count
     const total = await CharacterModel.countDocuments(query);
+
+    // Then get the paginated results
     const characters = await CharacterModel.find(query)
+      .sort({ 'name.english': 1 }) // Sort by English name
       .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ 'names.givenName': 1 });
+      .limit(limit)
+      .lean();
 
     res.json({
       characters,
       total,
+      page,
       pages: Math.ceil(total / limit)
     });
-  } catch (err) {
-    console.error('Error fetching characters:', err);
-    res.status(500).json({ message: 'Error fetching characters' });
-  }
-};
-
-/**
- * @function getAllCharactersWithoutPagination
- * @description Get all character documents from the database without pagination.
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
- * @return {Array} - Array of character documents.
- */
-const getAllCharactersWithoutPagination = async (req, res) => {
-  try {
-    const characters = await CharacterModel.find({}).sort({ 'names.givenName': 1 });
-    res.json(characters);
-  } catch (err) {
-    console.error('Error fetching all characters:', err);
-    res.status(500).json({ message: 'Error fetching all characters' });
+  } catch (error) {
+    console.error("Error fetching characters:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -414,7 +422,6 @@ const getBatchCharacters = async (req, res) => {
 
 export {
   getAllCharacters,
-  getAllCharactersWithoutPagination,
   searchForCharacters,
   checkForCharacter,
   getCharacterInfo,

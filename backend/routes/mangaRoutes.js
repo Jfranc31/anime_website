@@ -13,16 +13,13 @@ import {
   updateManga,
   createMangaFromAnilist,
   compareMangaWithAnilist,
-  updateMangaAnilist,
-  getAllMangas,
-  getAllMangasWithoutPagination
+  updateMangaAnilist
 } from "../controllers/mangaController.js";
 import { fetchMangaDataById, fetchCharactersBySeriesId } from '../services/anilistService.js';
 
 const router = express.Router();
 
 router.get("/mangas", getAllManga);
-router.get("/all", getAllMangasWithoutPagination);
 
 router.post("/check-by-database", checkForManga);
 

@@ -6,7 +6,6 @@
 import express from "express";
 import {
   getAllAnimes,
-  getAllAnimesWithoutPagination,
   checkForAnime,
   getAnimeInfo,
   findAnimeInfo,
@@ -21,7 +20,6 @@ import { fetchAnimeDataById, fetchCharactersBySeriesId } from '../services/anili
 const router = express.Router();
 
 router.get("/animes", getAllAnimes);
-router.get("/all", getAllAnimesWithoutPagination);
 
 router.post("/check-by-database", checkForAnime);
 
