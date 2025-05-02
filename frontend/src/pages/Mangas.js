@@ -86,7 +86,7 @@ const Mangas = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-    }
+      }
   };
 
   const handleGenreClick = (genre) => {
@@ -135,12 +135,12 @@ const Mangas = () => {
           title={getTitle(manga.titles)}
           userStatus={userMangaStatuses[manga._id]}
           onEditClick={() => {
-            setSelectedMangaForEdit(manga);
-            setIsMangaEditorOpen(true);
+    setSelectedMangaForEdit(manga);
+    setIsMangaEditorOpen(true);
           }}
           onStatusChange={async (newStatus) => {
-            if (!userData?._id) return;
-            try {
+    if (!userData?._id) return;
+    try {
               await axiosInstance.post(`/users/${userData._id}/manga-status`, {
                 mangaId: manga._id,
                 status: newStatus
@@ -151,7 +151,7 @@ const Mangas = () => {
               }));
             } catch (error) {
               console.error('Error updating manga status:', error);
-            }
+    }
           }}
         />
       </li>
@@ -176,17 +176,17 @@ const Mangas = () => {
             <div className={browseStyles.selectedFilters}>
               {selectedGenres.map(genre => (
                 <div key={genre} className={browseStyles.selectedFilter}>
-                  {genre}
+                {genre}
                   <button
                     className={browseStyles.removeGenreBtn}
                     onClick={() => handleGenreClick(genre)}
                   >
                     ×
                   </button>
-                </div>
-              ))}
-            </div>
-            <select
+              </div>
+            ))}
+          </div>
+          <select
               className={browseStyles.genreSelect}
               onChange={(e) => {
                 if (e.target.value) {
@@ -194,15 +194,15 @@ const Mangas = () => {
                   e.target.value = ''; // Reset the select
                 }
               }}
-            >
+          >
               <option value="">Select a genre...</option>
               {AVAILABLE_GENRES.map(genre => (
                 <option key={genre} value={genre}>{genre}</option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </select>
+        </div>
 
-          <div className={browseStyles.filterSection}>
+        <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Format</h3>
             <div className={browseStyles.selectedFilters}>
               {selectedFormats.map(format => (
@@ -217,7 +217,7 @@ const Mangas = () => {
                 </div>
               ))}
             </div>
-            <select
+          <select
               className={browseStyles.genreSelect}
               onChange={(e) => {
                 if (e.target.value) {
@@ -225,26 +225,26 @@ const Mangas = () => {
                   e.target.value = ''; // Reset the select
                 }
               }}
-            >
+          >
               <option value="">Select a format...</option>
-              {MANGA_FORMATS.map(format => (
-                <option key={format} value={format}>{format}</option>
-              ))}
-            </select>
-          </div>
+            {MANGA_FORMATS.map(format => (
+              <option key={format} value={format}>{format}</option>
+            ))}
+          </select>
+        </div>
 
-          <div className={browseStyles.filterSection}>
+        <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Status</h3>
-            <select
+          <select
               className={browseStyles.genreSelect}
-              value={selectedStatus}
+            value={selectedStatus}
               onChange={(e) => handleStatusChange(e.target.value)}
-            >
+          >
               <option value="">All Statuses</option>
-              {AIRING_STATUS.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
+            {AIRING_STATUS.map(status => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
           </div>
 
           <div className={browseStyles.filterSection}>

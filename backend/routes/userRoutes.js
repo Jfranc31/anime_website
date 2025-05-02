@@ -4,14 +4,6 @@
  */
 
 import express from "express";
-import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Define __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 import {
   registerUser,
   loginUser,
@@ -26,9 +18,8 @@ import {
   syncUserList,
   deleteAllLists
 } from "../controllers/userController.js";
-import { verifyToken } from "../middleware/auth.js";
-import { upload } from "../middleware/upload.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import upload from '../utils/gridfsStorage.js';
 import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniListConnection, syncAniListData, getAniListUserLists } from '../services/anilistAuthService.js';
 import UserModel from '../Models/userModel.js';
 
@@ -39,20 +30,20 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 // User profile routes
-router.get("/:userId", verifyToken, getUserInfo);
+router.get("/:userId", authMiddleware, getUserInfo);
 router.get("/:userId/avatar", getAvatar);
-router.post("/:userId/avatar", verifyToken, upload.single("avatar"), uploadAvatar);
-router.patch("/:userId/theme", verifyToken, updateTheme);
-router.patch("/:userId/title", verifyToken, updateTitle);
-router.patch("/:userId/characterName", verifyToken, updateCharacterName);
+router.post("/:userId/avatar", authMiddleware, upload.single("avatar"), uploadAvatar);
+router.patch("/:userId/theme", authMiddleware, updateTheme);
+router.patch("/:userId/title", authMiddleware, updateTitle);
+router.patch("/:userId/characterName", authMiddleware, updateCharacterName);
 
 // Admin routes
-router.get("/", verifyToken, getAllUsers);
-router.patch("/:userId/admin", verifyToken, makeAdmin);
+router.get("/", authMiddleware, getAllUsers);
+router.patch("/:userId/admin", authMiddleware, makeAdmin);
 
 // AniList sync routes
-router.post("/:userId/sync", verifyToken, syncUserList);
-router.delete("/:userId/lists", verifyToken, deleteAllLists);
+router.post("/:userId/sync", authMiddleware, syncUserList);
+router.delete("/:userId/lists", authMiddleware, deleteAllLists);
 
 // Get AniList authorization URL
 router.get('/anilist/auth', (req, res) => {

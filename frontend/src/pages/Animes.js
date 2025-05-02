@@ -96,7 +96,7 @@ const Animes = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
+    setCurrentPage(newPage);
     }
   };
 
@@ -151,11 +151,11 @@ const Animes = () => {
           title={getTitle(anime.titles)}
           userStatus={userAnimeStatuses[anime._id]}
           onEditClick={() => {
-            setSelectedAnimeForEdit(anime);
-            setIsAnimeEditorOpen(true);
+    setSelectedAnimeForEdit(anime);
+    setIsAnimeEditorOpen(true);
           }}
           onStatusChange={async (newStatus) => {
-            if (!userData?._id) return;
+    if (!userData?._id) return;
             try {
               await axiosInstance.post(`/users/${userData._id}/anime-status`, {
                 animeId: anime._id,
@@ -202,8 +202,8 @@ const Animes = () => {
                 </div>
               ))}
             </div>
-            <select
-              className={browseStyles.genreSelect}
+          <select
+            className={browseStyles.genreSelect}
               onChange={(e) => {
                 if (e.target.value) {
                   handleGenreClick(e.target.value);
@@ -213,9 +213,9 @@ const Animes = () => {
             >
               <option value="">Select a genre...</option>
               {AVAILABLE_GENRES.map(genre => (
-                <option key={genre} value={genre}>{genre}</option>
-              ))}
-            </select>
+              <option key={genre} value={genre}>{genre}</option>
+            ))}
+          </select>
           </div>
 
           <div className={browseStyles.filterSection}>
@@ -230,8 +230,8 @@ const Animes = () => {
                   >
                     ×
                   </button>
-                </div>
-              ))}
+              </div>
+            ))}
             </div>
             <select
               className={browseStyles.genreSelect}
@@ -261,42 +261,42 @@ const Animes = () => {
                 <option key={status} value={status}>{status}</option>
               ))}
             </select>
-          </div>
+        </div>
 
-          <div className={browseStyles.filterSection}>
+        <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Year</h3>
-            <select
+          <select
               className={browseStyles.genreSelect}
-              value={selectedYear}
+            value={selectedYear}
               onChange={(e) => handleYearChange(e.target.value)}
-            >
-              <option value="">All Years</option>
-              {YEARS.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
+          >
+            <option value="">All Years</option>
+            {YEARS.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
 
-          <div className={browseStyles.filterSection}>
+        <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Season</h3>
-            <select
+          <select
               className={browseStyles.genreSelect}
-              value={selectedSeason}
+            value={selectedSeason}
               onChange={(e) => handleSeasonChange(e.target.value)}
-            >
-              <option value="">All Seasons</option>
-              {SEASONS.map(season => (
-                <option key={season} value={season}>{season}</option>
-              ))}
-            </select>
-          </div>
+          >
+            <option value="">All Seasons</option>
+            {SEASONS.map(season => (
+              <option key={season} value={season}>{season}</option>
+            ))}
+          </select>
+        </div>
         </div>
       </div>
 
       <div className={browseStyles.listContainer}>
         <ul className={browseStyles.list}>
-          {renderListItems()}
-        </ul>
+              {renderListItems()}
+            </ul>
       </div>
 
       {totalPages > 1 && (

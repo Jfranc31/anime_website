@@ -50,7 +50,7 @@ const Characters = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
+    setCurrentPage(newPage);
     }
   };
 
@@ -87,7 +87,7 @@ const Characters = () => {
     if (loading) {
       return Array(limit).fill(0).map((_, index) => (
         <li key={index} className={browseStyles.listItem}>
-          <SkeletonCard />
+            <SkeletonCard />
         </li>
       ));
     }
@@ -98,7 +98,7 @@ const Characters = () => {
           character={character}
           title={getFullName(character.names)}
         />
-      </li>
+          </li>
     ));
   };
 
@@ -131,32 +131,32 @@ const Characters = () => {
         </div>
       </div>
 
-      <div className={browseStyles.listContainer}>
-        <ul className={browseStyles.list}>
-          {renderListItems()}
-        </ul>
+          <div className={browseStyles.listContainer}>
+            <ul className={browseStyles.list}>
+              {renderListItems()}
+            </ul>
       </div>
 
       {totalPages > 1 && (
         <div className={browseStyles.pagination}>
-          <button
+        <button 
             className={browseStyles.paginationButton}
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
+          onClick={() => handlePageChange(currentPage - 1)} 
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
           <span className={browseStyles.pageInfo}>
             Page {currentPage} of {totalPages}
           </span>
-          <button
+        <button 
             className={browseStyles.paginationButton}
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
+          onClick={() => handlePageChange(currentPage + 1)} 
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
+      </div>
       )}
     </div>
   );
