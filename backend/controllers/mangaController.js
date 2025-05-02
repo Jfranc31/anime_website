@@ -792,6 +792,59 @@ const updateMangaAnilist = async (req, res) => {
   }
 };
 
+const getAllMangas = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search, genres, formats, status, year } = req.query;
+    const skip = (page - 1) * limit;
+
+    let query = {};
+    if (search) {
+      query.$or = [
+        { 'titles.english': { $regex: search, $options: 'i' } },
+        { 'titles.romaji': { $regex: search, $options: 'i' } },
+        { 'titles.native': { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (genres) {
+      query.genres = { $all: genres.split(',') };
+    }
+    if (formats) {
+      query.format = { $in: formats.split(',') };
+    }
+    if (status) {
+      query['releaseData.releaseStatus'] = status;
+    }
+    if (year) {
+      query['releaseData.releaseYear'] = parseInt(year);
+    }
+
+    const total = await MangaModel.countDocuments(query);
+    const mangas = await MangaModel.find(query)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ 'titles.english': 1 });
+
+    res.json({
+      mangas,
+      total,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    console.error('Error fetching mangas:', err);
+    res.status(500).json({ message: 'Error fetching mangas' });
+  }
+};
+
+const getAllMangasWithoutPagination = async (req, res) => {
+  try {
+    const mangas = await MangaModel.find({}).sort({ 'titles.english': 1 });
+    res.json(mangas);
+  } catch (err) {
+    console.error('Error fetching all mangas:', err);
+    res.status(500).json({ message: 'Error fetching all mangas' });
+  }
+};
+
 export {
   getAllManga,
   checkForManga,
@@ -801,5 +854,7 @@ export {
   updateManga,
   createMangaFromAnilist,
   compareMangaWithAnilist,
-  updateMangaAnilist
+  updateMangaAnilist,
+  getAllMangas,
+  getAllMangasWithoutPagination
 };

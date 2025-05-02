@@ -19,72 +19,57 @@ import { updateAnimeFromAnilist, compareAnimeData, FORMAT_MAP } from "../service
  */
 const getAllAnimes = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const { page = 1, limit = 20, search, genres, formats, status, year, season } = req.query;
     const skip = (page - 1) * limit;
-    const searchQuery = req.query.search || '';
-    const genres = req.query.genres ? req.query.genres.split(',') : [];
-    const formats = req.query.formats ? req.query.formats.split(',') : [];
-    const status = req.query.status || '';
-    const year = req.query.year || '';
-    const season = req.query.season || '';
 
-    // Build the query object
-    const query = {};
-
-    // Add search query if provided
-    if (searchQuery) {
+    let query = {};
+    if (search) {
       query.$or = [
-        { 'titles.english': { $regex: searchQuery, $options: 'i' } },
-        { 'titles.romaji': { $regex: searchQuery, $options: 'i' } },
-        { 'titles.native': { $regex: searchQuery, $options: 'i' } }
+        { 'titles.english': { $regex: search, $options: 'i' } },
+        { 'titles.romaji': { $regex: search, $options: 'i' } },
+        { 'titles.native': { $regex: search, $options: 'i' } }
       ];
     }
-
-    // Add genre filter if provided
-    if (genres.length > 0) {
-      query.genres = { $all: genres };
+    if (genres) {
+      query.genres = { $all: genres.split(',') };
     }
-
-    // Add format filter if provided
-    if (formats.length > 0) {
-      query['typings.Format'] = { $in: formats };
+    if (formats) {
+      query.format = { $in: formats.split(',') };
     }
-
-    // Add status filter if provided
     if (status) {
       query['releaseData.releaseStatus'] = status;
     }
-
-    // Add year filter if provided
     if (year) {
-      query['releaseData.startDate.year'] = parseInt(year);
+      query['releaseData.releaseYear'] = parseInt(year);
     }
-
-    // Add season filter if provided
     if (season) {
-      query['releaseData.startDate.season'] = season;
+      query['releaseData.releaseSeason'] = season;
     }
 
-    // First get the total count
     const total = await AnimeModel.countDocuments(query);
-
-    // Then get the paginated results
     const animes = await AnimeModel.find(query)
-      .sort({ 'titles.english': 1 }) // Sort by English title
       .skip(skip)
-      .limit(limit)
-      .lean();
+      .limit(parseInt(limit))
+      .sort({ 'titles.english': 1 });
 
     res.json({
       animes,
       total,
-      page,
       pages: Math.ceil(total / limit)
     });
-  } catch (error) {
-    console.error("Error fetching animes:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+  } catch (err) {
+    console.error('Error fetching animes:', err);
+    res.status(500).json({ message: 'Error fetching animes' });
+  }
+};
+
+const getAllAnimesWithoutPagination = async (req, res) => {
+  try {
+    const animes = await AnimeModel.find({}).sort({ 'titles.english': 1 });
+    res.json(animes);
+  } catch (err) {
+    console.error('Error fetching all animes:', err);
+    res.status(500).json({ message: 'Error fetching all animes' });
   }
 };
 
@@ -794,6 +779,7 @@ const updateAnimeAnilist = async (req, res) => {
 
 export {
   getAllAnimes,
+  getAllAnimesWithoutPagination,
   checkForAnime,
   getAnimeInfo,
   findAnimeInfo,

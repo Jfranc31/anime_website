@@ -6,6 +6,7 @@
 import express from "express";
 import {
   getAllCharacters,
+  getAllCharactersWithoutPagination,
   searchForCharacters,
   checkForCharacter,
   getCharacterInfo,
@@ -20,6 +21,8 @@ import { fetchCharacterDataById } from "../services/anilistService.js";
 const router = express.Router();
 
 router.get("/characters", getAllCharacters);
+
+router.get("/all", getAllCharactersWithoutPagination);
 
 router.get("/searchcharacters", searchForCharacters);
 

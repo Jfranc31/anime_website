@@ -4,6 +4,7 @@ import axiosInstance from './../utils/axiosConfig';
 import { useAnimeContext } from '../Context/AnimeContext';
 import { useMangaContext } from '../Context/MangaContext';
 import { useUser } from '../Context/ContextApi';
+import { useSeries } from '../Context/SeriesContext';
 import homeStyles from '../styles/pages/Home.module.css';
 import { fetchWithErrorHandling } from '../utils/apiUtils';
 
@@ -11,6 +12,7 @@ const Home = () => {
   const animeContext = useAnimeContext();
   const mangaContext = useMangaContext();
   const { userData } = useUser();
+  const { animes, mangas, loading } = useSeries();
   const [userAnimeList, setUserAnimeList] = useState([]);
   const [userMangaList, setUserMangaList] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -28,7 +30,6 @@ const Home = () => {
   const [mangaActivities, setMangaActivities] = useState([]);
 
   const [featuredContent, setFeaturedContent] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const calculateTimeUntilAiring = useCallback((airingAt) => {
@@ -100,7 +101,6 @@ const Home = () => {
 
   const fetchFeaturedContent = async () => {
     try {
-      setLoading(true);
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/featured`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -123,8 +123,6 @@ const Home = () => {
     } catch (err) {
       console.error('Error fetching featured content:', err);
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -148,6 +146,14 @@ const Home = () => {
     const preference = userData?.title || 'english';
     return titles[preference] || titles.english || titles.romaji || titles.native;
   }, [userData?.title]);
+
+  // Filter animes and mangas based on user status
+  const watchingAnimes = animes.filter(anime => 
+    userData?.animeStatuses?.[anime._id] === 'Watching'
+  );
+  const readingMangas = mangas.filter(manga => 
+    userData?.mangaStatuses?.[manga._id] === 'Reading'
+  );
 
   const watchingAnime = useMemo(() => 
     userAnimeList
@@ -361,60 +367,59 @@ const Home = () => {
     <div className={homeStyles.progressSection}>
       <h2>Currently Watching</h2>
       <div className={homeStyles.progressGrid}>
-        {watchingAnime.map((activity) => (
+        {watchingAnimes.map((anime) => (
           <div
-            key={activity.animeId}
+            key={anime._id}
             className={homeStyles.progressCard}
-            onMouseEnter={(event) => handleMouseEnter(activity.animeId, event)}
+            onMouseEnter={(event) => handleMouseEnter(anime._id, event)}
             onMouseLeave={() => setHoveredCard(null)}
           >
-            <Link to={`/anime/${activity.animeId}`}>
+            <Link to={`/anime/${anime._id}`}>
               <img
-                src={getAnimeById(activity.animeId)?.images.image}
-                alt={getAnimeById(activity.animeId)?.titles.english}
+                src={anime.images.image}
+                alt={anime.titles.english}
               />
             </Link>
             <div className={homeStyles.progressInfo}>
-              {hoveredCard === activity.animeId ? (
+              {hoveredCard === anime._id ? (
                 <div className={homeStyles.episodeInfo}>
                   <span
-                    onClick={() => handleIncrementWatchCount(activity.animeId, 'anime')}
+                    onClick={() => handleIncrementWatchCount(anime._id, 'anime')}
                   >
-                    {activity.currentEpisode}+
+                    {anime.currentEpisode}+
                   </span>
                 </div>
               ) : (
-                airingTimes[activity.animeId] && (
+                airingTimes[anime._id] && (
                   <div className={homeStyles.episodeInfo}>
                     <span>
-                      {airingTimes[activity.animeId].episode}
+                      {airingTimes[anime._id].episode}
                     </span>
                     <span>
-                      {formatTimeUntilNextEpisode(airingTimes[activity.animeId].timeUntilAiring)}
+                      {formatTimeUntilNextEpisode(airingTimes[anime._id].timeUntilAiring)}
                     </span>
                   </div>
                 )
               )}
             </div>
-            {hoveredCard === activity.animeId && (
+            {hoveredCard === anime._id && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                {getAnimeById(activity.animeId)?.releaseData.releaseStatus === 'Currently Releasing' && (
+                {anime.releaseData.releaseStatus === 'Currently Releasing' && (
                   (() => {
-                    const anime = getAnimeById(activity.animeId);
-                    const maxEpisodes = parseInt(anime?.lengths.Episodes) || Infinity;
+                    const maxEpisodes = parseInt(anime.lengths.Episodes) || Infinity;
                     const latestAiredEpisode = Math.min(
-                      (anime?.nextAiringEpisode?.episode || 1) - 1,
+                      (anime.nextAiringEpisode?.episode || 1) - 1,
                       maxEpisodes
                     );
-                    const episodesBehind = Math.max(0, latestAiredEpisode - activity.currentEpisode);
+                    const episodesBehind = Math.max(0, latestAiredEpisode - anime.currentEpisode);
                     
                     return episodesBehind > 0 ? (
                       <h3>{episodesBehind} Episodes Behind</h3>
                     ) : null;
                   })()
                 )}
-                <h4>{getTitle(getAnimeById(activity.animeId)?.titles)}</h4>
-                <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
+                <h4>{getTitle(anime.titles)}</h4>
+                <p>Progress: {anime.currentEpisode}/{anime.lengths.Episodes}</p>
               </div>
             )}
           </div>
@@ -427,36 +432,36 @@ const Home = () => {
     <div className={homeStyles.progressSection}>
       <h2>Currently Reading</h2>
       <div className={homeStyles.progressGrid}>
-        {readingManga.map((activity) => (
+        {readingMangas.map((manga) => (
           <div
-            key={activity.mangaId}
+            key={manga._id}
             className={homeStyles.progressCard}
-            onMouseEnter={(event) => handleMouseEnter(activity.mangaId, event)}
+            onMouseEnter={(event) => handleMouseEnter(manga._id, event)}
             onMouseLeave={() => setHoveredCard(null)}
           >
             <Link
-              to={`/manga/${activity.mangaId}`}
+              to={`/manga/${manga._id}`}
             >
               <img
-                src={getMangaById(activity.mangaId)?.images.image}
-                alt={getMangaById(activity.mangaId)?.titles.english}
+                src={manga.images.image}
+                alt={manga.titles.english}
               />
             </Link>
             <div className={homeStyles.progressInfo}>
-              {hoveredCard === activity.mangaId && (
+              {hoveredCard === manga._id && (
                 <div className={homeStyles.episodeInfo}>
                   <span
-                    onClick={() => handleIncrementWatchCount(activity.mangaId, 'manga')}
+                    onClick={() => handleIncrementWatchCount(manga._id, 'manga')}
                   >
-                    {activity.currentChapter}+
+                    {manga.currentChapter}+
                   </span>
                 </div>
               )}
             </div>
-            {hoveredCard === activity.mangaId && (
+            {hoveredCard === manga._id && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                <h4>{getTitle(getMangaById(activity.mangaId)?.titles)}</h4>
-                <p>Progress: {activity.currentChapter}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
+                <h4>{getTitle(manga.titles)}</h4>
+                <p>Progress: {manga.currentChapter}/{manga.lengths.chapters}</p>
               </div>
             )}
           </div>
@@ -465,7 +470,7 @@ const Home = () => {
     </div>
   );
 
-  if (loading) {
+  if (loading.animes || loading.mangas) {
     return <div>Loading...</div>;
   }
 
@@ -541,7 +546,7 @@ const Home = () => {
             )}
           </div>
 
-          {watchingAnime.length > 0 && renderProgressSection()}
+          {watchingAnimes.length > 0 && renderProgressSection()}
         </>
       )}
 
@@ -596,7 +601,7 @@ const Home = () => {
             )}
           </div>
 
-          {readingManga.length > 0 && (
+          {readingMangas.length > 0 && (
             renderReadingSection()
           )}
         </>

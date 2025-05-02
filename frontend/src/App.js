@@ -30,6 +30,7 @@ import UserManagement from './Components/Admin/UserManagement';
 import Settings from './pages/Settings';
 import Loader from './constants/Loader.js';
 import AniListCallback from './Components/AniListCallback';
+import { SeriesProvider } from './Context/SeriesContext';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -122,24 +123,26 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Router>
-      <UserProvider>
-        <ThemeProvider>
-          <div className="App">
-            <ScrollToTop />
-            <Navbar />
-            <AnimeProvider>
-              <MangaProvider>
-                <CharacterProvider>
-                  <AppRoutes />
-                </CharacterProvider>
-              </MangaProvider>
-            </AnimeProvider>
-            <Footer />
-          </div>
-        </ThemeProvider>
-      </UserProvider>
-    </Router>
+    <UserProvider>
+      <SeriesProvider>
+        <Router>
+          <ThemeProvider>
+            <div className="App">
+              <ScrollToTop />
+              <Navbar />
+              <AnimeProvider>
+                <MangaProvider>
+                  <CharacterProvider>
+                    <AppRoutes />
+                  </CharacterProvider>
+                </MangaProvider>
+              </AnimeProvider>
+              <Footer />
+            </div>
+          </ThemeProvider>
+        </Router>
+      </SeriesProvider>
+    </UserProvider>
   );
 }
 
