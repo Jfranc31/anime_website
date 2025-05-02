@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosConfig';
-import { useAnimeContext } from '../Context/AnimeContext';
 import AnimeCard from '../cards/AnimeCard';
 import SkeletonCard from '../cards/SkeletonCard';
 import AnimeEditor from '../Components/ListEditors/AnimeEditor';
@@ -11,7 +10,6 @@ import { useUser } from '../Context/ContextApi';
 import { useTitlePreference } from '../hooks/useTitlePreference';
 
 const Animes = () => {
-  const { animeList, setAnimeList } = useAnimeContext();
   const { userData, setUserData } = useUser();
   const { getTitle } = useTitlePreference();
   const [userAnimeStatuses, setUserAnimeStatuses] = useState({});
@@ -29,6 +27,7 @@ const Animes = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalAnimes, setTotalAnimes] = useState(0);
+  const [animes, setAnimes] = useState([]);
   const limit = 20;
 
   const handleModalClose = () => setIsAnimeEditorOpen(false);
@@ -56,7 +55,7 @@ const Animes = () => {
 
       const response = await axiosInstance.get(`/animes/animes?${params.toString()}`);
       const { animes, total, pages } = response.data;
-      setAnimeList(animes);
+      setAnimes(animes);
       setTotalPages(pages);
       setTotalAnimes(total);
       setError(null);
@@ -108,6 +107,7 @@ const Animes = () => {
       }
       return [...prev, genre];
     });
+    setCurrentPage(1); // Reset to first page when changing genres
   };
 
   const handleFormatClick = (format) => {
@@ -117,6 +117,22 @@ const Animes = () => {
       }
       return [...prev, format];
     });
+    setCurrentPage(1); // Reset to first page when changing formats
+  };
+
+  const handleStatusChange = (status) => {
+    setSelectedStatus(status);
+    setCurrentPage(1); // Reset to first page when changing status
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    setCurrentPage(1); // Reset to first page when changing year
+  };
+
+  const handleSeasonChange = (season) => {
+    setSelectedSeason(season);
+    setCurrentPage(1); // Reset to first page when changing season
   };
 
   const renderListItems = () => {
@@ -128,7 +144,7 @@ const Animes = () => {
       ));
     }
 
-    return animeList.map((anime) => (
+    return animes.map((anime) => (
       <li key={anime._id} className={browseStyles.listItem}>
         <AnimeCard
           anime={anime}
@@ -153,7 +169,6 @@ const Animes = () => {
               console.error('Error updating anime status:', error);
             }
           }}
-          handleGenreClick={handleGenreClick}
         />
       </li>
     ));
@@ -219,7 +234,7 @@ const Animes = () => {
               ))}
             </div>
             <select
-              className={browseStyles.filterSelect}
+              className={browseStyles.genreSelect}
               onChange={(e) => {
                 if (e.target.value) {
                   handleFormatClick(e.target.value);
@@ -237,9 +252,9 @@ const Animes = () => {
           <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Status</h3>
             <select
+              className={browseStyles.genreSelect}
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className={browseStyles.filterSelect}
+              onChange={(e) => handleStatusChange(e.target.value)}
             >
               <option value="">All Statuses</option>
               {AIRING_STATUS.map(status => (
@@ -251,9 +266,9 @@ const Animes = () => {
           <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Year</h3>
             <select
+              className={browseStyles.genreSelect}
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className={browseStyles.filterSelect}
+              onChange={(e) => handleYearChange(e.target.value)}
             >
               <option value="">All Years</option>
               {YEARS.map(year => (
@@ -265,9 +280,9 @@ const Animes = () => {
           <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Season</h3>
             <select
+              className={browseStyles.genreSelect}
               value={selectedSeason}
-              onChange={(e) => setSelectedSeason(e.target.value)}
-              className={browseStyles.filterSelect}
+              onChange={(e) => handleSeasonChange(e.target.value)}
             >
               <option value="">All Seasons</option>
               {SEASONS.map(season => (
@@ -278,52 +293,49 @@ const Animes = () => {
         </div>
       </div>
 
-      <div className={`${browseStyles.listSection} ${browseStyles[gridLayout]}`}>
-        {animeList.length === 0 && !loading ? (
-          <div className={browseStyles.noResults}>
-            No animes found
-          </div>
-        ) : (
-          <div className={`${browseStyles.listContainer} ${browseStyles[gridLayout]}`}>
-            <ul className={`${browseStyles.list} ${browseStyles[gridLayout]}`}>
-              {renderListItems()}
-            </ul>
-          </div>
-        )}
+      <div className={browseStyles.listContainer}>
+        <ul className={browseStyles.list}>
+          {renderListItems()}
+        </ul>
       </div>
 
-      {isAnimeEditorOpen && (
+      {totalPages > 1 && (
+        <div className={browseStyles.pagination}>
+          <button
+            className={browseStyles.paginationButton}
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className={browseStyles.pageInfo}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className={browseStyles.paginationButton}
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {isAnimeEditorOpen && selectedAnimeForEdit && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
-          <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={modalStyles.characterModal}
+            onClick={(e) => e.stopPropagation()}
+          >
             <AnimeEditor
               anime={selectedAnimeForEdit}
-              userId={userData?._id}
+              userId={userData._id}
               closeModal={handleModalClose}
-              onAnimeDelete={() => {
-                handleModalClose();
-                fetchAnimes();
-              }}
-              setUser={setUserData}
+              setUserData={setUserData}
             />
           </div>
         </div>
       )}
-
-      <div className={browseStyles.pagination}>
-        <button 
-          onClick={() => handlePageChange(currentPage - 1)} 
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <button 
-          onClick={() => handlePageChange(currentPage + 1)} 
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
     </div>
   );
 };

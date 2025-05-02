@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosConfig';
-import { useMangaContext } from '../Context/MangaContext';
 import MangaCard from '../cards/MangaCard';
 import SkeletonCard from '../cards/SkeletonCard';
 import MangaEditor from '../Components/ListEditors/MangaEditor';
@@ -11,7 +10,6 @@ import { useUser } from '../Context/ContextApi';
 import { useTitlePreference } from '../hooks/useTitlePreference';
 
 const Mangas = () => {
-  const { mangaList, setMangaList } = useMangaContext();
   const { userData, setUserData } = useUser();
   const { getTitle } = useTitlePreference();
   const [userMangaStatuses, setUserMangaStatuses] = useState({});
@@ -28,10 +26,17 @@ const Mangas = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalMangas, setTotalMangas] = useState(0);
+  const [mangas, setMangas] = useState([]);
   const limit = 20;
 
   const handleModalClose = () => setIsMangaEditorOpen(false);
   const changeLayout = (layout) => setGridLayout(layout);
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   const fetchMangas = async () => {
     try {
@@ -48,7 +53,7 @@ const Mangas = () => {
 
       const response = await axiosInstance.get(`/mangas/mangas?${params.toString()}`);
       const { mangas, total, pages } = response.data;
-      setMangaList(mangas);
+      setMangas(mangas);
       setTotalPages(pages);
       setTotalMangas(total);
       setError(null);
@@ -72,8 +77,11 @@ const Mangas = () => {
 
   useEffect(() => {
     fetchMangas();
-    fetchUserMangaStatuses();
   }, [currentPage, userData?._id, searchInput, selectedGenres, selectedFormats, selectedStatus, selectedYear]);
+
+  useEffect(() => {
+    fetchUserMangaStatuses();
+  }, [userData?._id]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -88,6 +96,7 @@ const Mangas = () => {
       }
       return [...prev, genre];
     });
+    setCurrentPage(1); // Reset to first page when changing genres
   };
 
   const handleFormatClick = (format) => {
@@ -97,12 +106,17 @@ const Mangas = () => {
       }
       return [...prev, format];
     });
+    setCurrentPage(1); // Reset to first page when changing formats
   };
 
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchInput(value);
-    setCurrentPage(1); // Reset to first page when searching
+  const handleStatusChange = (status) => {
+    setSelectedStatus(status);
+    setCurrentPage(1); // Reset to first page when changing status
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    setCurrentPage(1); // Reset to first page when changing year
   };
 
   const renderListItems = () => {
@@ -114,7 +128,7 @@ const Mangas = () => {
       ));
     }
 
-    return mangaList.map((manga) => (
+    return mangas.map((manga) => (
       <li key={manga._id} className={browseStyles.listItem}>
         <MangaCard
           manga={manga}
@@ -139,7 +153,6 @@ const Mangas = () => {
               console.error('Error updating manga status:', error);
             }
           }}
-          handleGenreClick={handleGenreClick}
         />
       </li>
     ));
@@ -205,7 +218,7 @@ const Mangas = () => {
               ))}
             </div>
             <select
-              className={browseStyles.filterSelect}
+              className={browseStyles.genreSelect}
               onChange={(e) => {
                 if (e.target.value) {
                   handleFormatClick(e.target.value);
@@ -223,9 +236,9 @@ const Mangas = () => {
           <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Status</h3>
             <select
+              className={browseStyles.genreSelect}
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className={browseStyles.filterSelect}
+              onChange={(e) => handleStatusChange(e.target.value)}
             >
               <option value="">All Statuses</option>
               {AIRING_STATUS.map(status => (
@@ -237,9 +250,9 @@ const Mangas = () => {
           <div className={browseStyles.filterSection}>
             <h3 className={browseStyles.filterTitle}>Year</h3>
             <select
+              className={browseStyles.genreSelect}
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className={browseStyles.filterSelect}
+              onChange={(e) => handleYearChange(e.target.value)}
             >
               <option value="">All Years</option>
               {YEARS.map(year => (
@@ -251,7 +264,7 @@ const Mangas = () => {
       </div>
 
       <div className={`${browseStyles.listSection} ${browseStyles[gridLayout]}`}>
-        {mangaList.length === 0 && !loading ? (
+        {mangas.length === 0 && !loading ? (
           <div className={browseStyles.noResults}>
             No mangas found
           </div>
@@ -264,38 +277,43 @@ const Mangas = () => {
         )}
       </div>
 
-      {isMangaEditorOpen && (
+      {totalPages > 1 && (
+        <div className={browseStyles.pagination}>
+          <button
+            className={browseStyles.paginationButton}
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className={browseStyles.pageInfo}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className={browseStyles.paginationButton}
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {isMangaEditorOpen && selectedMangaForEdit && (
         <div className={modalStyles.modalOverlay} onClick={handleModalClose}>
-          <div className={modalStyles.characterModal} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={modalStyles.characterModal}
+            onClick={(e) => e.stopPropagation()}
+          >
             <MangaEditor
               manga={selectedMangaForEdit}
-              userId={userData?._id}
+              userId={userData._id}
               closeModal={handleModalClose}
-              onMangaDelete={() => {
-                handleModalClose();
-                fetchMangas();
-              }}
-              setUser={setUserData}
+              setUserData={setUserData}
             />
           </div>
         </div>
       )}
-
-      <div className={browseStyles.pagination}>
-        <button 
-          onClick={() => handlePageChange(currentPage - 1)} 
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <button 
-          onClick={() => handlePageChange(currentPage + 1)} 
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
     </div>
   );
 };
