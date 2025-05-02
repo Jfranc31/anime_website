@@ -137,12 +137,22 @@ const MangaDetails = () => {
         return acc;
       }, {});
       
+      // Create a Set to track unique character IDs
+      const uniqueCharacterIds = new Set();
+      
       const processedCharacters = pageData.mangaDetails.characters
         .map(char => ({
           ...char,
           characterDetails: characterMap[char.characterId]
         }))
-        .filter(char => char.characterDetails) // Filter out any characters without details
+        .filter(char => {
+          // Only include characters that have details and haven't been seen before
+          if (!char.characterDetails || uniqueCharacterIds.has(char.characterId)) {
+            return false;
+          }
+          uniqueCharacterIds.add(char.characterId);
+          return true;
+        })
         .sort((a, b) => {
           const rolePriority = ['Main', 'Supporting', 'Background'];
           return rolePriority.indexOf(a.role) - rolePriority.indexOf(b.role);

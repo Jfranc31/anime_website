@@ -26,6 +26,10 @@ const Characters = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [characters, setCharacters] = useState([]);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCharacters, setTotalCharacters] = useState(0);
+  const limit = CHARACTERS_PER_PAGE;
 
   const observer = useRef();
   const filteredCharactersRef = useRef([]);
@@ -79,17 +83,22 @@ const Characters = () => {
   useEffect(() => {
     setIsInitialLoading(true);
     fetchCharacters();
-  }, [debouncedSearch, selectedGender]);
+  }, [debouncedSearch, selectedGender, currentPage]);
 
   const fetchCharacters = async () => {
     try {
       const params = new URLSearchParams({
+        page: currentPage,
+        limit: limit,
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(selectedGender && { gender: selectedGender })
       });
 
       const response = await axiosInstance.get(`/characters/characters?${params.toString()}`);
-      setCharacters(response.data.characters);
+      const { characters, total, pages } = response.data;
+      setCharacters(characters);
+      setTotalPages(pages);
+      setTotalCharacters(total);
       setError(null);
     } catch (err) {
       console.error('Error fetching characters:', err);
@@ -205,14 +214,11 @@ const Characters = () => {
 
   // Render list items with transitions
   const renderListItems = () => {
-    const items = [];
-
-    displayedCharacters.forEach((character, index) => {
+    return characters.map((character, index) => {
       const isLoading = loadingStates[character._id];
-      items.push(
+      return (
         <li
           key={character._id}
-          ref={index === displayedCharacters.length - 1 ? lastCharacterElementRef : null}
           className={`${browseStyles.listItem} ${isLoading ? browseStyles.loading : browseStyles.loaded}`}
         >
           {isLoading ? (
@@ -229,18 +235,12 @@ const Characters = () => {
         </li>
       );
     });
+  };
 
-    if ((isLoadingMore || isSearching) && hasMore) {
-      for (let i = 0; i < 4; i++) {
-        items.push(
-          <li key={`skeleton-more-${i}`} className={`${browseStyles.listItem} ${browseStyles.loading}`}>
-            <SkeletonCard />
-          </li>
-        );
-      }
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
     }
-
-    return items;
   };
 
   return (
@@ -253,7 +253,10 @@ const Characters = () => {
             name="searchInput"
             placeholder="Search characters..."
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              setCurrentPage(1);
+            }}
             className={browseStyles.searchInput}
           />
         </div>
@@ -262,7 +265,10 @@ const Characters = () => {
             <h3 className={browseStyles.filterTitle}>Gender</h3>
             <select
               value={selectedGender}
-              onChange={(e) => setSelectedGender(e.target.value)}
+              onChange={(e) => {
+                setSelectedGender(e.target.value);
+                setCurrentPage(1);
+              }}
               className={browseStyles.filterSelect}
             >
               <option value="">All Genders</option>
@@ -275,7 +281,13 @@ const Characters = () => {
       </div>
 
       <div className={browseStyles.listSection}>
-        {displayedCharacters.length === 0 && !isInitialLoading && !isLoadingMore && !isSearching ? (
+        {isInitialLoading ? (
+          <div className={browseStyles.loadingContainer}>
+            {[...Array(6)].map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
+          </div>
+        ) : characters.length === 0 ? (
           <div className={browseStyles.noResults}>
             No characters found matching your criteria
           </div>
@@ -287,6 +299,28 @@ const Characters = () => {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className={browseStyles.pagination}>
+          <button 
+            onClick={() => handlePageChange(currentPage - 1)} 
+            disabled={currentPage === 1}
+            className={browseStyles.paginationButton}
+          >
+            Previous
+          </button>
+          <span className={browseStyles.pageInfo}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button 
+            onClick={() => handlePageChange(currentPage + 1)} 
+            disabled={currentPage === totalPages}
+            className={browseStyles.paginationButton}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
