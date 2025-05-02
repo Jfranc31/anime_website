@@ -10,7 +10,7 @@ import bcrypt from "bcrypt";
 import { syncAniListData } from '../services/anilistAuthService.js';
 import mongoose from 'mongoose';
 import path from 'path';
-import UserList from '../models/UserList.js';
+import UserList from '../Models/UserList.js';
 const { ObjectId } = mongoose.Types;
 
 // Initialize GridFS stream
