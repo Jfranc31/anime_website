@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const userListSchema = new mongoose.Schema({
   userId: {
@@ -100,4 +100,5 @@ userListSchema.index({ 'readingManga.mangaId': 1 });
 userListSchema.index({ 'completedManga.mangaId': 1 });
 userListSchema.index({ 'planningManga.mangaId': 1 });
 
-module.exports = mongoose.model('UserList', userListSchema); 
+const UserList = mongoose.model('UserList', userListSchema);
+export default UserList; 
