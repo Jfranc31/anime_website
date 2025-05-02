@@ -9,8 +9,8 @@ import MangaProfile from './MangaProfile';
 import Stats from './StatsProfile';
 import Overview from './OverviewProfile';
 import { Routes, Route, Navigate } from 'react-router-dom'
-import AnimeCard from '../Components/AnimeCard';
-import MangaCard from '../Components/MangaCard';
+import AnimeCard from '../cards/AnimeCard';
+import MangaCard from '../cards/MangaCard';
 
 const Profile = () => {
   const { userData } = useUser();
