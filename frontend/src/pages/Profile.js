@@ -11,11 +11,12 @@ import Overview from './OverviewProfile';
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AnimeCard from '../cards/AnimeCard';
 import MangaCard from '../cards/MangaCard';
-import { getTitle } from '../hooks/useTitlePreference';
+import { useTitlePreference } from '../hooks/useTitlePreference';
 
 const Profile = () => {
   const { userData } = useUser();
   const { animes, mangas, loading } = useSeries();
+  const { getTitle } = useTitlePreference();
 
   // Filter animes and mangas based on user status
   const watchingAnimes = animes.filter(anime => 
