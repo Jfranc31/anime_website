@@ -64,18 +64,15 @@ const Mangas = () => {
     if (!userData?._id) return;
     try {
       const response = await axiosInstance.get(`/users/${userData._id}/manga-statuses`);
-      setUserMangaStatuses(response.data || {});
+      setUserMangaStatuses(response.data);
     } catch (err) {
       console.error('Error fetching user manga statuses:', err);
-      setUserMangaStatuses({});
     }
   };
 
   useEffect(() => {
     fetchMangas();
-    if (userData?._id) {
-      fetchUserMangaStatuses();
-    }
+    fetchUserMangaStatuses();
   }, [currentPage, userData?._id, searchInput, selectedGenres, selectedFormats, selectedStatus, selectedYear]);
 
   const handlePageChange = (newPage) => {

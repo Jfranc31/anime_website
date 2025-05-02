@@ -79,12 +79,8 @@ const Home = () => {
   const fetchUserList = useCallback(async () => {
     try {
       const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-      // Ensure we have the complete list of anime and manga statuses
-      const animeData = await fetchWithErrorHandling(`/users/${userData._id}/anime-statuses`);
-      const mangaData = await fetchWithErrorHandling(`/users/${userData._id}/manga-statuses`);
-      
-      setUserAnimeList(animeData || []);
-      setUserMangaList(mangaData || []);
+      setUserAnimeList(data.animes || []);
+      setUserMangaList(data.mangas || []);
     } catch (error) {
       console.error('Error fetching user list:', error);
       setUserAnimeList([]);
@@ -132,51 +128,72 @@ const Home = () => {
     }
   };
 
-  const getAnimeById = useCallback(() => null, []);
-  const getMangaById = useCallback(() => null, []);
+  const getAnimeById = useCallback((animeId) => {
+    if (!animeContext?.animeList || !Array.isArray(animeContext.animeList)) {
+      console.warn('animeList is not available or not an array:', animeContext?.animeList);
+      return null;
+    }
+    return animeContext.animeList.find((anime) => anime?._id === animeId);
+  }, [animeContext?.animeList]);
+
+  const getMangaById = useCallback((mangaId) => {
+    if (!mangaContext?.mangaList || !Array.isArray(mangaContext.mangaList)) {
+      console.warn('mangaList is not available or not an array:', mangaContext?.mangaList);
+      return null;
+    }
+    return mangaContext.mangaList.find((manga) => manga?._id === mangaId);
+  }, [mangaContext?.mangaList]);
 
   const getTitle = useCallback((titles) => {
-    if (!titles) return '';
     const preference = userData?.title || 'english';
-    return titles[preference] || titles.english || titles.romaji || titles.native || '';
+    return titles[preference] || titles.english || titles.romaji || titles.native;
   }, [userData?.title]);
 
-  const watchingAnime = useMemo(() => {
-    if (!Array.isArray(userAnimeList)) return [];
-    
-    return userAnimeList
-      .filter((userAnime) => userAnime?.status === 'Watching' && userAnime?.animeDetails)
-      .map((userAnime) => ({
-        animeId: userAnime.animeId,
-        currentEpisode: userAnime.currentEpisode,
-        status: userAnime.status,
-        animeDetails: userAnime.animeDetails
-      }))
+  const watchingAnime = useMemo(() => 
+    userAnimeList
+      .filter((userAnime) => userAnime.status === 'Watching')
+      .map((userAnime) => {
+        const animeDetails = getAnimeById(userAnime.animeId);
+        return {
+          animeId: userAnime.animeId,
+          currentEpisode: userAnime.currentEpisode,
+          status: userAnime.status,
+          animeDetails
+        };
+      })
+      // Filter out items where animeDetails is undefined
+      .filter(item => item.animeDetails)
       .sort((a, b) => {
-        const titleA = getTitle(a.animeDetails?.titles) || '';
-        const titleB = getTitle(b.animeDetails?.titles) || '';
+        const titleA = getTitle(a.animeDetails.titles) || '';
+        const titleB = getTitle(b.animeDetails.titles) || '';
+  
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-      });
-  }, [userAnimeList, getTitle]);
+      }),
+    [userAnimeList, getAnimeById, getTitle]
+  );
 
-  const readingManga = useMemo(() => {
-    if (!Array.isArray(userMangaList)) return [];
-    
-    return userMangaList
-      .filter((userManga) => userManga?.status === 'Reading' && userManga?.mangaDetails)
-      .map((userManga) => ({
-        mangaId: userManga.mangaId,
-        currentChapter: userManga.currentChapter,
-        currentVolume: userManga.currentVolume,
-        status: userManga.status,
-        mangaDetails: userManga.mangaDetails
-      }))
+  const readingManga = useMemo(() => 
+    userMangaList
+      .filter((userManga) => userManga.status === 'Reading')
+      .map((userManga) => {
+        const mangaDetails = getMangaById(userManga.mangaId);
+        return {
+          mangaId: userManga.mangaId,
+          currentChapter: userManga.currentChapter,
+          currentVolume: userManga.currentVolume,
+          status: userManga.status,
+          mangaDetails
+        };
+      })
+      .filter(item => item.mangaDetails)
       .sort((a, b) => {
-        const titleA = getTitle(a.mangaDetails?.titles) || '';
-        const titleB = getTitle(b.mangaDetails?.titles) || '';
+        const titleA = getTitle(a.mangaDetails.titles) || '';
+        const titleB = getTitle(b.mangaDetails.titles) || '';
+  
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
-      });
-  }, [userMangaList, getTitle]);
+      }),
+    [userMangaList, getMangaById, getTitle]
+  );
 
   const updateAiringTimes = useCallback(() => {
     const updatedTimes = {};

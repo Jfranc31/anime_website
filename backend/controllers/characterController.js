@@ -24,7 +24,6 @@ const getAllCharacters = async (req, res) => {
     const gender = req.query.gender || '';
     const animeId = req.query.animeId || '';
     const mangaId = req.query.mangaId || '';
-    const birthdayToday = req.query.birthdayToday === 'true';
 
     // Build the query object
     const query = {};
@@ -32,47 +31,25 @@ const getAllCharacters = async (req, res) => {
     // Add search query if provided
     if (searchQuery) {
       query.$or = [
-        { 'names.givenName': { $regex: searchQuery, $options: 'i' } },
-        { 'names.middleName': { $regex: searchQuery, $options: 'i' } },
-        { 'names.surName': { $regex: searchQuery, $options: 'i' } },
-        { 'names.nativeName': { $regex: searchQuery, $options: 'i' } },
-        { 'names.alterNames': { $regex: searchQuery, $options: 'i' } }
+        { 'name.english': { $regex: searchQuery, $options: 'i' } },
+        { 'name.romaji': { $regex: searchQuery, $options: 'i' } },
+        { 'name.native': { $regex: searchQuery, $options: 'i' } }
       ];
     }
 
     // Add gender filter if provided
     if (gender) {
-      // Map the frontend gender values to the database values
-      const genderMap = {
-        'Male': 'Male',
-        'Female': 'Female',
-        'Non-binary': 'Non-binary',
-        'Unknown': 'Unknown'
-      };
-      query.gender = genderMap[gender];
+      query.gender = gender;
     }
 
     // Add anime filter if provided
     if (animeId) {
-      query['animes.animeId'] = animeId;
+      query['appearances.anime'] = animeId;
     }
 
     // Add manga filter if provided
     if (mangaId) {
-      query['mangas.mangaId'] = mangaId;
-    }
-
-    // Add birthday filter if provided
-    if (birthdayToday) {
-      const today = new Date();
-      const month = today.getMonth() + 1; // JavaScript months are 0-based
-      const day = today.getDate();
-      
-      // Match characters with birthday today (month and day)
-      query.$and = [
-        { 'DOB.month': month.toString() },
-        { 'DOB.day': day.toString() }
-      ];
+      query['appearances.manga'] = mangaId;
     }
 
     // First get the total count
@@ -80,7 +57,7 @@ const getAllCharacters = async (req, res) => {
 
     // Then get the paginated results
     const characters = await CharacterModel.find(query)
-      .sort({ 'names.givenName': 1, 'names.surName': 1 }) // Sort by given name, then surname
+      .sort({ 'name.english': 1 }) // Sort by English name
       .skip(skip)
       .limit(limit)
       .lean();

@@ -9,7 +9,6 @@ import browseStyles from '../styles/pages/Browse.module.css';
 import { SEASONS, AVAILABLE_GENRES, ANIME_FORMATS, AIRING_STATUS, YEARS } from '../constants/filterOptions';
 import { useUser } from '../Context/ContextApi';
 import { useTitlePreference } from '../hooks/useTitlePreference';
-import { fetchWithErrorHandling } from '../utils/apiUtils';
 
 const Animes = () => {
   const { animeList, setAnimeList } = useAnimeContext();
@@ -93,19 +92,7 @@ const Animes = () => {
   ]);
 
   useEffect(() => {
-    const fetchUserStatuses = async () => {
-      try {
-        const response = await fetchWithErrorHandling(`/users/${userData._id}/anime-statuses`);
-        setUserAnimeStatuses(response || {});
-      } catch (error) {
-        console.error('Error fetching user anime statuses:', error);
-        setUserAnimeStatuses({});
-      }
-    };
-
-    if (userData?._id) {
-      fetchUserStatuses();
-    }
+    fetchUserAnimeStatuses();
   }, [userData?._id]);
 
   const handlePageChange = (newPage) => {

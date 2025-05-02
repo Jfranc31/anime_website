@@ -995,22 +995,13 @@ export const getUserAnimeStatuses = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Get all anime IDs from user's list
-    const animeIds = user.animes.map(anime => anime.animeId);
-    
-    // Fetch complete anime details
-    const animes = await AnimeModel.find({ _id: { $in: animeIds } });
-    
-    // Create a map of anime details with their statuses
-    const animeList = user.animes.map(userAnime => {
-      const animeDetails = animes.find(a => a._id.toString() === userAnime.animeId.toString());
-      return {
-        ...userAnime.toObject(),
-        animeDetails
-      };
+    // Create a map of anime IDs to their statuses
+    const statuses = {};
+    user.animes.forEach(anime => {
+      statuses[anime.animeId] = anime.status;
     });
 
-    res.json(animeList);
+    res.json(statuses);
   } catch (error) {
     console.error('Error fetching user anime statuses:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -1033,22 +1024,13 @@ export const getUserMangaStatuses = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Get all manga IDs from user's list
-    const mangaIds = user.mangas.map(manga => manga.mangaId);
-    
-    // Fetch complete manga details
-    const mangas = await MangaModel.find({ _id: { $in: mangaIds } });
-    
-    // Create a map of manga details with their statuses
-    const mangaList = user.mangas.map(userManga => {
-      const mangaDetails = mangas.find(m => m._id.toString() === userManga.mangaId.toString());
-      return {
-        ...userManga.toObject(),
-        mangaDetails
-      };
+    // Create a map of manga IDs to their statuses
+    const statuses = {};
+    user.mangas.forEach(manga => {
+      statuses[manga.mangaId] = manga.status;
     });
 
-    res.json(mangaList);
+    res.json(statuses);
   } catch (error) {
     console.error('Error fetching user manga statuses:', error);
     res.status(500).json({ message: 'Internal server error' });
