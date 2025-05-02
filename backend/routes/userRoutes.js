@@ -15,13 +15,7 @@ const __dirname = path.dirname(__filename);
 import {
   registerUser,
   loginUser,
-  updateUserAnime,
-  updateUserManga,
-  addAnime,
-  addManga,
   getUserInfo,
-  removeAnime,
-  removeManga,
   makeAdmin,
   updateTheme,
   getAllUsers,
@@ -30,46 +24,35 @@ import {
   updateTitle,
   updateCharacterName,
   syncUserList,
-  deleteAllLists,
-  getUserAnimeStatuses,
-  getUserMangaStatuses
+  deleteAllLists
 } from "../controllers/userController.js";
+import { verifyToken } from "../middleware/auth.js";
+import { upload } from "../middleware/upload.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniListConnection, syncAniListData, getAniListUserLists } from '../services/anilistAuthService.js';
 import UserModel from '../Models/userModel.js';
-import upload from '../utils/gridfsStorage.js';
 
 const router = express.Router();
 
-router.get('/', authMiddleware, getAllUsers);
-
+// User authentication routes
 router.post("/register", registerUser);
-
 router.post("/login", loginUser);
 
-router.get("/:userId/current", getUserInfo);
-
-// Manga routes
-router.post("/:userId/addManga", addManga);
-router.post("/:userId/updateManga", updateUserManga);
-router.post("/:userId/removeManga", removeManga);
-router.get("/:userId/manga-statuses", getUserMangaStatuses);
-
-// Anime routes
-router.post("/:userId/addAnime", addAnime);
-router.post("/:userId/updateAnime", updateUserAnime);
-router.post("/:userId/removeAnime", removeAnime);
-router.get("/:userId/anime-statuses", getUserAnimeStatuses);
+// User profile routes
+router.get("/:userId", verifyToken, getUserInfo);
+router.get("/:userId/avatar", getAvatar);
+router.post("/:userId/avatar", verifyToken, upload.single("avatar"), uploadAvatar);
+router.patch("/:userId/theme", verifyToken, updateTheme);
+router.patch("/:userId/title", verifyToken, updateTitle);
+router.patch("/:userId/characterName", verifyToken, updateCharacterName);
 
 // Admin routes
-router.put("/:userId/make-admin", authMiddleware, makeAdmin);
-router.put("/:userId/theme", authMiddleware, updateTheme);
-router.put("/:userId/title", authMiddleware, updateTitle);
-router.put("/:userId/characterName", authMiddleware, updateCharacterName);
+router.get("/", verifyToken, getAllUsers);
+router.patch("/:userId/admin", verifyToken, makeAdmin);
 
-// Avatar routes
-router.post('/:userId/upload-avatar', authMiddleware, upload.single('avatar'), uploadAvatar);
-router.get('/:userId/avatar', getAvatar);
+// AniList sync routes
+router.post("/:userId/sync", verifyToken, syncUserList);
+router.delete("/:userId/lists", verifyToken, deleteAllLists);
 
 // Get AniList authorization URL
 router.get('/anilist/auth', (req, res) => {
@@ -191,9 +174,6 @@ router.get('/:userId/anilist/validate', authMiddleware, async (req, res) => {
   }
 });
 
-// Sync AniList data
-router.post('/:userId/anilist/sync', authMiddleware, syncUserList);
-
 // Get AniList user lists
 router.get('/:userId/anilist/lists', authMiddleware, async (req, res) => {
   try {
@@ -224,8 +204,5 @@ router.get('/:userId/anilist/lists', authMiddleware, async (req, res) => {
     });
   }
 });
-
-// Delete all lists
-router.delete('/:userId/lists', authMiddleware, deleteAllLists);
 
 export default router;

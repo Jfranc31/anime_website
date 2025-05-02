@@ -20,60 +20,6 @@ const userSchema = new mongoose.Schema({
     enum: ['light', 'dark'],
     default: 'light'
   },
-  animes: [
-    {
-      animeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "AnimeModel",
-        required: true
-      },
-      anilistId: {
-        type: Number
-      },
-      status: {
-        type: String,
-        enum: ["Watching", "Completed", "Planning"],
-        default: 'Planning'
-      },
-      currentEpisode: {
-        type: Number,
-        default: 0
-      },
-      activityTimestamp: {
-        type: Number,
-        default: Date.now
-      }
-    },
-  ],
-  mangas: [
-    {
-      mangaId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "MangaModel",
-        required: true
-      },
-      anilistId: {
-        type: Number
-      },
-      status: {
-        type: String,
-        enum: ["Reading", "Completed", "Planning"],
-        default: "Planning"
-      },
-      currentChapter: {
-        type: Number,
-        default: 0
-      },
-      currentVolume: {
-        type: Number,
-        default: 0
-      },
-      activityTimestamp: {
-        type: Number,
-        default: Date.now
-      }
-    }
-  ],
   username: {
     type: String,
     required: true,
@@ -92,12 +38,12 @@ const userSchema = new mongoose.Schema({
   title: {
     type: String,
     enum: ['romaji', 'english', 'native'],
-    default: 'english', // Set a default value
+    default: 'english',
   },
   characterName: {
     type: String,
     enum: ['romaji-western', 'romaji', 'native'],
-    default: 'romaji-western', // Set a default value
+    default: 'romaji-western',
   },
   anilist: {
     connected: {
@@ -113,7 +59,7 @@ const userSchema = new mongoose.Schema({
     username: {
       type: String
     }
-  },
+  }
 });
 
 // Remove any existing index on mangas.anilistId
