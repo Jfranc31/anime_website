@@ -368,8 +368,8 @@ const Home = () => {
           >
             <Link to={`/anime/${activity.animeId}`}>
               <img
-                src={getAnimeById(activity.animeId)?.images.image}
-                alt={getAnimeById(activity.animeId)?.titles.english}
+                src={getAnimeById(activity.animeId)?.images?.image || ''}
+                alt={getAnimeById(activity.animeId)?.titles?.english || ''}
               />
             </Link>
             <div className={homeStyles.progressInfo}>
@@ -396,10 +396,10 @@ const Home = () => {
             </div>
             {hoveredCard === activity.animeId && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                {getAnimeById(activity.animeId)?.releaseData.releaseStatus === 'Currently Releasing' && (
+                {getAnimeById(activity.animeId)?.releaseData?.releaseStatus === 'Currently Releasing' && (
                   (() => {
                     const anime = getAnimeById(activity.animeId);
-                    const maxEpisodes = parseInt(anime?.lengths.Episodes) || Infinity;
+                    const maxEpisodes = parseInt(anime?.lengths?.Episodes) || Infinity;
                     const latestAiredEpisode = Math.min(
                       (anime?.nextAiringEpisode?.episode || 1) - 1,
                       maxEpisodes
@@ -411,8 +411,8 @@ const Home = () => {
                     ) : null;
                   })()
                 )}
-                <h4>{getTitle(getAnimeById(activity.animeId)?.titles)}</h4>
-                <p>Progress: {activity.progress}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
+                <h4>{getTitle(getAnimeById(activity.animeId)?.titles || {})}</h4>
+                <p>Progress: {activity.progress}/{getAnimeById(activity.animeId)?.lengths?.Episodes || '?'}</p>
               </div>
             )}
           </div>
@@ -436,8 +436,8 @@ const Home = () => {
               to={`/manga/${activity.mangaId}`}
             >
               <img
-                src={getMangaById(activity.mangaId)?.images.image}
-                alt={getMangaById(activity.mangaId)?.titles.english}
+                src={getMangaById(activity.mangaId)?.images?.image || ''}
+                alt={getMangaById(activity.mangaId)?.titles?.english || ''}
               />
             </Link>
             <div className={homeStyles.progressInfo}>
@@ -453,8 +453,8 @@ const Home = () => {
             </div>
             {hoveredCard === activity.mangaId && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
-                <h4>{getTitle(getMangaById(activity.mangaId)?.titles)}</h4>
-                <p>Progress: {activity.progress}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
+                <h4>{getTitle(getMangaById(activity.mangaId)?.titles || {})}</h4>
+                <p>Progress: {activity.progress}/{getMangaById(activity.mangaId)?.lengths?.chapters || '?'}</p>
               </div>
             )}
           </div>
