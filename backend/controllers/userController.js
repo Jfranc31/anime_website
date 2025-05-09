@@ -124,8 +124,14 @@ const getUserInfo = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Get user's lists
-    const userList = await UserList.findOne({ userId: userID });
+    // Get user's lists and populate anime/manga details
+    const userList = await UserList.findOne({ userId: userID })
+      .populate('watchingAnime.animeId')
+      .populate('completedAnime.animeId')
+      .populate('planningAnime.animeId')
+      .populate('readingManga.mangaId')
+      .populate('completedManga.mangaId')
+      .populate('planningManga.mangaId');
     
     // Set cache headers
     res.setHeader('Cache-Control', 'public, max-age=60'); // Cache for 1 minute
