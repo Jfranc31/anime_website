@@ -473,8 +473,8 @@ const Home = () => {
         axiosInstance.get(`/users/${userData._id}/currently-reading`)
       ]);
 
-      console.log("Watching Response: ", watchingResponse.data.animes);
-      console.log("Reading Response: ", readingResponse.data.mangas);
+      console.log("Watching Response: ", watchingResponse);
+      console.log("Reading Response: ", readingResponse);
 
       setCurrentlyWatching(watchingResponse.data.animes);
       setCurrentlyReading(readingResponse.data.mangas);
