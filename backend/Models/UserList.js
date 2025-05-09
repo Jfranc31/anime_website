@@ -10,7 +10,7 @@ const userListSchema = new mongoose.Schema({
   watchingAnime: [{
     animeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Anime',
+      ref: 'AnimeModel',
       required: true
     },
     progress: {
@@ -25,7 +25,7 @@ const userListSchema = new mongoose.Schema({
   completedAnime: [{
     animeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Anime',
+      ref: 'AnimeModel',
       required: true
     },
     progress: {
@@ -40,7 +40,7 @@ const userListSchema = new mongoose.Schema({
   planningAnime: [{
     animeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Anime',
+      ref: 'AnimeModel',
       required: true
     },
     lastUpdated: {
@@ -51,7 +51,7 @@ const userListSchema = new mongoose.Schema({
   readingManga: [{
     mangaId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Manga',
+      ref: 'MangaModel',
       required: true
     },
     progress: {
@@ -66,7 +66,7 @@ const userListSchema = new mongoose.Schema({
   completedManga: [{
     mangaId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Manga',
+      ref: 'MangaModel',
       required: true
     },
     progress: {
@@ -81,7 +81,7 @@ const userListSchema = new mongoose.Schema({
   planningManga: [{
     mangaId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Manga',
+      ref: 'MangaModel',
       required: true
     },
     lastUpdated: {
