@@ -423,6 +423,10 @@ const syncUserList = async (req, res) => {
     userList.completedManga = [];
     userList.planningManga = [];
 
+    // Track progress for frontend
+    const animeProgress = { added: 0, updated: 0, skipped: 0 };
+    const mangaProgress = { added: 0, updated: 0, skipped: 0 };
+
     // Process anime list
     for (const animeEntry of anilistData.anime) {
       try {
@@ -430,14 +434,18 @@ const syncUserList = async (req, res) => {
         const progress = animeEntry.progress || 0;
         const listField = animeStatusMap[status] || 'planningAnime';
         let animeInDatabase = await AnimeModel.findOne({ anilistId: animeEntry.mediaId });
-        if (!animeInDatabase) continue;
+        if (!animeInDatabase) {
+          animeProgress.skipped++;
+          continue;
+        }
         userList[listField].push({
           animeId: animeInDatabase._id,
           progress,
           lastUpdated: new Date()
         });
+        animeProgress.added++;
       } catch (error) {
-        // Optionally log or collect skipped
+        animeProgress.skipped++;
       }
     }
 
@@ -448,14 +456,18 @@ const syncUserList = async (req, res) => {
         const progress = mangaEntry.progress || 0;
         const listField = mangaStatusMap[status] || 'planningManga';
         let mangaInDatabase = await MangaModel.findOne({ anilistId: mangaEntry.mediaId });
-        if (!mangaInDatabase) continue;
+        if (!mangaInDatabase) {
+          mangaProgress.skipped++;
+          continue;
+        }
         userList[listField].push({
           mangaId: mangaInDatabase._id,
           progress,
           lastUpdated: new Date()
         });
+        mangaProgress.added++;
       } catch (error) {
-        // Optionally log or collect skipped
+        mangaProgress.skipped++;
       }
     }
 
@@ -466,6 +478,10 @@ const syncUserList = async (req, res) => {
     res.json({
       success: true,
       message: 'Successfully synced with AniList',
+      data: {
+        anime: animeProgress,
+        manga: mangaProgress
+      }
     });
   } catch (error) {
     console.error('Error syncing AniList data:', error);
