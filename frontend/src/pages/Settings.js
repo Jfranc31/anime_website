@@ -532,6 +532,8 @@ const Settings = () => {
     </div>
   );
 
+  console.log("UserData: ", userData);
+
   return (
     <div className={settingsStyles.settingsPage}>
       <div className={settingsStyles.sidebar}>
