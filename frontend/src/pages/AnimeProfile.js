@@ -260,13 +260,16 @@ const AnimeProfile = () => {
                     )}
                 </div>
                 {isAnimeEditorOpen && selectedAnimeForEdit && (
-                    <div className={modalStyles.modalOverlay}>
-                        <div className={modalStyles.modalContent}>
+                    <div className={modalStyles.modalOverlay} onClick={handleAnimeModalClose}>
+                        <div className={modalStyles.modalContent} onClick={e => e.stopPropagation()}>
                             <AnimeEditor
-                            anime={selectedAnimeForEdit}
-                            onClose={handleAnimeModalClose}
-                            onDelete={onAnimeDelete}
-                            onUpdate={onAnimeUpdate}
+                                anime={selectedAnimeForEdit}
+                                userId={userData._id}
+                                closeModal={handleAnimeModalClose}
+                                onDelete={onAnimeDelete}
+                                onAnimeDelete={onAnimeDelete}
+                                onAnimeUpdate={onAnimeUpdate}
+                                setUserData={refreshUserData}
                             />
                         </div>
                     </div>

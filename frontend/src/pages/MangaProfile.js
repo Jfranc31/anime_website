@@ -267,13 +267,15 @@ const MangaProfile = () => {
             </div>
 
             {isMangaEditorOpen && selectedMangaForEdit && (
-                <div className={modalStyles.modalOverlay}>
-                    <div className={modalStyles.modalContent}>
+                <div className={modalStyles.modalOverlay} onClick={handleMangaModalClose}>
+                    <div className={modalStyles.modalContent} onClick={e => e.stopPropagation()}>
                         <MangaEditor
                             manga={selectedMangaForEdit}
-                            onClose={handleMangaModalClose}
-                            onDelete={onMangaDelete}
-                            onUpdate={onMangaUpdate}
+                            userId={userData._id}
+                            closeModal={handleMangaModalClose}
+                            onMangaDelete={onMangaDelete}
+                            onMangaUpdate={onMangaUpdate}
+                            setUserData={refreshUserData}
                         />
                     </div>
                 </div>
