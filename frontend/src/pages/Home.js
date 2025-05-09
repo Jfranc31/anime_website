@@ -167,9 +167,9 @@ const Home = () => {
       // Filter out items where animeDetails is undefined
       .filter(item => item.animeDetails)
       .sort((a, b) => {
-        const titleA = a.animeDetails?.titles ? getTitle(a.animeDetails.titles) : '';
-        const titleB = b.animeDetails?.titles ? getTitle(b.animeDetails.titles) : '';
-  
+        if (!a.animeDetails?.titles || !b.animeDetails?.titles) return 0;
+        const titleA = getTitle(a.animeDetails.titles);
+        const titleB = getTitle(b.animeDetails.titles);
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       }),
     [userAnimeList, getAnimeById, getTitle]
@@ -190,9 +190,9 @@ const Home = () => {
       })
       .filter(item => item.mangaDetails)
       .sort((a, b) => {
-        const titleA = a.mangaDetails?.titles ? getTitle(a.mangaDetails.titles) : '';
-        const titleB = b.mangaDetails?.titles ? getTitle(b.mangaDetails.titles) : '';
-  
+        if (!a.mangaDetails?.titles || !b.mangaDetails?.titles) return 0;
+        const titleA = getTitle(a.mangaDetails.titles);
+        const titleB = getTitle(b.mangaDetails.titles);
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       }),
     [userMangaList, getMangaById, getTitle]

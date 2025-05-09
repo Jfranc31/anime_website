@@ -12,18 +12,23 @@ export const MangaProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-    try {
+      try {
         setIsLoading(true);
-      setError(null);
-        const response = await axiosInstance.get('/mangas/mangas?page=1&limit=20');
+        setError(null);
+        // First get total count
+        const countResponse = await axiosInstance.get('/mangas/mangas?page=1&limit=1');
+        const totalItems = countResponse.data.totalItems || 0;
+        
+        // Then fetch all items
+        const response = await axiosInstance.get(`/mangas/mangas?page=1&limit=${totalItems}`);
         setMangaList(response.data.mangas || []);
-    } catch (error) {
-      console.error('Error fetching manga list:', error);
-      setError(error.response?.data?.message || 'Unable to load manga list. Please try again later.');
-      setMangaList([]);
-    } finally {
+      } catch (error) {
+        console.error('Error fetching manga list:', error);
+        setError(error.response?.data?.message || 'Unable to load manga list. Please try again later.');
+        setMangaList([]);
+      } finally {
         setIsLoading(false);
-    }
+      }
     };
 
     fetchData();
