@@ -63,6 +63,12 @@ app.use(
 // Add this before your routes
 app.use(cookieParser());
 
+// Add auth routes that redirect to user routes
+app.post("/auth/login", (req, res, next) => {
+  req.url = "/users/login";
+  next();
+});
+
 // // Add this logging middleware to debug routes
 // app.use((req, res, next) => {
 //   console.log(`${req.method} ${req.url}`);
