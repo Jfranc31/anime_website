@@ -118,7 +118,7 @@ const loginUser = async (req, res) => {
 const getUserInfo = async (req, res) => {
   try {
     const userID = req.params.userId;
-    const user = await UserModel.findById(userID).select('username email role theme avatar title CharacterName');
+    const user = await UserModel.findById(userID).select('username email role theme avatar title CharacterName anilist');
     
     if (!user) {
       return res.status(404).json({ message: "User not found" });
