@@ -31,6 +31,7 @@ router.post("/login", loginUser);
 
 // User profile routes
 router.get("/:userId", authMiddleware, getUserInfo);
+router.get("/:userId/current", authMiddleware, getUserInfo);
 router.get("/:userId/avatar", getAvatar);
 router.post("/:userId/avatar", authMiddleware, upload.single("avatar"), uploadAvatar);
 router.patch("/:userId/theme", authMiddleware, updateTheme);
