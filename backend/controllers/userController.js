@@ -392,167 +392,80 @@ const syncUserList = async (req, res) => {
     }
 
     const anilistData = await syncAniListData(user.anilist.accessToken);
-    
-    const addedAnime = [];
-    const skippedAnime = [];
-    const updatedAnime = [];
+
+    // Upsert UserList document
+    let userList = await UserList.findOne({ userId: user._id });
+    if (!userList) {
+      userList = new UserList({ userId: user._id });
+    }
+
+    // Helper to map AniList status to UserList field
+    const animeStatusMap = {
+      'current': 'watchingAnime',
+      'completed': 'completedAnime',
+      'planning': 'planningAnime',
+      'dropped': 'planningAnime', // Optionally handle dropped/paused
+      'paused': 'planningAnime',
+    };
+    const mangaStatusMap = {
+      'current': 'readingManga',
+      'completed': 'completedManga',
+      'planning': 'planningManga',
+      'dropped': 'planningManga',
+      'paused': 'planningManga',
+    };
+
+    // Clear all lists before syncing
+    userList.watchingAnime = [];
+    userList.completedAnime = [];
+    userList.planningAnime = [];
+    userList.readingManga = [];
+    userList.completedManga = [];
+    userList.planningManga = [];
 
     // Process anime list
     for (const animeEntry of anilistData.anime) {
       try {
         const status = animeEntry.status.toLowerCase();
         const progress = animeEntry.progress || 0;
-        
-        // First check if this anime exists in our database
-        let animeInDatabase = await AnimeModel.findOne({ 
-          anilistId: animeEntry.mediaId 
+        const listField = animeStatusMap[status] || 'planningAnime';
+        let animeInDatabase = await AnimeModel.findOne({ anilistId: animeEntry.mediaId });
+        if (!animeInDatabase) continue;
+        userList[listField].push({
+          animeId: animeInDatabase._id,
+          progress,
+          lastUpdated: new Date()
         });
-
-        if (!animeInDatabase) {
-          skippedAnime.push({
-            title: animeEntry.title.userPreferred,
-            anilistId: animeEntry.mediaId
-          });
-          continue;
-        }
-
-        // Check if user already has this anime
-        const existingUserAnime = user.animes.find(
-          anime => anime.anilistId === animeEntry.mediaId
-        );
-
-        if (existingUserAnime) {
-          // Update existing entry if progress changed
-          if (existingUserAnime.currentEpisode !== progress) {
-            existingUserAnime.currentEpisode = progress;
-            existingUserAnime.status = status === 'completed' ? 'Completed' : 
-                                     status === 'current' ? 'Watching' : 'Planning';
-            existingUserAnime.activityTimestamp = Date.now();
-            
-            updatedAnime.push({
-              title: animeEntry.title.userPreferred,
-              anilistId: animeEntry.mediaId
-            });
-          }
-        } else {
-          // Add new entry
-          user.animes.push({
-            animeId: animeInDatabase._id,
-            anilistId: animeEntry.mediaId,
-            status: status === 'completed' ? 'Completed' : 
-                    status === 'current' ? 'Watching' : 'Planning',
-            currentEpisode: progress,
-            activityTimestamp: Date.now()
-          });
-
-          addedAnime.push({
-            title: animeEntry.title.userPreferred,
-            anilistId: animeEntry.mediaId
-          });
-        }
       } catch (error) {
-        console.error('Error processing anime:', animeEntry, error);
-        skippedAnime.push({
-          title: animeEntry.title?.userPreferred || 'Unknown',
-          anilistId: animeEntry.mediaId,
-          error: error.message
-        });
+        // Optionally log or collect skipped
       }
     }
 
     // Process manga list
-    const addedManga = [];
-    const skippedManga = [];
-    const updatedManga = [];
-
     for (const mangaEntry of anilistData.manga) {
       try {
         const status = mangaEntry.status.toLowerCase();
         const progress = mangaEntry.progress || 0;
-        const volumeProgress = mangaEntry.progressVolumes || 0;
-
-        // First check if this manga exists in our database
-        let mangaInDatabase = await MangaModel.findOne({ 
-          anilistId: mangaEntry.mediaId 
+        const listField = mangaStatusMap[status] || 'planningManga';
+        let mangaInDatabase = await MangaModel.findOne({ anilistId: mangaEntry.mediaId });
+        if (!mangaInDatabase) continue;
+        userList[listField].push({
+          mangaId: mangaInDatabase._id,
+          progress,
+          lastUpdated: new Date()
         });
-
-        if (!mangaInDatabase) {
-          skippedManga.push({
-            title: mangaEntry.title.userPreferred,
-            anilistId: mangaEntry.mediaId
-          });
-          continue;
-        }
-
-        // Check if user already has this manga
-        const existingUserManga = user.mangas.find(
-          manga => manga.anilistId === mangaEntry.mediaId
-        );
-
-        if (existingUserManga) {
-          // Update existing entry if progress changed
-          if (existingUserManga.currentChapter !== progress || 
-              existingUserManga.currentVolume !== volumeProgress) {
-            existingUserManga.currentChapter = progress;
-            existingUserManga.currentVolume = volumeProgress;
-            existingUserManga.status = status === 'completed' ? 'Completed' : 
-                                     status === 'current' ? 'Reading' : 'Planning';
-            existingUserManga.activityTimestamp = Date.now();
-            
-            updatedManga.push({
-              title: mangaEntry.title.userPreferred,
-              anilistId: mangaEntry.mediaId
-            });
-          }
-        } else {
-          // Add new entry
-          user.mangas.push({
-            mangaId: mangaInDatabase._id,
-            anilistId: mangaEntry.mediaId,
-            status: status === 'completed' ? 'Completed' : 
-                    status === 'current' ? 'Reading' : 'Planning',
-            currentChapter: progress,
-            currentVolume: volumeProgress,
-            activityTimestamp: Date.now()
-          });
-
-          addedManga.push({
-            title: mangaEntry.title.userPreferred,
-            anilistId: mangaEntry.mediaId
-          });
-        }
       } catch (error) {
-        console.error('Error processing manga:', mangaEntry, error);
-        skippedManga.push({
-          title: mangaEntry.title?.userPreferred || 'Unknown',
-          anilistId: mangaEntry.mediaId,
-          error: error.message
-        });
+        // Optionally log or collect skipped
       }
     }
 
-    // Save all changes
-    await user.save();
-
-    // Update last sync timestamp
+    await userList.save();
     user.anilist.lastSync = Date.now();
     await user.save();
 
     res.json({
       success: true,
       message: 'Successfully synced with AniList',
-      data: {
-        anime: {
-          added: addedAnime,
-          updated: updatedAnime,
-          skipped: skippedAnime
-        },
-        manga: {
-          added: addedManga,
-          updated: updatedManga,
-          skipped: skippedManga
-        }
-      }
     });
   } catch (error) {
     console.error('Error syncing AniList data:', error);
@@ -576,29 +489,27 @@ const deleteAllLists = async (req, res) => {
       });
     }
 
-    // Update user document to clear both lists
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          animes: [],
-          mangas: []
-        }
-      },
-      { new: true }
-    );
-
-    if (!updatedUser) {
+    // Find and clear the UserList document
+    let userList = await UserList.findOne({ userId });
+    if (!userList) {
       return res.status(404).json({ 
         success: false, 
-        message: 'User not found' 
+        message: 'User list not found' 
       });
     }
 
+    userList.watchingAnime = [];
+    userList.completedAnime = [];
+    userList.planningAnime = [];
+    userList.readingManga = [];
+    userList.completedManga = [];
+    userList.planningManga = [];
+    await userList.save();
+
     res.json({ 
       success: true, 
-      message: 'All lists deleted successfully' ,
-      user: updatedUser
+      message: 'All lists deleted successfully',
+      userList
     });
 
   } catch (error) {

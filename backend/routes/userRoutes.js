@@ -22,6 +22,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 import upload from '../utils/gridfsStorage.js';
 import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniListConnection, syncAniListData, getAniListUserLists } from '../services/anilistAuthService.js';
 import UserModel from '../Models/userModel.js';
+import UserList from '../Models/userListModel.js';
 
 const router = express.Router();
 
@@ -54,11 +55,11 @@ router.get("/:userId/anime-statuses", authMiddleware, async (req, res) => {
 
 router.get("/:userId/currently-watching", authMiddleware, async (req, res) => {
   try {
-    const user = await UserModel.findById(req.params.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const userList = await UserList.findOne({ userId: req.params.userId });
+    if (!userList) {
+      return res.status(404).json({ message: "User list not found" });
     }
-    res.json({ currentlyWatching: user.animes || [] });
+    res.json({ currentlyWatching: userList.watchingAnime || [] });
   } catch (error) {
     console.error("Error fetching currently watching:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -67,11 +68,11 @@ router.get("/:userId/currently-watching", authMiddleware, async (req, res) => {
 
 router.get("/:userId/currently-reading", authMiddleware, async (req, res) => {
   try {
-    const user = await UserModel.findById(req.params.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const userList = await UserList.findOne({ userId: req.params.userId });
+    if (!userList) {
+      return res.status(404).json({ message: "User list not found" });
     }
-    res.json({ currentlyReading: user.mangas || [] });
+    res.json({ currentlyReading: userList.readingManga || [] });
   } catch (error) {
     console.error("Error fetching currently reading:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -234,6 +235,58 @@ router.get('/:userId/anilist/lists', authMiddleware, async (req, res) => {
       success: false,
       error: error.message || 'Failed to fetch AniList lists'
     });
+  }
+});
+
+// Update anime status in UserList
+router.post('/:userId/anime-status', authMiddleware, async (req, res) => {
+  try {
+    const { animeId, status, progress } = req.body;
+    const userId = req.params.userId;
+    let userList = await UserList.findOne({ userId });
+    if (!userList) {
+      userList = new UserList({ userId });
+    }
+    // Remove anime from all lists
+    userList.watchingAnime = userList.watchingAnime.filter(a => !a.animeId.equals(animeId));
+    userList.completedAnime = userList.completedAnime.filter(a => !a.animeId.equals(animeId));
+    userList.planningAnime = userList.planningAnime.filter(a => !a.animeId.equals(animeId));
+    // Add to correct list
+    let listField = 'planningAnime';
+    if (status === 'Watching') listField = 'watchingAnime';
+    else if (status === 'Completed') listField = 'completedAnime';
+    userList[listField].push({ animeId, progress, lastUpdated: new Date() });
+    await userList.save();
+    res.json({ success: true, userList });
+  } catch (error) {
+    console.error('Error updating anime status:', error);
+    res.status(500).json({ success: false, message: 'Error updating anime status', error: error.message });
+  }
+});
+
+// Update manga status in UserList
+router.post('/:userId/manga-status', authMiddleware, async (req, res) => {
+  try {
+    const { mangaId, status, progress } = req.body;
+    const userId = req.params.userId;
+    let userList = await UserList.findOne({ userId });
+    if (!userList) {
+      userList = new UserList({ userId });
+    }
+    // Remove manga from all lists
+    userList.readingManga = userList.readingManga.filter(m => !m.mangaId.equals(mangaId));
+    userList.completedManga = userList.completedManga.filter(m => !m.mangaId.equals(mangaId));
+    userList.planningManga = userList.planningManga.filter(m => !m.mangaId.equals(mangaId));
+    // Add to correct list
+    let listField = 'planningManga';
+    if (status === 'Reading') listField = 'readingManga';
+    else if (status === 'Completed') listField = 'completedManga';
+    userList[listField].push({ mangaId, progress, lastUpdated: new Date() });
+    await userList.save();
+    res.json({ success: true, userList });
+  } catch (error) {
+    console.error('Error updating manga status:', error);
+    res.status(500).json({ success: false, message: 'Error updating manga status', error: error.message });
   }
 });
 
