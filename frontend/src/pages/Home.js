@@ -161,7 +161,7 @@ const Home = () => {
       .filter((userAnime) => userAnime.status === 'Watching')
       .map((userAnime) => ({
         animeId: userAnime.animeId._id,
-        currentEpisode: userAnime.progress,
+        progress: userAnime.progress,
         status: userAnime.status,
         animeDetails: userAnime.animeId // Already populated from backend
       }))
@@ -180,7 +180,7 @@ const Home = () => {
       .filter((userManga) => userManga.status === 'Reading')
       .map((userManga) => ({
         mangaId: userManga.mangaId._id,
-        currentChapter: userManga.progress,
+        progress: userManga.progress,
         currentVolume: userManga.currentVolume,
         status: userManga.status,
         mangaDetails: userManga.mangaId // Already populated from backend
@@ -378,7 +378,7 @@ const Home = () => {
                   <span
                     onClick={() => handleIncrementWatchCount(activity.animeId, 'anime')}
                   >
-                    {activity.currentEpisode}+
+                    {activity.progress}+
                   </span>
                 </div>
               ) : (
@@ -404,7 +404,7 @@ const Home = () => {
                       (anime?.nextAiringEpisode?.episode || 1) - 1,
                       maxEpisodes
                     );
-                    const episodesBehind = Math.max(0, latestAiredEpisode - activity.currentEpisode);
+                    const episodesBehind = Math.max(0, latestAiredEpisode - activity.progress);
                     
                     return episodesBehind > 0 ? (
                       <h3>{episodesBehind} Episodes Behind</h3>
@@ -412,7 +412,7 @@ const Home = () => {
                   })()
                 )}
                 <h4>{getTitle(getAnimeById(activity.animeId)?.titles)}</h4>
-                <p>Progress: {activity.currentEpisode}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
+                <p>Progress: {activity.progress}/{getAnimeById(activity.animeId)?.lengths.Episodes}</p>
               </div>
             )}
           </div>
@@ -446,7 +446,7 @@ const Home = () => {
                   <span
                     onClick={() => handleIncrementWatchCount(activity.mangaId, 'manga')}
                   >
-                    {activity.currentChapter}+
+                    {activity.progress}+
                   </span>
                 </div>
               )}
@@ -454,7 +454,7 @@ const Home = () => {
             {hoveredCard === activity.mangaId && (
               <div className={homeStyles.popup} style={{ left: popupPosition.left, top: popupPosition.top }}>
                 <h4>{getTitle(getMangaById(activity.mangaId)?.titles)}</h4>
-                <p>Progress: {activity.currentChapter}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
+                <p>Progress: {activity.progress}/{getMangaById(activity.mangaId)?.lengths.chapters}</p>
               </div>
             )}
           </div>
