@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../Context/ContextApi';
 import axiosInstance from '../utils/axiosConfig';
 import styles from '../styles/pages/Login.module.css';
+import Cookies from 'js-cookie';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -21,11 +22,24 @@ const LoginPage = () => {
 
     try {
       const response = await axiosInstance.post('/auth/login', formData);
-      localStorage.setItem('userInfo', JSON.stringify(response.data));
+      
+      // Store user info in both cookie and localStorage for redundancy
+      const userInfo = response.data.user;
+      Cookies.set('userInfo', JSON.stringify(userInfo), { 
+        expires: 29, // 29 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'None'
+      });
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      
+      // Wait for user data to be refreshed
       await refreshUserData();
-      navigate('/');
+      
+      // Navigate to home page
+      navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

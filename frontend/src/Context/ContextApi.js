@@ -18,7 +18,9 @@ export const UserProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   const fetchUserData = useCallback(async () => {
-    const userInfo = Cookies.get('userInfo');
+    // Try to get user info from cookie first, then localStorage
+    const userInfo = Cookies.get('userInfo') || localStorage.getItem('userInfo');
+    
     if (!userInfo) {
       setIsLoading(false);
       return;
@@ -32,6 +34,9 @@ export const UserProvider = ({ children }) => {
     } catch (err) {
       setError(err.message);
       console.error('Error fetching user data:', err);
+      // Clear invalid user data
+      Cookies.remove('userInfo');
+      localStorage.removeItem('userInfo');
     } finally {
       setIsLoading(false);
     }
