@@ -85,6 +85,7 @@ router.patch("/:userId/admin", authMiddleware, makeAdmin);
 
 // AniList sync routes
 router.post("/:userId/sync", authMiddleware, syncUserList);
+router.post("/:userId/anilist/sync", authMiddleware, syncUserList);
 router.delete("/:userId/lists", authMiddleware, deleteAllLists);
 
 // Get AniList authorization URL
