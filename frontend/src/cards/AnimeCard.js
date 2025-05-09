@@ -157,7 +157,7 @@ function AnimeCard({
         <>
           <div className={cardsStyles.card2}>
             <div className={cardsStyles.imgContainer}>
-              <img src={anime.images.image} alt={anime.titles.english} />
+              <img src={anime?.images?.image || ''} alt={anime?.titles?.english || ''} />
             </div>
           </div>
           <div className={cardsStyles.titleAndProgress}>
@@ -210,7 +210,7 @@ function AnimeCard({
         >
           <div className={cardsStyles.card2}>
             <div className={cardsStyles.imgContainer}>
-              <img src={anime.images.image} alt={anime.titles.english} />
+              <img src={anime?.images?.image || ''} alt={anime?.titles?.english || ''} />
               <div className={cardsStyles.titleAndProgress} style={{ height: titleHeight }}>
                 <Link className={cardsStyles.navLink} to={`/anime/${anime._id}`}>
                 <div className={cardsStyles.titleWrapper}>

@@ -39,6 +39,9 @@ const Home = () => {
   const [currentlyWatching, setCurrentlyWatching] = useState([]);
   const [currentlyReading, setCurrentlyReading] = useState([]);
 
+  const { animeList } = useAnimeContext();
+  const { mangaList } = useMangaContext();
+
   const calculateTimeUntilAiring = useCallback((airingAt) => {
     const now = Math.floor(Date.now() / 1000);
     return airingAt - now;
@@ -496,21 +499,24 @@ const Home = () => {
         </div>
       ));
     }
-
     if (currentlyWatching.length === 0) {
       return <p className={homeStyles.emptyMessage}>No currently watching anime</p>;
     }
-
-    return currentlyWatching.map(anime => (
-      <div key={anime._id} className={homeStyles.cardContainer}>
-        <AnimeCard
-          anime={anime}
-          title={getTitle(anime.titles)}
-          progress={anime.progress}
-          lastUpdated={anime.lastUpdated}
-        />
-      </div>
-    ));
+    return currentlyWatching.map(userEntry => {
+      const animeId = userEntry.animeId?._id || userEntry.animeId || userEntry._id;
+      const anime = animeList.find(a => a._id === animeId);
+      if (!anime) return null;
+      return (
+        <div key={anime._id} className={homeStyles.cardContainer}>
+          <AnimeCard
+            anime={anime}
+            title={getTitle(anime.titles)}
+            progress={userEntry.progress}
+            lastUpdated={userEntry.lastUpdated}
+          />
+        </div>
+      );
+    });
   };
 
   const renderCurrentlyReading = () => {
@@ -521,21 +527,24 @@ const Home = () => {
         </div>
       ));
     }
-
     if (currentlyReading.length === 0) {
       return <p className={homeStyles.emptyMessage}>No currently reading manga</p>;
     }
-
-    return currentlyReading.map(manga => (
-      <div key={manga._id} className={homeStyles.cardContainer}>
-        <MangaCard
-          manga={manga}
-          title={getTitle(manga.titles)}
-          progress={manga.progress}
-          lastUpdated={manga.lastUpdated}
-        />
-      </div>
-    ));
+    return currentlyReading.map(userEntry => {
+      const mangaId = userEntry.mangaId?._id || userEntry.mangaId || userEntry._id;
+      const manga = mangaList.find(m => m._id === mangaId);
+      if (!manga) return null;
+      return (
+        <div key={manga._id} className={homeStyles.cardContainer}>
+          <MangaCard
+            manga={manga}
+            title={getTitle(manga.titles)}
+            progress={userEntry.progress}
+            lastUpdated={userEntry.lastUpdated}
+          />
+        </div>
+      );
+    });
   };
 
   if (error) {
