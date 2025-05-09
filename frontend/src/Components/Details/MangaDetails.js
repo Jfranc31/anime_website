@@ -81,24 +81,28 @@ const MangaDetails = () => {
   // Memoize the user's manga status check
   const updateUserMangaStatus = useCallback(() => {
     if (userData?._id && pageData.mangaDetails?._id) {
-      const isAdded = userData.mangas?.some(
-        (manga) => manga.mangaId === pageData.mangaDetails._id
-      );
-      const existingMangaIndex = userData.mangas?.findIndex(
-        (manga) => manga.mangaId.toString() === pageData.mangaDetails._id.toString()
+      const lists = userData.lists || {};
+      const allManga = [
+        ...(lists.readingManga || []),
+        ...(lists.completedManga || []),
+        ...(lists.planningManga || [])
+      ];
+      
+      const existingManga = allManga.find(
+        manga => manga.mangaId._id === pageData.mangaDetails._id
       );
 
       updatePageData({
-        isMangaAdded: isAdded,
-        ...(existingMangaIndex !== -1 && {
+        isMangaAdded: !!existingManga,
+        ...(existingManga && {
           userProgress: {
-            status: userData.mangas[existingMangaIndex].status,
-            currentChapter: userData.mangas[existingMangaIndex].currentChapter,
+            status: existingManga.status,
+            currentChapter: existingManga.progress
           }
         })
       });
     }
-  }, [userData?._id, pageData.mangaDetails?._id, userData?.mangas]);
+  }, [userData?._id, pageData.mangaDetails?._id, userData?.lists]);
 
   // Fetch initial data only when component mounts or ID changes
   useEffect(() => {

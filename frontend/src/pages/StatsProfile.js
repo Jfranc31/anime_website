@@ -18,8 +18,20 @@ const Stats = () => {
     try {
       setLoading(true);
       const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-      setUserAnimeList(data.animes || []);
-      setUserMangaList(data.mangas || []);
+      // Combine all anime and manga lists from UserList
+      const lists = data.lists || {};
+      const combinedAnime = [
+        ...(lists.watchingAnime || []).map(item => ({...item, status: 'Watching'})),
+        ...(lists.completedAnime || []).map(item => ({...item, status: 'Completed'})),
+        ...(lists.planningAnime || []).map(item => ({...item, status: 'Planning'})),
+      ];
+      const combinedManga = [
+        ...(lists.readingManga || []).map(item => ({...item, status: 'Reading'})),
+        ...(lists.completedManga || []).map(item => ({...item, status: 'Completed'})),
+        ...(lists.planningManga || []).map(item => ({...item, status: 'Planning'})),
+      ];
+      setUserAnimeList(combinedAnime);
+      setUserMangaList(combinedManga);
     } catch (error) {
       console.error('Error fetching user list:', error);
       setError('Failed to load user data');

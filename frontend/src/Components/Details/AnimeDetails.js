@@ -81,24 +81,28 @@ const AnimeDetails = () => {
   // Memoize the user's anime status check
   const updateUserAnimeStatus = useCallback(() => {
     if (userData?._id && pageData.animeDetails?._id) {
-      const isAdded = userData.animes?.some(
-        (anime) => anime.animeId === pageData.animeDetails._id
-      );
-      const existingAnimeIndex = userData.animes?.findIndex(
-        (anime) => anime.animeId.toString() === pageData.animeDetails._id.toString()
+      const lists = userData.lists || {};
+      const allAnime = [
+        ...(lists.watchingAnime || []),
+        ...(lists.completedAnime || []),
+        ...(lists.planningAnime || [])
+      ];
+      
+      const existingAnime = allAnime.find(
+        anime => anime.animeId._id === pageData.animeDetails._id
       );
 
       updatePageData({
-        isAnimeAdded: isAdded,
-        ...(existingAnimeIndex !== -1 && {
+        isAnimeAdded: !!existingAnime,
+        ...(existingAnime && {
           userProgress: {
-            status: userData.animes[existingAnimeIndex].status,
-            currentEpisode: userData.animes[existingAnimeIndex].currentEpisode,
+            status: existingAnime.status,
+            currentEpisode: existingAnime.progress
           }
         })
       });
     }
-  }, [userData?._id, pageData.animeDetails?._id, userData?.animes]);
+  }, [userData?._id, pageData.animeDetails?._id, userData?.lists]);
 
   // Fetch initial data only when component mounts or ID changes
   useEffect(() => {

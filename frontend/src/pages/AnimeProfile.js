@@ -41,7 +41,14 @@ const AnimeProfile = () => {
             setIsLoading(true);
             setError(null);
             const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-            setUserAnimeList(response.animes || []);
+            // Combine all anime lists from UserList
+            const lists = response.lists || {};
+            const combined = [
+                ...(lists.watchingAnime || []).map(item => ({...item, status: 'Watching'})),
+                ...(lists.completedAnime || []).map(item => ({...item, status: 'Completed'})),
+                ...(lists.planningAnime || []).map(item => ({...item, status: 'Planning'})),
+            ];
+            setUserAnimeList(combined);
         } catch (err) {
             console.error('Error fetching user list:', err);
             setError('Failed to load user list. Please try again later.');
@@ -58,8 +65,8 @@ const AnimeProfile = () => {
     }, [userData?._id, fetchUserList]);
     
     const getMediaById = useCallback((mediaId) => (
-        animeList?.find((anime) => anime._id === mediaId)
-    ), [animeList]);
+        userAnimeList?.find((anime) => anime.animeId?._id === mediaId)?.animeId || null
+    ), [userAnimeList]);
 
     const getTitle = useCallback((titles) => {
         if (!titles) return '';
@@ -69,20 +76,19 @@ const AnimeProfile = () => {
 
     const filteredMediaList = useMemo(() => {
         if (!userAnimeList?.length) return [];
-        
         return userAnimeList
             .filter((item) => item.status === statusType)
             .map((item) => ({
                 ...item,
-                mediaDetails: getMediaById(item.animeId),
+                mediaDetails: item.animeId, // Populated anime details
             }))
-            .filter(item => item.mediaDetails) // Filter out items with no media details
+            .filter(item => item.mediaDetails)
             .sort((a, b) => {
                 const titleA = getTitle(a.mediaDetails?.titles) || '';
                 const titleB = getTitle(b.mediaDetails?.titles) || '';
                 return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
             });
-    }, [userAnimeList, statusType, getMediaById, getTitle]);
+    }, [userAnimeList, statusType, getTitle]);
 
     const handleProgressUpdate = async (id, newProgress) => {
         if (!userData?._id) return;

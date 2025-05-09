@@ -41,7 +41,14 @@ const MangaProfile = () => {
             setIsLoading(true);
             setError(null);
             const response = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-            setUserMangaList(response.mangas || []);
+            // Combine all manga lists from UserList
+            const lists = response.lists || {};
+            const combined = [
+                ...(lists.readingManga || []).map(item => ({...item, status: 'Reading'})),
+                ...(lists.completedManga || []).map(item => ({...item, status: 'Completed'})),
+                ...(lists.planningManga || []).map(item => ({...item, status: 'Planning'})),
+            ];
+            setUserMangaList(combined);
         } catch (err) {
             console.error('Error fetching user list:', err);
             setError('Failed to load user list. Please try again later.');
@@ -58,8 +65,8 @@ const MangaProfile = () => {
     }, [userData?._id, fetchUserList]);
 
     const getMediaById = useCallback((mediaId) => (
-        mangaList?.find((manga) => manga._id === mediaId)
-    ), [mangaList]);
+        userMangaList?.find((manga) => manga.mangaId?._id === mediaId)?.mangaId || null
+    ), [userMangaList]);
 
     const getTitle = useCallback((titles) => {
         if (!titles) return '';
@@ -69,26 +76,24 @@ const MangaProfile = () => {
 
     const filteredMediaList = useMemo(() => {
         if (!userMangaList?.length) return [];
-        
         const statusMap = {
             [STATUS_TYPES.READING]: 'Reading',
             [STATUS_TYPES.PLANNING]: 'Planning',
             [STATUS_TYPES.COMPLETED]: 'Completed'
         };
-        
         return userMangaList
             .filter((item) => item.status === statusMap[statusType])
             .map((item) => ({
                 ...item,
-                mediaDetails: getMediaById(item.mangaId),
+                mediaDetails: item.mangaId, // Populated manga details
             }))
-            .filter(item => item.mediaDetails) // Filter out items with no media details
+            .filter(item => item.mediaDetails)
             .sort((a, b) => {
                 const titleA = getTitle(a.mediaDetails?.titles) || '';
                 const titleB = getTitle(b.mediaDetails?.titles) || '';
                 return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
             });
-    }, [userMangaList, statusType, getMediaById, getTitle]);
+    }, [userMangaList, statusType, getTitle]);
 
     const handleProgressUpdate = async (id, newProgress) => {
         if (!userData?._id) return;

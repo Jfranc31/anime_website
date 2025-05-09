@@ -87,8 +87,20 @@ const Home = () => {
   const fetchUserList = useCallback(async () => {
     try {
       const data = await fetchWithErrorHandling(`/users/${userData._id}/current`);
-      setUserAnimeList(data.animes || []);
-      setUserMangaList(data.mangas || []);
+      // Combine all anime and manga lists from UserList
+      const lists = data.lists || {};
+      const combinedAnime = [
+        ...(lists.watchingAnime || []).map(item => ({...item, status: 'Watching'})),
+        ...(lists.completedAnime || []).map(item => ({...item, status: 'Completed'})),
+        ...(lists.planningAnime || []).map(item => ({...item, status: 'Planning'})),
+      ];
+      const combinedManga = [
+        ...(lists.readingManga || []).map(item => ({...item, status: 'Reading'})),
+        ...(lists.completedManga || []).map(item => ({...item, status: 'Completed'})),
+        ...(lists.planningManga || []).map(item => ({...item, status: 'Planning'})),
+      ];
+      setUserAnimeList(combinedAnime);
+      setUserMangaList(combinedManga);
     } catch (error) {
       console.error('Error fetching user list:', error);
       setUserAnimeList([]);
@@ -137,34 +149,22 @@ const Home = () => {
   };
 
   const getAnimeById = useCallback((animeId) => {
-    if (!animeContext?.animeList || !Array.isArray(animeContext.animeList)) {
-      console.warn('animeList is not available or not an array:', animeContext?.animeList);
-      return null;
-    }
-    return animeContext.animeList.find((anime) => anime?._id === animeId);
-  }, [animeContext?.animeList]);
+    return userAnimeList?.find((anime) => anime.animeId?._id === animeId)?.animeId || null;
+  }, [userAnimeList]);
 
   const getMangaById = useCallback((mangaId) => {
-    if (!mangaContext?.mangaList || !Array.isArray(mangaContext.mangaList)) {
-      console.warn('mangaList is not available or not an array:', mangaContext?.mangaList);
-      return null;
-    }
-    return mangaContext.mangaList.find((manga) => manga?._id === mangaId);
-  }, [mangaContext?.mangaList]);
+    return userMangaList?.find((manga) => manga.mangaId?._id === mangaId)?.mangaId || null;
+  }, [userMangaList]);
 
   const watchingAnime = useMemo(() => 
     userAnimeList
       .filter((userAnime) => userAnime.status === 'Watching')
-      .map((userAnime) => {
-        const animeDetails = getAnimeById(userAnime.animeId);
-        return {
-          animeId: userAnime.animeId,
-          currentEpisode: userAnime.currentEpisode,
-          status: userAnime.status,
-          animeDetails
-        };
-      })
-      // Filter out items where animeDetails is undefined
+      .map((userAnime) => ({
+        animeId: userAnime.animeId._id,
+        currentEpisode: userAnime.progress,
+        status: userAnime.status,
+        animeDetails: userAnime.animeId // Already populated from backend
+      }))
       .filter(item => item.animeDetails)
       .sort((a, b) => {
         if (!a.animeDetails?.titles || !b.animeDetails?.titles) return 0;
@@ -172,22 +172,19 @@ const Home = () => {
         const titleB = getTitle(b.animeDetails.titles);
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       }),
-    [userAnimeList, getAnimeById, getTitle]
+    [userAnimeList, getTitle]
   );
 
   const readingManga = useMemo(() => 
     userMangaList
       .filter((userManga) => userManga.status === 'Reading')
-      .map((userManga) => {
-        const mangaDetails = getMangaById(userManga.mangaId);
-        return {
-          mangaId: userManga.mangaId,
-          currentChapter: userManga.currentChapter,
-          currentVolume: userManga.currentVolume,
-          status: userManga.status,
-          mangaDetails
-        };
-      })
+      .map((userManga) => ({
+        mangaId: userManga.mangaId._id,
+        currentChapter: userManga.progress,
+        currentVolume: userManga.currentVolume,
+        status: userManga.status,
+        mangaDetails: userManga.mangaId // Already populated from backend
+      }))
       .filter(item => item.mangaDetails)
       .sort((a, b) => {
         if (!a.mangaDetails?.titles || !b.mangaDetails?.titles) return 0;
@@ -195,7 +192,7 @@ const Home = () => {
         const titleB = getTitle(b.mangaDetails.titles);
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       }),
-    [userMangaList, getMangaById, getTitle]
+    [userMangaList, getTitle]
   );
 
   const updateAiringTimes = useCallback(() => {
@@ -243,15 +240,15 @@ const Home = () => {
 
   const handleIncrementWatchCount = async (id, type) => {
     if (type === 'anime') {
-      const currentAnime = userAnimeList.find(anime => anime.animeId === id);
+      const currentAnime = userAnimeList.find(anime => anime.animeId._id === id);
 
       if (currentAnime) {
-        const newEpisodeCount = currentAnime.currentEpisode + 1;
+        const newEpisodeCount = currentAnime.progress + 1;
 
         setUserAnimeList((prevList) =>
           prevList.map((anime) =>
-            anime.animeId === id
-              ? { ...anime, currentEpisode: newEpisodeCount }
+            anime.animeId._id === id
+              ? { ...anime, progress: newEpisodeCount }
               : anime
           )
         );
@@ -259,12 +256,11 @@ const Home = () => {
         try {
           const response = await axiosInstance.post(`/users/${userData._id}/updateAnime`, {
             animeId: id,
-            status: userData.status || 'Watching',
+            status: currentAnime.status,
             currentEpisode: newEpisodeCount,
           });
 
           if (response.data) {
-            // Reset to page 1 and fetch fresh data
             setAnimeActivitiesPage(1);
             await fetchActivities('anime', 1, false);
           }
@@ -275,16 +271,16 @@ const Home = () => {
     }
     
     if (type === 'manga') {
-      const currentManga = userMangaList.find(manga => manga.mangaId === id);
+      const currentManga = userMangaList.find(manga => manga.mangaId._id === id);
 
       if (currentManga) {
-        const newChapterCount = currentManga.currentChapter + 1;
+        const newChapterCount = currentManga.progress + 1;
         const volumeCount = currentManga.currentVolume;
 
         setUserMangaList((prevList) =>
           prevList.map((manga) =>
-            manga.mangaId === id
-              ? { ...manga, currentChapter: newChapterCount, currentVolume: volumeCount }
+            manga.mangaId._id === id
+              ? { ...manga, progress: newChapterCount, currentVolume: volumeCount }
               : manga
           )
         );
@@ -292,13 +288,12 @@ const Home = () => {
         try {
           const response = await axiosInstance.post(`/users/${userData._id}/updateManga`, {
             mangaId: id,
-            status: userData.status || 'Reading',
+            status: currentManga.status,
             currentChapter: newChapterCount,
             currentVolume: volumeCount
           });
 
           if (response.data) {
-            // Reset to page 1 and fetch fresh data
             setMangaActivitiesPage(1);
             await fetchActivities('manga', 1, false);
           }

@@ -52,51 +52,71 @@ const OverviewProfile = () => {
         // Fetch user data
         const userResponse = await axiosInstance.get(`/users/${userData._id}/current`);
         const user = userResponse.data;
+        const lists = user.lists || {};
+        // Combine anime and manga lists
+        const animeList = [
+          ...(lists.watchingAnime || []).map(item => ({...item, status: 'watching'})),
+          ...(lists.completedAnime || []).map(item => ({...item, status: 'completed'})),
+          ...(lists.planningAnime || []).map(item => ({...item, status: 'planning'})),
+        ];
+        const mangaList = [
+          ...(lists.readingManga || []).map(item => ({...item, status: 'reading'})),
+          ...(lists.completedManga || []).map(item => ({...item, status: 'completed'})),
+          ...(lists.planningManga || []).map(item => ({...item, status: 'planning'})),
+        ];
 
         // Calculate overview data
-        const recentAnimeActivity = user.animeList
+        const recentAnimeActivity = animeList
           ?.filter(anime => anime.status === 'completed' || anime.status === 'watching')
           .map(anime => ({
             type: 'anime',
-            title: anime.title,
+            title: anime.animeId?.titles?.english || anime.animeId?.titles?.romaji || anime.animeId?.titles?.native || '',
             status: anime.status,
             score: anime.score,
-            updatedAt: anime.updatedAt
+            updatedAt: anime.updatedAt || anime.lastUpdated
           })) || [];
 
-        const recentMangaActivity = user.mangaList
+        const recentMangaActivity = mangaList
           ?.filter(manga => manga.status === 'completed' || manga.status === 'reading')
           .map(manga => ({
             type: 'manga',
-            title: manga.title,
+            title: manga.mangaId?.titles?.english || manga.mangaId?.titles?.romaji || manga.mangaId?.titles?.native || '',
             status: manga.status,
             score: manga.score,
-            updatedAt: manga.updatedAt
+            updatedAt: manga.updatedAt || manga.lastUpdated
           })) || [];
 
         const recentActivity = [...recentAnimeActivity, ...recentMangaActivity]
           .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
           .slice(0, 10);
 
-        const topAnime = user.animeList
+        const topAnime = animeList
           ?.filter(anime => anime.status === 'completed' && anime.score > 0)
           .sort((a, b) => b.score - a.score)
-          .slice(0, 5) || [];
+          .slice(0, 5)
+          .map(anime => ({
+            title: anime.animeId?.titles?.english || anime.animeId?.titles?.romaji || anime.animeId?.titles?.native || '',
+            score: anime.score
+          })) || [];
 
-        const topManga = user.mangaList
+        const topManga = mangaList
           ?.filter(manga => manga.status === 'completed' && manga.score > 0)
           .sort((a, b) => b.score - a.score)
-          .slice(0, 5) || [];
+          .slice(0, 5)
+          .map(manga => ({
+            title: manga.mangaId?.titles?.english || manga.mangaId?.titles?.romaji || manga.mangaId?.titles?.native || '',
+            score: manga.score
+          })) || [];
 
         const stats = {
-          totalAnime: user.animeList?.length || 0,
-          totalManga: user.mangaList?.length || 0,
+          totalAnime: animeList?.length || 0,
+          totalManga: mangaList?.length || 0,
           totalCharacters: characterList?.length || 0,
-          averageAnimeScore: user.animeList?.length 
-            ? user.animeList.reduce((acc, anime) => acc + (anime.score || 0), 0) / user.animeList.length
+          averageAnimeScore: animeList?.length 
+            ? animeList.reduce((acc, anime) => acc + (anime.score || 0), 0) / animeList.length
             : 0,
-          averageMangaScore: user.mangaList?.length
-            ? user.mangaList.reduce((acc, manga) => acc + (manga.score || 0), 0) / user.mangaList.length
+          averageMangaScore: mangaList?.length
+            ? mangaList.reduce((acc, manga) => acc + (manga.score || 0), 0) / mangaList.length
             : 0
         };
 
