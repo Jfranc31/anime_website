@@ -40,6 +40,7 @@ app.use(express.urlencoded({ extended: false }));
 const allowedOrigins = [
   'https://anime-website-alpha.vercel.app',
   'https://anime-website-git-main-davidfranco923-gmailcoms-projects.vercel.app',
+  'https://anime-website.vercel.app',
   'http://localhost:3000',
 ];
 

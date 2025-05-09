@@ -38,6 +38,33 @@ router.patch("/:userId/theme", authMiddleware, updateTheme);
 router.patch("/:userId/title", authMiddleware, updateTitle);
 router.patch("/:userId/characterName", authMiddleware, updateCharacterName);
 
+// User list routes
+router.get("/:userId/currently-watching", authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ currentlyWatching: user.animes || [] });
+  } catch (error) {
+    console.error("Error fetching currently watching:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.get("/:userId/currently-reading", authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ currentlyReading: user.mangas || [] });
+  } catch (error) {
+    console.error("Error fetching currently reading:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 // Admin routes
 router.get("/", authMiddleware, getAllUsers);
 router.patch("/:userId/admin", authMiddleware, makeAdmin);
