@@ -167,8 +167,8 @@ const Home = () => {
       // Filter out items where animeDetails is undefined
       .filter(item => item.animeDetails)
       .sort((a, b) => {
-        const titleA = getTitle(a.animeDetails.titles) || '';
-        const titleB = getTitle(b.animeDetails.titles) || '';
+        const titleA = a.animeDetails?.titles ? getTitle(a.animeDetails.titles) : '';
+        const titleB = b.animeDetails?.titles ? getTitle(b.animeDetails.titles) : '';
   
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       }),
@@ -190,8 +190,8 @@ const Home = () => {
       })
       .filter(item => item.mangaDetails)
       .sort((a, b) => {
-        const titleA = getTitle(a.mangaDetails.titles) || '';
-        const titleB = getTitle(b.mangaDetails.titles) || '';
+        const titleA = a.mangaDetails?.titles ? getTitle(a.mangaDetails.titles) : '';
+        const titleB = b.mangaDetails?.titles ? getTitle(b.mangaDetails.titles) : '';
   
         return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
       }),
