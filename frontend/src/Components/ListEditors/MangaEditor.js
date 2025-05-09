@@ -38,7 +38,6 @@ const MangaEditor = ({
   useEffect(() => {
     const fetchMangaDetails = async () => {
       if (!manga?._id || !userId) return;
-
       try {
         const mangaResponse = await axiosInstance.get(
           `/mangas/manga/${manga._id}`
@@ -47,27 +46,31 @@ const MangaEditor = ({
           `/users/${userId}/current`
         );
         const currentUser = userResponse.data;
-
-        const existingMangaIndex = currentUser?.mangas?.findIndex(
-          (userManga) => userManga.mangaId === manga._id
+        // Use UserList structure
+        const lists = currentUser.lists || {};
+        const allManga = [
+          ...(lists.readingManga || []),
+          ...(lists.completedManga || []),
+          ...(lists.planningManga || [])
+        ];
+        const existingManga = allManga.find(
+          userManga => userManga.mangaId._id === manga._id
         );
-
-        setIsInUserList(existingMangaIndex !== -1);
+        setIsInUserList(!!existingManga);
         setMangaDetails(mangaResponse.data);
-
-        if (currentUser && existingMangaIndex !== -1) {
-          const userManga = currentUser.mangas[existingMangaIndex];
+        if (existingManga) {
           setUserProgress({
-            status: userManga.status || 'Planning',
-            currentChapter: typeof userManga.currentChapter === 'number' ? userManga.currentChapter : 0,
-            currentVolume: typeof userManga.currentVolume === 'number' ? userManga.currentVolume : 0
+            status: existingManga.status,
+            currentChapter: existingManga.progress,
+            currentVolume: existingManga.currentVolume || 0
           });
+        } else {
+          setUserProgress({ status: 'Planning', currentChapter: 0, currentVolume: 0 });
         }
       } catch (error) {
         console.error('Error fetching manga details:', error);
       }
     };
-
     fetchMangaDetails();
   }, [manga?._id, userId]);
 

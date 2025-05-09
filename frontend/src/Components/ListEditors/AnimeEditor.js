@@ -37,7 +37,6 @@ const AnimeEditor = ({
   useEffect(() => {
     const fetchAnimeDetails = async () => {
       if (!anime?._id || !userId) return;
-      
       try {
         const animeResponse = await axiosInstance.get(
           `/animes/anime/${anime._id}`
@@ -46,26 +45,30 @@ const AnimeEditor = ({
           `/users/${userId}/current`
         );
         const currentUser = userResponse.data;
-
-        const existingAnimeIndex = currentUser?.animes?.findIndex(
-          (userAnime) => userAnime.animeId === anime._id
+        // Use UserList structure
+        const lists = currentUser.lists || {};
+        const allAnime = [
+          ...(lists.watchingAnime || []),
+          ...(lists.completedAnime || []),
+          ...(lists.planningAnime || [])
+        ];
+        const existingAnime = allAnime.find(
+          userAnime => userAnime.animeId._id === anime._id
         );
-
-        setIsInUserList(existingAnimeIndex !== -1);
+        setIsInUserList(!!existingAnime);
         setAnimeDetails(animeResponse.data);
-
-        if (currentUser && existingAnimeIndex !== -1) {
+        if (existingAnime) {
           setUserProgress({
-            status: currentUser.animes[existingAnimeIndex].status,
-            currentEpisode:
-              currentUser.animes[existingAnimeIndex].currentEpisode,
+            status: existingAnime.status,
+            currentEpisode: existingAnime.progress
           });
+        } else {
+          setUserProgress({ status: '', currentEpisode: 0 });
         }
       } catch (error) {
         console.error('Error fetching anime details:', error);
       }
     };
-
     fetchAnimeDetails();
   }, [anime?._id, userId]);
 

@@ -93,15 +93,15 @@ const AnimeProfile = () => {
     const handleProgressUpdate = async (id, newProgress) => {
         if (!userData?._id) return;
         
-        const currentItem = userAnimeList.find(item => item.animeId === id);
+        const currentItem = userAnimeList.find(item => item.animeId._id === id);
         if (!currentItem) return;
     
         try {
             // Optimistic update
             setUserAnimeList(prevList =>
                 prevList.map(item =>
-                    item.animeId === id
-                        ? { ...item, currentEpisode: newProgress }
+                    item.animeId._id === id
+                        ? { ...item, progress: newProgress }
                         : item
                 )
             );
@@ -248,7 +248,7 @@ const AnimeProfile = () => {
                                     name={getTitle(item.mediaDetails?.titles)}
                                     layout={gridLayout}
                                     onTopRightButtonClick={handleTopRightButtonClick}
-                                    userProgress={item.currentEpisode}
+                                    userProgress={item.progress}
                                     userStatus={item.status}
                                     onProgressUpdate={(newProgress) => 
                                     handleProgressUpdate(item.animeId, newProgress)

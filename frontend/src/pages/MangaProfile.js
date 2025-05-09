@@ -98,15 +98,15 @@ const MangaProfile = () => {
     const handleProgressUpdate = async (id, newProgress) => {
         if (!userData?._id) return;
         
-        const currentItem = userMangaList.find(item => item.mangaId === id);
+        const currentItem = userMangaList.find(item => item.mangaId._id === id);
         if (!currentItem) return;
     
         try {
             // Optimistic update
             setUserMangaList(prevList =>
                 prevList.map(item =>
-                    item.mangaId === id
-                        ? { ...item, currentChapter: newProgress }
+                    item.mangaId._id === id
+                        ? { ...item, progress: newProgress }
                         : item
                 )
             );
@@ -253,7 +253,7 @@ const MangaProfile = () => {
                                         name={getTitle(item.mediaDetails?.titles)}
                                         layout={gridLayout}
                                         onTopRightButtonClick={handleTopRightButtonClick}
-                                        userProgress={item.currentChapter}
+                                        userProgress={item.progress}
                                         userStatus={item.status}
                                         onProgressUpdate={(newProgress) => 
                                             handleProgressUpdate(item.mangaId, newProgress)
