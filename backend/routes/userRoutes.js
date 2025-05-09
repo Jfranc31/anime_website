@@ -22,7 +22,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 import upload from '../utils/gridfsStorage.js';
 import { getAuthorizationUrl, getAccessToken, getAniListUserInfo, validateAniListConnection, syncAniListData, getAniListUserLists } from '../services/anilistAuthService.js';
 import UserModel from '../Models/userModel.js';
-import UserList from '../Models/userListModel.js';
+import UserList from '../Models/UserList.js';
 
 const router = express.Router();
 
