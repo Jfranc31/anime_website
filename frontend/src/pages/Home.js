@@ -553,19 +553,37 @@ const Home = () => {
 
   return (
     <div className={homeStyles.homeContainer}>
-      <section className={homeStyles.section}>
-        <h2 className={homeStyles.sectionTitle}>Currently Watching</h2>
-        <div className={homeStyles.cardsGrid}>
-          {renderCurrentlyWatching()}
-        </div>
-      </section>
-
-      <section className={homeStyles.section}>
-        <h2 className={homeStyles.sectionTitle}>Currently Reading</h2>
-        <div className={homeStyles.cardsGrid}>
-          {renderCurrentlyReading()}
-        </div>
-      </section>
+      <div className={homeStyles.tabContainer}>
+        <button
+          className={`${homeStyles.tabButton} ${activeTab === 'anime' ? homeStyles.activeTab : ''}`}
+          onClick={() => setActiveTab('anime')}
+        >
+          Anime
+        </button>
+        <button
+          className={`${homeStyles.tabButton} ${activeTab === 'manga' ? homeStyles.activeTab : ''}`}
+          onClick={() => setActiveTab('manga')}
+        >
+          Manga
+        </button>
+      </div>
+      <div className={homeStyles.section}>
+        {activeTab === 'anime' ? (
+          <>
+            <h2 className={homeStyles.sectionTitle}>Currently Watching</h2>
+            <div className={homeStyles.cardsGrid}>
+              {renderCurrentlyWatching()}
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className={homeStyles.sectionTitle}>Currently Reading</h2>
+            <div className={homeStyles.cardsGrid}>
+              {renderCurrentlyReading()}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
